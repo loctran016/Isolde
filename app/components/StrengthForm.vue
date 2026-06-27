@@ -28,24 +28,40 @@
             :exit="{ opacity: 0, top: '30%' }"
           >
           <DialogTitle class="font-semibold mb-5 leading-normal">
-            Strength exercise
+            Strength Excercise
           </DialogTitle>
-<!-- ComboxRoot -->
 
-            <MuscleComboBoxInput v-model="musclesValues" />
+            <form class="space-y-4" @submit.prevent="onSubmit">
+    <div>
+      <label class="mb-1 block text-sm font-medium">Exercise</label>
+      <ExerciseComboBox v-model="exercise" />
+    </div>
 
-          <div class="mt-[25px] flex justify-end">
-            <DialogClose as-child>
+    <div class="grid grid-cols-3 gap-3">
+      <input v-model.number="sets" type="number" min="1" placeholder="Sets" class="w-full rounded-lg border px-3 py-2">
+      <input v-model.number="reps" type="number" min="1" placeholder="Reps" class="w-full rounded-lg border px-3 py-2">
+      <input v-model.number="weight" type="number" min="0" step="0.5" placeholder="Weight" class="w-full rounded-lg border px-3 py-2">
+    </div>
+
+    <p v-if="errorMsg" class="text-sm text-red-600">{{ errorMsg }}</p>
+    <p v-if="successMsg" class="text-sm text-emerald-600">{{ successMsg }}</p>
+
+
+    <DialogClose>
               <button
-                class="inline-flex h-[35px] items-center justify-center rounded-[4px] px-[15px] font-semibold leading-none focus:shadow-[0_0_0_2px] focus:outline-none cursor-pointer"
+                class="inline-flex h-[35px] items-center justify-center rounded-[4px] px-[15px] font-semibold leading-none focus:shadow-[0_0_0_2px] focus:outline-none cursor-pointer disabled:opacity-50" :disabled="loading"
               >
-                Save changes
+                {{ loading ? 'Saving...' : 'Save workout' }}
               </button>
             </DialogClose>
-          </div>
+  </form>
+
+          <!-- <div class="mt-[25px] flex justify-end">
+
+          </div> -->
           <DialogClose
             class="absolute top-[10px] right-[10px] inline-flex h-[25px] w-[25px] appearance-none items-center justify-center rounded-full focus:shadow-[0_0_0_2px] focus:outline-none"
-            aria-label="Close"
+            aria-label="Close" as-child
           >
           </DialogClose>
 
@@ -68,12 +84,53 @@ import {
 } from "reka-ui";
 import { AnimatePresence, Motion } from "motion-v";
 
-import type { Muscles } from "~/types/database.types";
+import type { MuscleGroup,StrengthExercise } from "~/types/database.types";
 
-import MuscleComboBoxInput from '~/components/MuscleComboBoxInput.vue'
 import { ref } from 'vue'
 
-const musclesValues = ref<Muscles[]>([])
+const supabase = useSupabaseClient()
+
+const exercise = ref<StrengthExercise | null>(null)
+const sets = ref<number | null>(null)
+const reps = ref<number | null>(null)
+const weight = ref<number | null>(null)
+
+const loading = ref(false)
+const errorMsg = ref('')
+const successMsg = ref('')
+
+async function onSubmit() {
+  errorMsg.value = ''
+  successMsg.value = ''
+
+  if (!exercise.value) {
+    errorMsg.value = 'Please select an exercise.'
+    return
+  }
+
+  loading.value = true
+  try {
+    const { error } = await supabase.from('strength').insert({
+      exercise: exercise.value, // supabase enum: strength_exercise
+    //   sets: sets.value,
+    //   reps: reps.value,
+    //   weight: weight.value,
+    })
+
+    if (error) throw error
+
+    successMsg.value = 'Workout saved.'
+    exercise.value = null
+    sets.value = null
+    reps.value = null
+    weight.value = null
+  } catch (e: any) {
+    errorMsg.value = e?.message ?? 'Failed to save workout.'
+  } finally {
+    loading.value = false
+  }
+}
+
 </script>
 
 <style></style>

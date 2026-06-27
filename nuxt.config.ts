@@ -20,7 +20,7 @@ export default defineNuxtConfig({
   app: {
     pageTransition: { name: "page", mode: "out-in" },
   },
-    supabase: {
-      redirect: false, // TODO: setup login page
+  supabase: {
+    useSsrCookies: true // This should be true for SSR support
   }
 });

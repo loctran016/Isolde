@@ -94,6 +94,71 @@ export type StrengthExercise =
   | 'Cable Curl'
   | 'Concentration Curl';
 
+
+export const STRENGTH_EXERCISES = [
+  'DB Bench Press',
+  'Incline DB Bench Press',
+  'Decline DB Bench Press',
+  'Flat Barbell Bench Press',
+  'Incline Barbell Bench Press',
+  'Decline Barbell Bench Press',
+  'Push-Up',
+  'Weighted Push-Up',
+  'Chest Dip',
+  'Machine Chest Press',
+  'Cable Fly',
+  'Incline Cable Fly',
+  'Pec Deck Fly',
+  'Barbell Overhead Press',
+  'DB Shoulder Press',
+  'Arnold Press',
+  'Machine Shoulder Press',
+  'Front Raise',
+  'DB Lateral Raise',
+  'Cable Lateral Raise',
+  'Machine Lateral Raise',
+  'Leaning Cable Lateral Raise',
+  'Upright Row',
+  'Rear Delt Fly',
+  'Reverse Pec Deck',
+  'Face Pull',
+  'Cable Rear Delt Fly',
+  'Chest-Supported Rear Delt Raise',
+  'Pull-Up',
+  'Chin-Up',
+  'Lat Pulldown',
+  'Straight-Arm Pulldown',
+  'Single-Arm Lat Pulldown',
+  'DB Shrug',
+  'Barbell Shrug',
+  'Trap Bar Shrug',
+  'Farmer Carry',
+  'High Pull',
+  'Conventional Deadlift',
+  'Romanian Deadlift',
+  'Back Extension',
+  'Good Morning',
+  'Superman Hold',
+  'Wrist Curl',
+  'Reverse Wrist Curl',
+  'Hammer Curl',
+  'Farmer Hold',
+  'Plate Pinch Hold',
+  'Close-Grip Bench Press',
+  'Skull Crusher',
+  'Triceps Pushdown',
+  'Overhead Triceps Extension',
+  'Cable Overhead Triceps Extension',
+  'Bench Dip',
+  'Barbell Curl',
+  'EZ-Bar Curl',
+  'Incline DB Curl',
+  'Preacher Curl',
+  'Cable Curl',
+  'Concentration Curl',
+] as const satisfies readonly StrengthExercise[]
+
+
 export const EXERCISE_TO_MUSCLES = {
   // Chest-focused
   'DB Bench Press': ['Middle chest', 'Front delts', 'Triceps'],
@@ -323,7 +388,7 @@ export const MUSCLE_TO_EXERCISES: Record<MuscleGroup, StrengthExercise[]> = {
 export interface ExerciseRecord {
   id: number;
   date: string; // timestamp
-  exercisee: string;
+  exercise: StrengthExercise;
   created_at: string; // timestamp
   equipment: string;
   sets: number[];
