@@ -91,7 +91,7 @@ const signInWithGitHub = async () => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-purple-900 to-purple-700 flex items-center justify-center p-4">
+  <div class="min-h-screen bg-gradient-to-br from-purple-900/60 to-purple-700/40 flex items-center justify-center p-4">
     <div class="w-full max-w-md rounded-2xl bg-white shadow-lg border border-purple-100 p-6 space-y-5">
       <div class="text-center space-y-1">
         <h1 class="text-2xl font-bold text-purple-600">Welcome back</h1>
