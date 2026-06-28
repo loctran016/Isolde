@@ -48,7 +48,7 @@ async function queryData() {
         <div class="i-tabler:layout-grid" />
         Today workouts
       </h2>
-      <ul class="grid grid-cols-3 items-stretch w-full gap-2 mt-4">
+      <ul class="grid grid-cols-2 lg:grid-cols-3 items-stretch w-full gap-2 mt-4">
         <li
           v-for="items in strengthExercises"
           :key="items.id"
