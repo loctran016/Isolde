@@ -5,7 +5,7 @@
 </script>
 
 <template>
-  <div class="w-full h-full bg-stone-50  text-stone-900 dark:bg-stone-900 dark:text-gray-100">
+  <div class="w-full bg-stone-50  text-stone-900 dark:bg-stone-900 dark:text-gray-100">
     <NavBar />
       <slot />
 
@@ -15,12 +15,6 @@
 <style>
 html,
 body,
-#__nuxt {
-  width: 100%;
-  height: 100%;
-  margin: 0;
-  /* background: #1c1917; */
-}
 #__nuxt {
   width: 100%;
   height: 100%;
