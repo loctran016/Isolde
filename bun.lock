@@ -10,6 +10,7 @@
         "@nuxtjs/supabase": "2.0.9",
         "@vee-validate/nuxt": "4.15.1",
         "@vueuse/nuxt": "14.3.0",
+        "abcjs": "^6.6.3",
         "dayjs": "^1.11.21",
         "motion-v": "^2.3.0",
         "nuxt": "^4.4.8",
@@ -714,6 +715,8 @@
     "@xtuc/long": ["@xtuc/long@4.2.2", "", {}, "sha512-NuHqBY1PB/D8xU6s/thBgOAiAP7HOYDQ32+BFZILJ8ivkUkAHQnWfn6WhL79Owj1qmUnoN/YPhktdIoucipkAQ=="],
 
     "abbrev": ["abbrev@3.0.1", "", {}, "sha512-AO2ac6pjRB3SJmGJo+v5/aK6Omggp6fsLrs6wN9bd35ulu4cCwaAU9+7ZhXjeqHVkaHThLuzH0nZr0YpCDhygg=="],
+
+    "abcjs": ["abcjs@6.6.3", "", {}, "sha512-BerGJCY8+pvJV1+VxZn1Y/VNcuSAk8BysCbBICY0W8fgE5g4W6sA/zB5pKxcgqzY5/gObh8ugl++4ZoaTqUCkw=="],
 
     "abort-controller": ["abort-controller@3.0.0", "", { "dependencies": { "event-target-shim": "^5.0.0" } }, "sha512-h8lQ8tacZYnR3vNQTgibj+tODHI5/+l06Au2Pcriv/Gmet0eaj4TwWH41sO9wnHDiQsEj19q0drzdWdeAHtweg=="],
 

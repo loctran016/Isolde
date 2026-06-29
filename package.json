@@ -16,6 +16,7 @@
     "@nuxtjs/supabase": "2.0.9",
     "@vee-validate/nuxt": "4.15.1",
     "@vueuse/nuxt": "14.3.0",
+    "abcjs": "^6.6.3",
     "dayjs": "^1.11.21",
     "motion-v": "^2.3.0",
     "nuxt": "^4.4.8",
