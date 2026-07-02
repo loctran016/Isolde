@@ -18,6 +18,13 @@ const dayToColor = [
   'bg-teal-400/50', // 6: Sunday
 ]
 
+useHead({
+  title: 'Body.exe',
+  meta: [
+    { name: 'description', content: 'Activity and metric logs.' },
+  ]
+})
+
 const client = useSupabaseClient()
 const {
   data: strengthExercises,
