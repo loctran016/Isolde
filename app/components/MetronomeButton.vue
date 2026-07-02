@@ -294,13 +294,14 @@ watch(beatsPerBar, () => {
   restartIfPlaying()
 })
 
-onBeforeUnmount(async () => {
+onBeforeUnmount(() => {
   window.removeEventListener('keydown', onKeydown)
   stop()
   if (audioCtx) {
-    await audioCtx.close()
+    const ctx = audioCtx
     audioCtx = null
     masterGain = null
+    ctx.close().catch(() => {}) // fire-and-forget, don't await
   }
 })
 </script>
