@@ -47,7 +47,7 @@ const todayStrengthExercises = computed(() => {
         class="lg:col-span-4 w-full h-max border-gray-900/15 dark:border-gray-100/10 border-1 p-4 border-rounded-lg"
       >
         <h2
-          class="border-rounded-full w-max px-3 py-2 hover:bg-gray-400/30 transition-all duration-300 flex items-center gap-2 font-bold cursor-pointer font-sans text-base"
+          class="border-rounded-full w-max font-head px-3 py-2 hover:bg-gray-400/30 transition-all duration-300 flex items-center gap-2 font-bold cursor-pointer text-base"
         >
           <div class="i-tabler:layout-grid" />
           Today workouts
@@ -70,7 +70,7 @@ const todayStrengthExercises = computed(() => {
       </div>
       <div class="lg:col-span-2 lg:order-first w-full h-max p-4">
         <h2
-          class="border-rounded-full px-3 py-2 w-max flex items-center gap-2 font-semibold font-sans text-lg"
+          class="border-rounded-full px-3 py-2 w-max flex items-center gap-2 font-semibold font-head text-lg"
         >
           Quick actions
         </h2>
@@ -95,7 +95,7 @@ const todayStrengthExercises = computed(() => {
         class="lg:col-span-6 w-full h-max border-gray-900/15 dark:border-gray-100/10 border-1 p-4 border-rounded-lg"
       >
         <h2
-          class="border-rounded-full w-max px-3 py-2 hover:bg-gray-400/30 transition-all duration-300 flex items-center gap-2 font-bold cursor-pointer font-sans text-base"
+          class="border-rounded-full w-max px-3 py-2 hover:bg-gray-400/30 transition-all duration-300 flex items-center gap-2 font-bold cursor-pointer font-head text-base"
         >
           <div class="i-tabler:layout-grid" />
           Strength Workouts
