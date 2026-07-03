@@ -14,6 +14,7 @@ export default defineConfig({
       fonts: {
         // these will extend the default theme
         sans: 'Inter',
+        head: 'Space Grotesk',
         // mono: ["Fira Code", "Fira Mono:400,700"],
         // custom ones
       },
