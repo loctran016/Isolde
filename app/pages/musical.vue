@@ -1,6 +1,6 @@
 <template>
-  <main class="p-8">
-    <ComboboxRoot v-model="selectedTune" class="relative">
+  <div class="grid">
+    <ComboboxRoot v-model="selectedTune" class="relative mt-10">
       <ComboboxAnchor
         class="min-w-24 inline-flex items-center justify-between rounded-lg border border-stone-800/30 px-4 text-xs leading-none h-[35px] gap-[5px] bg-white/50 hover:bg-stone-50/50 transition-all duration-200 shadow-sm focus:shadow-[0_0_0_2px] focus:shadow-black outline-none"
       >
@@ -40,7 +40,7 @@
       </ComboboxContent>
     </ComboboxRoot>
 
-    <div class="w-3/4 mx-auto mt-10">
+    <div class="w-3/4 mx-auto mt-8">
       <ClientOnly>
         <ABCRenderer v-if="tuneAbc" :abcNotation="tuneAbc" />
         <template #fallback>
@@ -48,7 +48,7 @@
         </template>
       </ClientOnly>
     </div>
-  </main>
+  </div>
   <div class="fixed bottom-4 right-4">
     <MetronomeButton />
   </div>
@@ -71,6 +71,9 @@ type Tune = {
   path: string
   title: string
 }
+
+// app/pages/musical.vue
+definePageMeta({ title: 'Sound Island' })
 
 const tuneModules = import.meta.glob('~/assets/data/tunes/*.abc', { query: '?raw' })
 

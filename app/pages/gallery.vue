@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import type { CloudinaryPhoto } from '~/server/api/gallery.get'
 
-useHead({ title: 'Gallery' })
+// useHead({ title: 'Gallery' })
+
+// app/pages/musical.vue
+definePageMeta({ title: 'Light Island' })
 
 const { data: photos, status } = await useFetch<CloudinaryPhoto[]>('/api/gallery')
 

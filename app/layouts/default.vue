@@ -1,30 +1,28 @@
-<script setup>
+<script setup lang="ts">
 const { $pwa } = useNuxtApp()
-
-// const toast = useToast()
-
-// onMounted(() => {
-//   if ($pwa.offlineReady) toast.success('App ready to work offline')
-// })
+const route = useRoute()
+const pageTitle = computed(() => (route.meta.title as string) ?? '')
 </script>
 
 <template>
-  <!-- <div class="w-full bg-stone-50/20 text-stone-900 scrollbar-track-op-0 scrollbar-thin"> -->
   <div
-    class="w-full bg-stone-50/20 text-stone-900 dark:bg-stone-900 dark:text-gray-100 scrollbar scrollbar-track-op-0 scrollbar-thin font-sans min-h-screen"
+    class="w-full bg-stone-50 text-stone-900 dark:bg-stone-900 dark:text-gray-100 scrollbar scrollbar-track-op-0 scrollbar-thin font-sans min-h-screen grid items-start"
   >
-    <NavBar />
-    <slot />
-  </div>
-  <!-- <div
-    v-show="$pwa.needRefresh"
-    class="fixed bottom-2 right-2 bg-stone-400/50 backdrop-blur-2xl border-stone-500/30 p-4"
-  >
-    <span> New content available, click on reload button to update. </span>
+    <header
+      class="sticky top-0 z-20 border-b border-white/40 dark:border-white/10 bg-white/30 dark:bg-stone-700/30 backdrop-blur-xl backdrop-saturate-150"
+    >
+      <div class="max-w-6xl mx-auto flex items-center justify-between gap-4 px-4 py-3">
+        <span class="text-xl font-medium font-head truncate">{{ pageTitle }}</span>
+        <NavBar />
+      </div>
+    </header>
 
-    <button @click="$pwa.updateServiceWorker()">Reload</button>
-  </div> -->
-  <NuxtPwaManifest />
+    <main class="mx-auto px-4 max-w-9/10 lg:max-w-5/6 w-full self-stretch">
+      <slot />
+    </main>
+
+    <NuxtPwaManifest />
+  </div>
 </template>
 
 <style>
@@ -34,7 +32,6 @@ body,
   width: 100%;
   height: 100%;
   margin: 0;
-  /* background: #1c1917; */
 }
 
 .page-enter-active,
