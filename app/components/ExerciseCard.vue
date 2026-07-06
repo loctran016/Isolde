@@ -40,7 +40,7 @@
       {{ df.format(parseDateTime(exercise.date).toDate('Asia/Ho_Chi_Minh')) }}
     </div> -->
 
-      <ul class="flex flex-wrap items-left gap-1 text-xs justify-end max-w-6/10 lg:max-w-7/10">
+      <ul class="flex flex-wrap items-left gap-1 text-xs justify-end max-w-65/100 lg:max-w-7/10">
         <li
           v-for="muscle in exercise.muscles"
           :key="`${exercise.id}-${muscle}`"
