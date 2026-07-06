@@ -6,11 +6,11 @@ const pageTitle = computed(() => (route.meta.title as string) ?? '')
 useHead({
   bodyAttrs: {
     class:
-      'scrollbar scrollbar-w-1.5 scrollbar-radius-full scrollbar-track-color-transparent scrollbar-thumb-color-black/20 hover:scrollbar-thumb-color-black/40 dark:scrollbar-thumb-color-white/20 dark:hover:scrollbar-thumb-color-white/40',
+      'xl:scrollbar scrollbar-w-1.5 scrollbar-radius-full scrollbar-track-color-transparent scrollbar-thumb-color-black/20 hover:scrollbar-thumb-color-black/40 dark:scrollbar-thumb-color-white/20 dark:hover:scrollbar-thumb-color-white/40',
   },
   htmlAttrs: {
     class:
-      'scrollbar scrollbar-w-1.5 scrollbar-radius-full scrollbar-track-color-transparent scrollbar-thumb-color-black/20 hover:scrollbar-thumb-color-black/40 dark:scrollbar-thumb-color-white/20 dark:hover:scrollbar-thumb-color-white/40',
+      'xl:scrollbar scrollbar-w-1.5 scrollbar-radius-full scrollbar-track-color-transparent scrollbar-thumb-color-black/20 hover:scrollbar-thumb-color-black/40 dark:scrollbar-thumb-color-white/20 dark:hover:scrollbar-thumb-color-white/40',
   },
 })
 // useHead({
