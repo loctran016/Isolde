@@ -134,7 +134,7 @@ const heatmapOption = computed(() => {
       monthLabel: { color: echartsTextColor.value },
       dayLabel: {
         color: echartsTextColor.value,
-        nameMap: ['Mon', '', 'Wed', '', 'Fri', '', ''],
+        nameMap: ['Mon', '', 'Wed', '', 'Fri', '', 'Sun'],
       },
     },
     series: [
@@ -225,28 +225,7 @@ const splitOption = computed(() => ({
         ></StrengthForm>
       </ul>
     </div>
-    <div class="lg:col-span-2 card">
-      <h2 class="px-3 py-2 w-max flex items-center gap-2 font-semibold font-head text-lg">
-        Quick actions
-      </h2>
-      <StrengthForm>
-        <button
-          type="button"
-          aria-haspopup="dialog"
-          aria-expanded="false"
-          data-state="closed"
-          class="inline-flex items-center justify-center focus:shadow-black focus:outline-none cursor-pointer ml-6 border border-transparent border-1 hover:pb-1 focus:pb-1 dark:hover:border-b-white dark:focus:border-b-white group transition-all duration-200"
-        >
-          <div
-            class="i-mdi:plus dark:text-white/90 group-hover:text-white transition-colors duration-200 mr-2 group-hover:font-semibold"
-          />
-          <span
-            class="dark:group-hover:text-white dark:group-focus:text-white group-hover:font-semibold group-focus:font-semibold"
-            >Add Strength</span
-          >
-        </button></StrengthForm
-      >
-    </div>
+    <div class="lg:col-span-2 card"></div>
 
     <!-- Full-width yearly heatmap -->
     <div class="lg:col-span-6 card" ref="heatmapCardRef">
@@ -272,17 +251,12 @@ const splitOption = computed(() => ({
     </div>
 
     <!-- Streak + split, side by side below -->
-    <div class="lg:col-span-3 card flex flex-col items-center justify-center gap-1">
-      <!-- <h3 class="text-sm font-semibold font-head self-start mb-2">Streak</h3> -->
-      <p class="text-4xl font-semibold">🔥 {{ currentStreak }}</p>
-      <p class="text-xs opacity-90">{{ currentStreak === 1 ? 'day' : 'days' }} active</p>
-    </div>
 
-    <div class="lg:col-span-3 card">
+    <div class="lg:col-span-2 h-74 card">
       <h2 class="card-title !text-base mb-2">Push / Pull split</h2>
       <ClientOnly>
-        <VChart v-if="hasSplitData" :option="splitOption" autoresize class="h-40 w-full" />
-        <p v-else class="h-40 flex items-center justify-center text-sm text-center px-4">
+        <VChart v-if="hasSplitData" :option="splitOption" autoresize class="h-50 w-full" />
+        <p v-else class="h-50 flex items-center justify-center text-sm text-center px-4">
           Log a few workouts to see your split.
         </p>
         <template #fallback>
@@ -291,6 +265,73 @@ const splitOption = computed(() => ({
       </ClientOnly>
       <p class="text-xs mt-1 opacity-90">Last {{ RECENT_WINDOW_DAYS }} days, by sets logged</p>
     </div>
+
+    <div class="lg:col-span-1 flex flex-col gap-2">
+      <StrengthForm>
+        <button
+          type="button"
+          aria-haspopup="dialog"
+          aria-expanded="false"
+          data-state="closed"
+          class="card h-36 flex items-center justify-center w-full cursor-pointer"
+        >
+          <!-- <div class="i-healthicons:exercise-weights h-full"></div> -->
+          <p class="text-6xl font-semibold">🏋️</p>
+          <span class="text-4xl opacity-85">+</span>
+          <!-- <p class="text-xs opacity-85">Add Strength Exercise</p> -->
+        </button>
+      </StrengthForm>
+      <StrengthForm>
+        <button
+          type="button"
+          aria-haspopup="dialog"
+          aria-expanded="false"
+          data-state="closed"
+          class="card h-36 flex items-center justify-center w-full cursor-pointer"
+        >
+          <!-- <div class="i-healthicons:exercise-weights h-full"></div> -->
+          <p class="text-6xl font-semibold">🏃‍♂️</p>
+          <span class="text-4xl opacity-85">+</span>
+          <!-- <p class="text-xs opacity-85">Add Strength Exercise</p> -->
+        </button>
+      </StrengthForm>
+    </div>
+    <div class="lg:col-span-1 flex flex-col gap-2">
+      <StrengthForm>
+        <button
+          type="button"
+          aria-haspopup="dialog"
+          aria-expanded="false"
+          data-state="closed"
+          class="card h-36 flex items-center justify-center w-full cursor-pointer"
+        >
+          <!-- <div class="i-healthicons:exercise-weights h-full"></div> -->
+          <p class="text-6xl font-semibold">⚖️</p>
+          <span class="text-4xl opacity-85">+</span>
+          <!-- <p class="text-xs opacity-85">Add Strength Exercise</p> -->
+        </button>
+      </StrengthForm>
+      <div class="card h-36 flex flex-col gap-1 items-center justify-center">
+        <p class="text-4xl font-semibold">🔥 {{ currentStreak }}</p>
+        <p class="text-sm opacity-85">{{ currentStreak === 1 ? 'day' : 'days' }} active</p>
+      </div>
+    </div>
+
+    <div class="lg:col-span-2 h-74 card">
+      <h2 class="card-title !text-base mb-2">Push / Pull split</h2>
+      <ClientOnly>
+        <VChart v-if="hasSplitData" :option="splitOption" autoresize class="h-50 w-full" />
+        <p v-else class="h-50 flex items-center justify-center text-sm text-center px-4">
+          Log a few workouts to see your split.
+        </p>
+        <template #fallback>
+          <div class="h-40 flex items-center justify-center text-sm opacity-50">Loading…</div>
+        </template>
+      </ClientOnly>
+      <p class="text-xs mt-1 opacity-90">Last {{ RECENT_WINDOW_DAYS }} days, by sets logged</p>
+    </div>
+
+    <!-- All Workouts -->
 
     <div class="lg:col-span-6 card">
       <h2 class="card-title">
