@@ -1,19 +1,7 @@
 <script setup>
-import { parseDateTime, today } from '@internationalized/date'
+import { parseDateTime, today, parseDate } from '@internationalized/date'
 import { useDark } from '@vueuse/core'
 import { EXERCISE_TO_SPLIT } from '~/types/database.types'
-import {
-  SelectContent,
-  SelectIcon,
-  SelectItem,
-  SelectItemIndicator,
-  SelectItemText,
-  SelectPortal,
-  SelectRoot,
-  SelectTrigger,
-  SelectValue,
-  SelectViewport,
-} from 'reka-ui'
 
 useHead({
   title: 'Body Island',
@@ -24,11 +12,6 @@ definePageMeta({ title: 'Body Island' })
 
 const TIME_ZONE = 'Asia/Ho_Chi_Minh'
 
-// Remove this entirely — no more hardcoded hex + isDark ternary:
-// const isDark = useDark()
-// const textColor = isDark.value ? '#e7e5e4' : '#44403c'
-
-// Replace with: read the color the layout has already applied, directly from the DOM
 const heatmapCardRef = ref(null)
 const echartsTextColor = ref('#000000')
 
@@ -58,15 +41,20 @@ const {
   return data ?? []
 })
 
+// pins "today" to a single value shared between server render and client hydration
+// store as ISO string ✅
+const todayDate = useState('fitness-today', () => today(TIME_ZONE).toString())
+
+// reconstruct CalendarDate for comparisons
+const todayCalendarDate = computed(() => parseDate(todayDate.value))
+
 const todayStrengthExercises = computed(() => {
-  const currentDate = today(TIME_ZONE)
   return (strengthExercises.value ?? []).filter((item) => {
     if (!item?.date) return false
     const itemDate = parseDateTime(item.date)
-    return itemDate.compare(currentDate) === 0
+    return itemDate.compare(todayCalendarDate.value) === 0
   })
 })
-
 // --- Overview stats: yearly heatmap, streak, push/pull split ---
 
 // Precompute sets-per-day once, rather than re-filtering the whole

@@ -16,7 +16,6 @@ export default defineNuxtConfig({
     'nuxt-easy-lightbox',
   ],
   runtimeConfig: {
-    // server-only, never sent to the client
     cloudinaryCloudName: process.env.CLOUDINARY_CLOUD_NAME,
     cloudinaryApiKey: process.env.CLOUDINARY_API_KEY,
     cloudinaryApiSecret: process.env.CLOUDINARY_API_SECRET,

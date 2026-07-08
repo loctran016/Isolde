@@ -59,6 +59,8 @@ interface CalendarEvent {
   type: string
 }
 
+// SUPABASE DATA
+
 const supabase = useSupabaseClient()
 
 const { data: events } = await useAsyncData('exams', async () => {
