@@ -253,7 +253,7 @@ const splitOption = computed(() => ({
         <StrengthForm>
           <li
             v-if="todayStrengthExercises.length < 3"
-            class="border-stone-900/30 hover:border-stone-900/50 dark:border-stone-100/20 dark:hover:border-white/40 border-1 border-dashed flex items-center justify-center duration-200 w-full border-rounded-md cursor-pointer p-4 min-h-24 hover:text-black dark:hover:text-white"
+            class="border-stone-900/30 hover:border-stone-900/50 dark:border-stone-100/20 dark:hover:border-white/40 border-1 border-dashed flex items-center justify-center duration-200 w-full border-rounded-md cursor-pointer p-4 min-h-36 hover:text-black dark:hover:text-white"
           >
             <div class="i-mdi:plus" /></li
         ></StrengthForm>
@@ -416,7 +416,7 @@ const splitOption = computed(() => ({
         <StrengthForm>
           <li
             v-if="strengthExercises.length < 4"
-            class="border-stone-100/30 hover:border-stone-100/50 dark:border-stone-100/20 dark:hover:border-white/40 border-1 border-dashed flex items-center justify-center duration-200 w-full border-rounded-md cursor-pointer p-4 min-h-24"
+            class="border-stone-100/30 hover:border-stone-100/50 dark:border-stone-100/20 dark:hover:border-white/40 border-1 border-dashed flex items-center justify-center duration-200 w-full border-rounded-md cursor-pointer p-4 min-h-36"
           >
             <div class="i-mdi:plus" /></li
         ></StrengthForm>
