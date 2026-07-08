@@ -122,7 +122,7 @@ onBeforeUnmount(() => {
 watch(
   selectedTune,
   (tune) => {
-    if (tune && import.meta.client) loadTune(tune.path) // client-only
+    if (tune) loadTune(tune.path) // client-only
   },
   { immediate: true },
 )
