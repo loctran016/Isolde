@@ -132,7 +132,7 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="card flex flex-col items-center gap-4">
-    <h2 class="card-title">
+    <h2 class="font-semibold font-head flex items-center gap-1 text-lg">
       <div class="i-mdi:clock-star-four-points" />
       Pomodoro
     </h2>

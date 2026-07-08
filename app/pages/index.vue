@@ -313,7 +313,7 @@ async function removeTodo(todo: TodoItem) {
             </li>
           </ul>
           <form
-            class="flex gap-2 pt-2 border-t border-stone-800/10 dark:border-stone-100/10"
+            class="flex gap-2 mt-auto pt-2 border-t border-stone-800/10 dark:border-stone-100/10"
             @submit.prevent="addTodo"
           >
             <input
