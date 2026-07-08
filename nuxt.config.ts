@@ -35,6 +35,12 @@ export default defineNuxtConfig({
   app: {
     pageTransition: { name: 'page', mode: 'out-in' },
   },
+  components: [
+    {
+      path: '~/components',
+      pathPrefix: false,
+    },
+  ],
   supabase: {
     useSsrCookies: true, // This should be true for SSR support
     redirect: false,

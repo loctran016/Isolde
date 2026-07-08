@@ -2,6 +2,18 @@
 import { parseDateTime, today } from '@internationalized/date'
 import { useDark } from '@vueuse/core'
 import { EXERCISE_TO_SPLIT } from '~/types/database.types'
+import {
+  SelectContent,
+  SelectIcon,
+  SelectItem,
+  SelectItemIndicator,
+  SelectItemText,
+  SelectPortal,
+  SelectRoot,
+  SelectTrigger,
+  SelectValue,
+  SelectViewport,
+} from 'reka-ui'
 
 useHead({
   title: 'Body Island',
@@ -112,7 +124,8 @@ const maxDailySets = computed(() =>
 const heatmapOption = computed(() => {
   return {
     tooltip: {
-      formatter: (params) => `${params.value[0]}: ${params.value[1]} sets`,
+      //   formatter: (params) => `${params.value[0]}: ${params.value[1]} sets`,
+      formatter: (params) => `${formatIsoDateHeatmap(params.value[0])}: ${params.value[1]} sets`,
     },
     visualMap: {
       min: 0,
@@ -175,6 +188,17 @@ const splitTotals = computed(() => {
   }
   return { push, pull }
 })
+
+function formatIsoDateHeatmap(iso) {
+  const [year, month, day] = iso.split('-').map(Number)
+  const d = new Date(Date.UTC(year, month - 1, day))
+  return d.toLocaleDateString('en-US', {
+    month: 'long',
+    day: '2-digit',
+    year: 'numeric',
+    timeZone: 'UTC',
+  })
+}
 
 const hasSplitData = computed(() => splitTotals.value.push + splitTotals.value.pull > 0)
 
@@ -247,7 +271,7 @@ const splitOption = computed(() => ({
           <div class="h-56 flex items-center justify-center text-sm">Loading…</div>
         </template>
       </ClientOnly>
-      <p class="text-xs mt-1">Streak: {{ currentStreak }} days · sets logged per day</p>
+      <p class="text-xs mt-1 opacity-85">Streak: {{ currentStreak }} days · sets logged per day</p>
     </div>
 
     <!-- Streak + split, side by side below -->
@@ -256,7 +280,7 @@ const splitOption = computed(() => ({
       <h2 class="card-title !text-base mb-2">Weight & BF</h2>
     </div>
 
-    <div class="lg:col-span-1 flex flex-col gap-2">
+    <div class="lg:col-span-1 flex flex-col gap-4 text-gray-800 dark:text-gray-100">
       <StrengthForm>
         <button
           type="button"
@@ -265,11 +289,17 @@ const splitOption = computed(() => ({
           data-state="closed"
           class="card h-36 flex items-center gap-2 justify-center w-full cursor-pointer group"
         >
-          <div class="i-solar:dumbbell-large-minimalistic-bold-duotone text-6xl" />
-          <p class="text-4xl opacity-15 transition-all duration-200 group-hover:opacity-100">+</p>
+          <div
+            class="i-solar:dumbbell-large-minimalistic-line-duotone dark:i-solar:dumbbell-large-minimalistic-bold-duotone text-6xl"
+          />
+          <p
+            class="text-4xl opacity-55 dark:opacity-15 transition-all duration-200 group-hover:opacity-100"
+          >
+            +
+          </p>
         </button>
       </StrengthForm>
-      <StrengthForm>
+      <CardioForm>
         <button
           type="button"
           aria-haspopup="dialog"
@@ -277,13 +307,19 @@ const splitOption = computed(() => ({
           data-state="closed"
           class="card h-36 flex items-center gap-2 justify-center w-full cursor-pointer group"
         >
-           <div class="i-solar:treadmill-round-bold-duotone text-7xl" />
-          <p class="text-4xl opacity-15 transition-all duration-200 group-hover:opacity-100">+</p>
+          <div
+            class="i-solar:treadmill-round-line-duotone dark:i-solar:treadmill-round-bold-duotone text-7xl"
+          />
+          <p
+            class="text-4xl opacity-55 dark:opacity-15 transition-all duration-200 group-hover:opacity-100"
+          >
+            +
+          </p>
         </button>
-      </StrengthForm>
+      </CardioForm>
     </div>
-    <div class="lg:col-span-1 flex flex-col gap-2">
-      <StrengthForm>
+    <div class="lg:col-span-1 flex flex-col gap-4 text-gray-800 dark:text-gray-100">
+      <BodyMetricForm>
         <button
           type="button"
           aria-haspopup="dialog"
@@ -291,17 +327,24 @@ const splitOption = computed(() => ({
           data-state="closed"
           class="card h-36 flex items-center gap-2 justify-center w-full cursor-pointer group"
         >
-          <div class="i-solar:weigher-bold-duotone text-6xl" />
-          <p class="text-4xl opacity-15 transition-all duration-200 group-hover:opacity-100">+</p>
+          <div class="i-solar:weigher-line-duotone dark:i-solar:weigher-bold-duotone text-6xl" />
+          <p
+            class="text-4xl opacity-55 dark:opacity-15 transition-all duration-200 group-hover:opacity-100"
+          >
+            +
+          </p>
         </button>
-      </StrengthForm>
+      </BodyMetricForm>
       <div class="card h-36 flex flex-col gap-1 items-center justify-center">
-        <p class="text-5xl font-semibold flex items-center gap-1"><div class="i-solar:fire-bold-duotone text-6xl" /> {{ currentStreak }}</p>
+        <div class="text-5xl font-semibold flex items-center gap-1">
+          <div class="i-solar:fire-line-duotone dark:i-solar:fire-bold-duotone text-6xl" />
+          <span class="opacity-90 dark:opacity-100">{{ currentStreak }}</span>
+        </div>
         <p class="text-base opacity-85">{{ currentStreak === 1 ? 'day' : 'days' }} active</p>
       </div>
     </div>
 
-    <div class="lg:col-span-2 h-74 card">
+    <div class="lg:col-span-2 h-76 card">
       <h2 class="card-title !text-base mb-2">Push / Pull split</h2>
       <ClientOnly>
         <VChart v-if="hasSplitData" :option="splitOption" autoresize class="h-50 w-full" />
