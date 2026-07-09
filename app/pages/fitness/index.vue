@@ -55,6 +55,8 @@ const {
   return data ?? []
 })
 
+const selectedMuscleGroups = ref([])
+
 // pins "today" to a single value shared between server render and client hydration
 // store as ISO string ✅
 const todayDate = useState('fitness-today', () => today(TIME_ZONE).toString())
@@ -494,17 +496,25 @@ const splitOption = computed(() => {
         :days="RECENT_WINDOW_DAYS"
         :strength-exercises="strengthExercises ?? []"
         class="mt-4"
+        @select="(groups) => (selectedMuscleGroups = groups)"
       />
     </div>
+
     <div class="lg:col-span-3 xl:col-span-4 card">
       <h2 class="card-title">
         <div class="i-solar:database-linear" />
         Muscle Table
       </h2>
-
       <p class="text-xs opacity-60 mt-1">
         Last {{ RECENT_WINDOW_DAYS }} days, select muscle group with the diagram
       </p>
+      <ExerciseContribution
+        :muscles="selectedMuscleGroups"
+        :strength-exercises="strengthExercises ?? []"
+        :today-date="todayDate"
+        :days="RECENT_WINDOW_DAYS"
+        class="mt-4"
+      />
     </div>
 
     <!-- All Workouts -->
