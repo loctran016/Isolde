@@ -340,96 +340,99 @@ onBeforeUnmount(() => {
       </button>
     </ContextMenuTrigger>
 
-    <ContextMenuPortal>
-      <ContextMenuContent
-        class="min-w-68 max-h-[70vh] overflow-y-auto rounded-xl border border-neutral-200 bg-white p-1 pt-2 shadow-xl outline-none dark:border-neutral-700 select-none dark:bg-neutral-900"
-      >
-        <ContextMenuLabel class="px-2 py-1 text-xs text-color-500">
-          Metronome (Space to toggle)
-        </ContextMenuLabel>
-
-        <ContextMenuItem
-          class="flex cursor-pointer items-center justify-between rounded-md px-2 py-1.5 text-sm hover:bg-neutral-100 dark:hover:bg-neutral-800"
-          @select.prevent="toggle"
+    <ClientOnly>
+      <ContextMenuPortal>
+        <ContextMenuContent
+          class="min-w-68 max-h-[70vh] overflow-y-auto rounded-xl border border-neutral-200 bg-white p-1 pt-2 shadow-xl outline-none dark:border-neutral-700 select-none dark:bg-neutral-900"
         >
-          <span>{{ isPlaying ? 'Stop' : 'Start' }}</span>
-          <span class="text-xs text-color-500">Left click / Space</span>
-        </ContextMenuItem>
+          <ContextMenuLabel class="px-2 py-1 text-xs text-color-500">
+            Metronome (Space to toggle)
+          </ContextMenuLabel>
 
-        <ContextMenuSeparator class="my-1 h-px bg-neutral-200 dark:bg-neutral-700" />
+          <ContextMenuItem
+            class="flex cursor-pointer items-center justify-between rounded-md px-2 py-1.5 text-sm hover:bg-neutral-100 dark:hover:bg-neutral-800"
+            @select.prevent="toggle"
+          >
+            <span>{{ isPlaying ? 'Stop' : 'Start' }}</span>
+            <span class="text-xs text-color-500">Left click / Space</span>
+          </ContextMenuItem>
 
-        <ContextMenuItem
-          class="flex cursor-pointer items-center justify-between rounded-md px-2 py-1.5 text-sm hover:bg-neutral-100 dark:hover:bg-neutral-800"
-          @select.prevent="decreaseBpm(1)"
-        >
-          <span>BPM -1</span><span class="text-color-500 select-none">{{ bpm }}</span>
-        </ContextMenuItem>
+          <ContextMenuSeparator class="my-1 h-px bg-neutral-200 dark:bg-neutral-700" />
 
-        <ContextMenuItem
-          class="flex cursor-pointer items-center justify-between rounded-md px-2 py-1.5 text-sm hover:bg-neutral-100 dark:hover:bg-neutral-800"
-          @select.prevent="increaseBpm(1)"
-        >
-          <span>BPM +1</span><span class="text-color-500 select-none">{{ bpm }}</span>
-        </ContextMenuItem>
+          <ContextMenuItem
+            class="flex cursor-pointer items-center justify-between rounded-md px-2 py-1.5 text-sm hover:bg-neutral-100 dark:hover:bg-neutral-800"
+            @select.prevent="decreaseBpm(1)"
+          >
+            <span>BPM -1</span><span class="text-color-500 select-none">{{ bpm }}</span>
+          </ContextMenuItem>
 
-        <ContextMenuItem
-          class="flex cursor-pointer items-center justify-between rounded-md px-2 py-1.5 text-sm hover:bg-neutral-100 dark:hover:bg-neutral-800"
-          @select.prevent="tapTempo"
-        >
-          <span>Tap Tempo</span><span class="text-xs text-color-500">Click repeatedly</span>
-        </ContextMenuItem>
+          <ContextMenuItem
+            class="flex cursor-pointer items-center justify-between rounded-md px-2 py-1.5 text-sm hover:bg-neutral-100 dark:hover:bg-neutral-800"
+            @select.prevent="increaseBpm(1)"
+          >
+            <span>BPM +1</span><span class="text-color-500 select-none">{{ bpm }}</span>
+          </ContextMenuItem>
 
-        <ContextMenuSeparator class="my-1 h-px bg-neutral-200 dark:bg-neutral-700" />
+          <ContextMenuItem
+            class="flex cursor-pointer items-center justify-between rounded-md px-2 py-1.5 text-sm hover:bg-neutral-100 dark:hover:bg-neutral-800"
+            @select.prevent="tapTempo"
+          >
+            <span>Tap Tempo</span><span class="text-xs text-color-500">Click repeatedly</span>
+          </ContextMenuItem>
 
-        <ContextMenuLabel class="px-2 py-1 text-xs text-color-500">
-          Beats per bar
-        </ContextMenuLabel>
+          <ContextMenuSeparator class="my-1 h-px bg-neutral-200 dark:bg-neutral-700" />
 
-        <ContextMenuRadioGroup
-          :model-value="String(beatsPerBar)"
-          @update:model-value="(v) => setBeats(Number(v))"
-        >
-          <ContextMenuRadioItem
-            v-for="n in [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]"
-            :key="n"
-            :value="String(n)"
+          <ContextMenuLabel class="px-2 py-1 text-xs text-color-500">
+            Beats per bar
+          </ContextMenuLabel>
+
+          <ContextMenuRadioGroup
+            :model-value="String(beatsPerBar)"
+            @update:model-value="(v) => setBeats(Number(v))"
+          >
+            <ContextMenuRadioItem
+              v-for="n in [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]"
+              :key="n"
+              :value="String(n)"
+              class="flex cursor-pointer items-center justify-between rounded-md px-2 py-1.5 text-sm hover:bg-neutral-100 dark:hover:bg-neutral-800"
+            >
+              <span>{{ n }}/4</span>
+              <ContextMenuItemIndicator>✓</ContextMenuItemIndicator>
+            </ContextMenuRadioItem>
+          </ContextMenuRadioGroup>
+
+          <ContextMenuSeparator class="my-1 h-px bg-neutral-200 dark:bg-neutral-700" />
+
+          <ContextMenuCheckboxItem
+            v-model="accentFirstBeat"
             class="flex cursor-pointer items-center justify-between rounded-md px-2 py-1.5 text-sm hover:bg-neutral-100 dark:hover:bg-neutral-800"
           >
-            <span>{{ n }}/4</span>
+            Accent first beat
             <ContextMenuItemIndicator>✓</ContextMenuItemIndicator>
-          </ContextMenuRadioItem>
-        </ContextMenuRadioGroup>
+          </ContextMenuCheckboxItem>
 
-        <ContextMenuSeparator class="my-1 h-px bg-neutral-200 dark:bg-neutral-700" />
+          <ContextMenuSeparator class="my-1 h-px bg-neutral-200 dark:bg-neutral-700" />
 
-        <ContextMenuCheckboxItem
-          v-model="accentFirstBeat"
-          class="flex cursor-pointer items-center justify-between rounded-md px-2 py-1.5 text-sm hover:bg-neutral-100 dark:hover:bg-neutral-800"
-        >
-          Accent first beat
-          <ContextMenuItemIndicator>✓</ContextMenuItemIndicator>
-        </ContextMenuCheckboxItem>
-
-        <ContextMenuSeparator class="my-1 h-px bg-neutral-200 dark:bg-neutral-700" />
-
-        <ContextMenuLabel class="px-2 py-1 text-xs text-color-500"> Sound </ContextMenuLabel>
-        <ContextMenuRadioGroup v-model="soundMode">
-          <ContextMenuRadioItem
-            value="beep"
-            class="flex cursor-pointer items-center justify-between rounded-md px-2 py-1.5 text-sm hover:bg-neutral-100 dark:hover:bg-neutral-800"
-          >
-            Beep
-            <ContextMenuItemIndicator>✓</ContextMenuItemIndicator>
-          </ContextMenuRadioItem>
-          <ContextMenuRadioItem
-            value="wood"
-            class="flex cursor-pointer items-center justify-between rounded-md px-2 py-1.5 text-sm hover:bg-neutral-100 dark:hover:bg-neutral-800"
-          >
-            Wood
-            <ContextMenuItemIndicator>✓</ContextMenuItemIndicator>
-          </ContextMenuRadioItem>
-        </ContextMenuRadioGroup>
-      </ContextMenuContent>
-    </ContextMenuPortal>
+          <ContextMenuLabel class="px-2 py-1 text-xs text-color-500"> Sound </ContextMenuLabel>
+          <ContextMenuRadioGroup v-model="soundMode">
+            <ContextMenuRadioItem
+              value="beep"
+              class="flex cursor-pointer items-center justify-between rounded-md px-2 py-1.5 text-sm hover:bg-neutral-100 dark:hover:bg-neutral-800"
+            >
+              Beep
+              <ContextMenuItemIndicator>✓</ContextMenuItemIndicator>
+            </ContextMenuRadioItem>
+            <ContextMenuRadioItem
+              value="wood"
+              class="flex cursor-pointer items-center justify-between rounded-md px-2 py-1.5 text-sm hover:bg-neutral-100 dark:hover:bg-neutral-800"
+            >
+              Wood
+              <ContextMenuItemIndicator>✓</ContextMenuItemIndicator>
+            </ContextMenuRadioItem>
+          </ContextMenuRadioGroup>
+        </ContextMenuContent>
+      </ContextMenuPortal>
+      <template #fallback />
+    </ClientOnly>
   </ContextMenuRoot>
 </template>

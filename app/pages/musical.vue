@@ -49,9 +49,10 @@
         </template>
       </ClientOnly>
     </div>
-  </div>
-  <div class="fixed bottom-4 right-4">
-    <MetronomeButton />
+
+    <div class="fixed bottom-4 right-4">
+      <MetronomeButton />
+    </div>
   </div>
 </template>
 
