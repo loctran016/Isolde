@@ -59,9 +59,9 @@ watch(
 </script>
 
 <template>
-  <div class="grid">
+  <div class="grid mt-10">
     <ClientOnly>
-      <Select v-model="selectedTuneTitle" :options="tuneTitles" class="mt-10 w-max" />
+      <Select v-model="selectedTuneTitle" :options="tuneTitles" class="mt-10 max-w-36" />
       <template #fallback>
         <div
           class="mt-10 h-9 w-40 rounded-xl border border-white/40 dark:border-white/10 bg-white/30 dark:bg-stone-700/10 animate-pulse"

@@ -168,7 +168,7 @@ const cardioChartOption = computed(() => {
 
     <div class="card col-span-2">
       <h2 class="card-title mb-3">Strength log</h2>
-      <DataTable
+      <LazyDataTable
         :data="strengthRows ?? []"
         :columns="strengthColumns"
         search-placeholder="Filter exercise, muscle…"
@@ -178,7 +178,7 @@ const cardioChartOption = computed(() => {
 
     <div class="card col-span-2">
       <h2 class="card-title mb-3">Cardio log</h2>
-      <DataTable
+      <LazyDataTable
         :data="cardioRows ?? []"
         :columns="cardioColumns"
         search-placeholder="Filter activity…"
