@@ -150,8 +150,7 @@ const cardioChartOption = computed(() => {
 </script>
 
 <template>
-  <div class="grid lg:grid-cols-6 gap-4 px-4 py-4 mx-auto font-sans dark:text-gray-100">
-    <div class="grid lg:grid-cols-2 gap-4">
+  <div class="grid lg:grid-cols-2 gap-4 px-4 py-4 mx-auto font-sans dark:text-gray-100">
       <div class="card">
         <h2 class="card-title !text-base mb-2">Cardio duration</h2>
         <ClientOnly>
@@ -168,7 +167,7 @@ const cardioChartOption = computed(() => {
       </div>
     </div>
 
-    <div class="card">
+    <div class="card lg:col-span-2">
       <h2 class="card-title mb-3">Strength log</h2>
       <DataTable
         :data="strengthRows ?? []"
@@ -177,7 +176,7 @@ const cardioChartOption = computed(() => {
       />
     </div>
 
-    <div class="card">
+    <div class="card lg:col-span-2">
       <h2 class="card-title mb-3">Cardio log</h2>
       <DataTable
         :data="cardioRows ?? []"
@@ -186,7 +185,7 @@ const cardioChartOption = computed(() => {
       />
     </div>
 
-    <div class="card">
+    <div class="card lg:col-span-2">
       <h2 class="card-title mb-3">Body metrics log</h2>
       <DataTable
         :data="bodyMetricRows ?? []"
