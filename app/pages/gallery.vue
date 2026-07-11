@@ -117,7 +117,7 @@ function openLightbox(publicId: string) {
           />
         </button>
       </template>
-    </MasonryWall>
+    </LazyMasonryWall>
     <p v-else class="text-stone-500 dark:text-stone-400">
       No photos match {{ selectedCategory }} / {{ selectedTag }}.
     </p>
