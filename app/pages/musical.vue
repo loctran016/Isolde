@@ -61,7 +61,7 @@ watch(
 <template>
   <div class="grid mt-10">
     <ClientOnly>
-      <div class="max-w-40">
+      <div class="max-w-40vw">
         <Select v-model="selectedTuneTitle" :options="tuneTitles" class="mt-10 max-w-36" />
       </div>
       <template #fallback>
