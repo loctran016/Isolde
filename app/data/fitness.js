@@ -46,8 +46,8 @@ export const WEEK_SCHEDULE = [
         detail: '3×12–15',
       },
       {
-        display: 'Incline Machine Press',
-        canonical: 'Machine Chest Press',
+        display: 'Incline Machine Chest Press',
+        canonical: 'Incline Machine Chest Press',
         detail: '3×10–12',
         isApproximate: true,
       },
