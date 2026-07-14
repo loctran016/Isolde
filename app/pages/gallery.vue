@@ -3,7 +3,7 @@ import type { CloudinaryPhoto } from '~~/server/api/gallery.get'
 
 import { MasonryWall } from '@yeger/vue-masonry-wall'
 
-definePageMeta({ title: 'Light Island' })
+definePageMeta({ title: 'Light Island', titleIcon: 'i-solar:gallery-round-bold' })
 
 const { data: photos, status } = await useFetch<CloudinaryPhoto[]>('/api/gallery')
 

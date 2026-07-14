@@ -2,7 +2,7 @@
 import { today } from '@internationalized/date'
 import { usePreferredDark } from '@vueuse/core'
 
-definePageMeta({ title: 'Habit Island' })
+definePageMeta({ title: 'Habit Island', titleIcon: 'i-solar:star-rainbow-bold' })
 
 const TIME_ZONE = 'Asia/Ho_Chi_Minh'
 const supabase = useSupabaseClient()

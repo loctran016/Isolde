@@ -11,6 +11,8 @@
     "generate-pwa-assets": "pwa-assets-generator --preset minimal-2023 public/logo.svg"
   },
   "dependencies": {
+    "@fontsource-variable/inter": "^5.2.8",
+    "@fontsource-variable/space-grotesk": "^5.2.10",
     "@formkit/auto-animate": "0.9.0",
     "@internationalized/date": "^3.12.2",
     "@nuxtjs/cloudinary": "^4.0.0",
@@ -43,7 +45,6 @@
     "@nuxt/eslint": "^1.16.0",
     "@unocss/nuxt": "^66.7.2",
     "@unocss/preset-icons": "^66.7.2",
-    "@unocss/preset-web-fonts": "^66.7.2",
     "@unocss/preset-wind4": "^66.7.2",
     "@vite-pwa/assets-generator": "^1.0.2",
     "prettier": "^3.9.4",

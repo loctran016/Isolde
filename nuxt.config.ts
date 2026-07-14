@@ -2,6 +2,7 @@
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
+  watch: ['~/uno.config.ts'],
   modules: [
     '@unocss/nuxt',
     '@formkit/auto-animate',
@@ -42,10 +43,10 @@ export default defineNuxtConfig({
           tagPriority: 'critical',
         },
       ],
-      link: [
-        { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
-        { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' },
-      ],
+      //   link: [
+      //     { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
+      //     { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' },
+      //   ],
     },
   },
   components: [
@@ -78,8 +79,8 @@ export default defineNuxtConfig({
       periodicSyncForUpdates: 3600, // re-check for new content every hour while the app stays open
     },
     devOptions: {
-      enabled: true,
-      type: 'module',
+      enabled: false,
+      //   type: 'classic',
     },
   },
 })

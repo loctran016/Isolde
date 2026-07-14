@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { Separator } from 'reka-ui'
 
 const { themePref, cycleTheme } = useTheme()
 
@@ -28,13 +29,13 @@ const navItems = [
   { to: '/fitness', icon: 'i-mdi:weight-lifter', label: 'Fitness' },
   { to: '/musical', icon: 'i-mdi:music-clef-treble', label: 'Musical' },
   { to: '/gallery', icon: 'i-solar:gallery-round-bold', label: 'Gallery' },
-  //   { to: '/habit', icon: 'i-solar:star-rainbow-bold', label: 'Motivation' },
+  { to: '/habit', icon: 'i-solar:star-rainbow-bold', label: 'Motivation' },
 ]
 </script>
 
 <template>
   <ul
-    class="flex gap-2 items-center justify-center rounded-full border border-white/40 dark:border-white/10 bg-white/20 dark:bg-stone-500/20 backdrop-blur-md p-1 text-base lg:text-xl"
+    class="flex gap-1.5 items-center justify-center rounded-full border border-white/40 dark:border-white/10 bg-white/20 dark:bg-stone-500/20 backdrop-blur-md p-1 text-base lg:text-lg"
   >
     <li v-for="item in navItems" :key="item.to">
       <NuxtLink
@@ -47,6 +48,12 @@ const navItems = [
         <IconNavBarWrapper><div :class="item.icon" /></IconNavBarWrapper>
       </NuxtLink>
     </li>
+
+    <Separator
+      class="bg-purple-300/40 self-stretch mx-1 my-2 data-[orientation=vertical]:w-px"
+      decorative
+      orientation="vertical"
+    />
 
     <ClientOnly>
       <li>

@@ -9,7 +9,7 @@ useHead({
   meta: [{ name: 'description', content: 'Activity and metric logs.' }],
 })
 
-definePageMeta({ title: 'Body Island' })
+definePageMeta({ title: 'Body Island',   titleIcon: 'i-mdi:weight-lifter' })
 
 const TIME_ZONE = 'Asia/Ho_Chi_Minh'
 

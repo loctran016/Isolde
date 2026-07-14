@@ -46,7 +46,7 @@ useHead({
   ],
 })
 
-definePageMeta({ title: 'Home Island' })
+definePageMeta({ title: 'Home Island', titleIcon: 'i-mdi:home' })
 
 const selectedDate = ref()
 

@@ -7,6 +7,9 @@
 
 <script setup lang="ts">
 // const useTheme = useTheme()
+import '@fontsource-variable/inter'
+import '@fontsource-variable/space-grotesk'
+
 const { themePref, applyTheme } = useTheme()
 
 watch(themePref, applyTheme)

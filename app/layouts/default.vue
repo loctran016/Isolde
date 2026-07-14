@@ -1,6 +1,7 @@
 <script setup lang="ts">
 const route = useRoute()
 const pageTitle = computed(() => (route.meta.title as string) ?? '')
+const pageTitleIcon = computed(() => (route.meta.titleIcon as string) ?? '')
 import { ScrollAreaRoot, ScrollAreaScrollbar, ScrollAreaThumb, ScrollAreaViewport } from 'reka-ui'
 
 useHead({
@@ -29,7 +30,12 @@ useHead({
           <div
             class="w-full md:max-w-95% lg:max-w-6xl mx-auto flex items-center justify-between gap-4 px-4"
           >
-            <span class="text-lg lg:text-xl font-medium font-head truncate">{{ pageTitle }}</span>
+            <div
+              class="text-lg lg:text-xl tracking-wide truncate flex gap-2 items-center justify-center h-full"
+            >
+              <span class="leading-none">{{ pageTitle }}</span>
+            </div>
+
             <NavBar />
           </div>
         </header>

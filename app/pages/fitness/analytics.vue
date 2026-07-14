@@ -3,8 +3,11 @@ import { createColumnHelper } from '@tanstack/vue-table'
 import { h } from 'vue'
 import type { StrengthRecord } from '~/types/database.types'
 
-definePageMeta({ title: 'Body Island' })
-
+definePageMeta({ title: 'Body Island', titleIcon: 'i-mdi:weight-lifter' })
+useHead({
+  title: 'Body Island',
+  meta: [{ name: 'description', content: 'Activity and metric logs.' }],
+})
 const supabase = useSupabaseClient()
 const { themePref } = useTheme()
 const colorMode = computed(() => themePref.value)

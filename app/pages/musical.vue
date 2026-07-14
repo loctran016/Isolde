@@ -4,7 +4,7 @@ type Tune = {
   title: string
 }
 
-definePageMeta({ title: 'Sound Island' })
+definePageMeta({ title: 'Sound Island', titleIcon: 'i-mdi:music-clef-treble' })
 
 const tuneModules = import.meta.glob('~/assets/data/tunes/*.abc', { query: '?raw' })
 
