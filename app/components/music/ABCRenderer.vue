@@ -1,9 +1,10 @@
 <template>
-  <div class="overflow-x-auto">
-    <div ref="sheetMusic" class=""></div>
+  <!-- Outer div handles the scrolling -->
+  <div class="overflow-x-auto w-full scrollbar-none">
+    <!-- The ref renders the SVG, and we target the SVG with min-width -->
+    <div ref="sheetMusic" class="w-fit min-w-[770px] p-2"></div>
   </div>
 </template>
-
 <script setup lang="ts">
 const props = defineProps<{ abcNotation: string }>()
 
