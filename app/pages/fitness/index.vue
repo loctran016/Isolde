@@ -356,7 +356,7 @@ const splitOption = computed(() => {
           </template>
         </ClientOnly>
       </div>
-      <div>
+      <div class="overflow-x-auto scrollbar-none">
         <ClientOnly>
           <VChart :option="heatmapOption" autoresize class="h-40 sm:h-50 min-w-144 w-full" />
           <template #fallback>

@@ -1,6 +1,6 @@
 <template>
-  <div class="overflow-x-auto w-full">
-    <div ref="sheetMusic" class="min-w-100 mx-auto"></div>
+  <div class="overflow-x-auto">
+    <div ref="sheetMusic" class=""></div>
   </div>
 </template>
 
