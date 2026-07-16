@@ -134,6 +134,7 @@ async function onSubmit() {
         <input
           v-model.number="form.duration"
           type="number"
+          inputmode="numeric"
           min="0"
           step="1"
           placeholder="e.g. 30"
@@ -151,6 +152,7 @@ async function onSubmit() {
         <input
           v-model.number="form.distance"
           type="number"
+          inputmode="numeric"
           min="0"
           step="0.1"
           placeholder="e.g. 5"

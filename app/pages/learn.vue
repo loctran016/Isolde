@@ -390,6 +390,7 @@ function getConfidenceEmoji(level: number | null) {
             <input
               v-model.number="quickDuration"
               type="number"
+              inputmode="numeric"
               min="5"
               step="5"
               class="w-full rounded-lg px-3 py-2 text-sm bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700"

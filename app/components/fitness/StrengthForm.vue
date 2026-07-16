@@ -210,6 +210,7 @@ async function onSubmit() {
               <input
                 v-model.number="set.reps"
                 type="number"
+                inputmode="numeric"
                 min="0"
                 step="1"
                 placeholder="reps"
@@ -219,6 +220,7 @@ async function onSubmit() {
               <input
                 v-model.number="set.kg"
                 type="number"
+                inputmode="numeric"
                 min="0"
                 step="0.5"
                 placeholder="kg"

@@ -180,6 +180,7 @@ async function onSubmit() {
           <input
             v-model.number="form.weight"
             type="number"
+            inputmode="numeric"
             min="0"
             step="0.1"
             class="w-full focus:outline-none border-b-gray-500/30 dark:border-b-gray-100/50 focus:border-purple-600 transition-all duration-200 border px-3 py-2 border-0 border-b-2"
@@ -193,6 +194,7 @@ async function onSubmit() {
           <input
             v-model.number="form.height"
             type="number"
+            inputmode="numeric"
             min="0"
             step="0.1"
             class="w-full focus:outline-none border-b-gray-500/30 dark:border-b-gray-100/50 focus:border-purple-600 transition-all duration-200 border px-3 py-2 border-0 border-b-2"
@@ -206,6 +208,7 @@ async function onSubmit() {
           <input
             v-model.number="form.neck"
             type="number"
+            inputmode="numeric"
             min="0"
             step="0.1"
             class="w-full focus:outline-none border-b-gray-500/30 dark:border-b-gray-100/50 focus:border-purple-600 transition-all duration-200 border px-3 py-2 border-0 border-b-2"
@@ -219,6 +222,7 @@ async function onSubmit() {
           <input
             v-model.number="form.waist"
             type="number"
+            inputmode="numeric"
             min="0"
             step="0.1"
             class="w-full focus:outline-none border-b-gray-500/30 dark:border-b-gray-100/50 focus:border-purple-600 transition-all duration-200 border px-3 py-2 border-0 border-b-2"
