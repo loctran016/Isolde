@@ -16,6 +16,16 @@ export default defineNuxtConfig({
     '@nuxtjs/cloudinary',
     'nuxt-easy-lightbox',
   ],
+  vite: {
+    optimizeDeps: {
+      include: ['@vue/devtools-core', '@vue/devtools-kit', '@internationalized/date', 'reka-ui'],
+    },
+  },
+  routeRules: {
+    '/manifest.webmanifest': { ssr: false, prerender: false },
+    '/dev-sw.js': { ssr: false, prerender: false },
+    '/sw.js': { ssr: false, prerender: false },
+  },
   runtimeConfig: {
     cloudinaryCloudName: process.env.CLOUDINARY_CLOUD_NAME,
     cloudinaryApiKey: process.env.CLOUDINARY_API_KEY,
