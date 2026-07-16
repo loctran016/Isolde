@@ -131,6 +131,9 @@ function sortByDueDate(items: TodoItem[]) {
 const sortedStudyTodos = computed(() => sortByDueDate(studyTodos.value))
 const sortedEventTodos = computed(() => sortByDueDate(eventTodos.value))
 
+// Section flex values: Tasks 1, Study 2, Events 1
+const sectionFlex = { task: 1, study: 2, event: 1 }
+
 // --- Add new items ---
 
 const newTaskText = ref('')
@@ -262,11 +265,11 @@ function formatDueDate(dateStr: string | null): string {
   const due = parseDate(dateStr)
   const todayDate = date
   const diff = due.compare(todayDate)
-  
+
   if (diff === 0) return 'Today'
   if (diff === 1) return 'Tomorrow'
   if (diff < 0) return `${Math.abs(diff)}d overdue`
-  
+
   const jsDate = due.toDate(TIME_ZONE)
   return jsDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 }
@@ -280,7 +283,7 @@ function isOverdue(dateStr: string | null): boolean {
 
 <template>
   <div
-    class="grid grid-cols-1 lt-sm:my-2 lg:grid-cols-4 lg:grid-rows-4 gap-3 p-3 sm:gap-4 sm:p-4 mx-auto font-sans dark:text-gray-100 h-[calc(100vh-var(--header-height))]"
+    class="grid grid-cols-1 lt-sm:my-2 lg:grid-cols-4 lg:grid-rows-4 gap-3 p-3 sm:gap-4 sm:p-4 mx-auto font-sans dark:text-gray-100"
   >
     <ClientOnly>
       <TooltipProvider :delay-duration="150">
@@ -382,10 +385,10 @@ function isOverdue(dateStr: string | null): boolean {
 
         <!-- Todo: Expanded to 2 cols x 4 rows, replacing Pomodoro & Music -->
         <div
-          class="card text-lg p-6 shadow-sm border flex flex-col gap-4 lg:col-start-3 lg:col-span-2 lg:row-start-1 lg:row-span-4 overflow-x-hidden"
+          class="card text-lg p-6 shadow-sm border flex flex-col gap-4 lg:col-start-3 lg:col-span-2 lg:row-start-1 lg:row-span-4 overflow-hidden"
         >
-          <!-- Header -->
-          <div class="flex items-center justify-between">
+          <!-- Header - static -->
+          <div class="flex items-center justify-between shrink-0">
             <h2 class="card-title">
               <div class="i-mdi:text-box-edit" />
               To-do
@@ -393,15 +396,16 @@ function isOverdue(dateStr: string | null): boolean {
             <span class="text-xs opacity-50">{{ taskTodos.length + studyTodos.length + eventTodos.length }} items</span>
           </div>
 
-          <div class="flex-1 overflow-y-auto scrollbar-none space-y-5 pr-1">
+          <!-- Sections with proportional heights -->
+          <div class="flex flex-col gap-5 flex-1 min-h-0">
             
             <!-- TASKS (no due date) -->
-            <section>
-              <h3 class="text-xs font-medium opacity-50 uppercase tracking-wider mb-2 flex items-center gap-2">
+            <section class="flex flex-col min-h-0" :style="{ flex: sectionFlex.task }">
+              <h3 class="text-xs font-medium opacity-50 uppercase tracking-wider mb-2 flex items-center gap-2 shrink-0">
                 <div class="i-mdi:checkbox-outline text-sm" />
                 Tasks
               </h3>
-              <ul class="flex flex-col gap-1.5">
+              <ul class="flex-1 min-h-0 overflow-y-auto scrollbar-none flex flex-col gap-1.5">
                 <li v-for="todo in taskTodos" :key="todo.id" class="flex items-center gap-3 group">
                   <CheckboxRoot
                     :model-value="todo.done"
@@ -440,9 +444,8 @@ function isOverdue(dateStr: string | null): boolean {
                 </li>
                 <li v-if="!taskTodos.length" class="text-xs opacity-40 py-1">No tasks yet</li>
               </ul>
-              
-              <!-- Add task form -->
-              <form class="flex gap-2 mt-2" @submit.prevent="addTodo">
+              <!-- Add task form – always visible -->
+              <form class="flex gap-2 mt-2 shrink-0" @submit.prevent="addTodo">
                 <input
                   v-model="newTaskText"
                   type="text"
@@ -460,12 +463,12 @@ function isOverdue(dateStr: string | null): boolean {
             </section>
 
             <!-- STUDY (purple, with due dates) -->
-            <section class="overflow-y-auto scrollbar-none">
-              <h3 class="text-xs font-medium text-purple-600 dark:text-purple-400 uppercase tracking-wider mb-2 flex items-center gap-2">
+            <section class="flex flex-col min-h-0" :style="{ flex: sectionFlex.study }">
+              <h3 class="text-xs font-medium text-purple-600 dark:text-purple-400 uppercase tracking-wider mb-2 flex items-center gap-2 shrink-0">
                 <div class="i-mdi:book-open-outline text-sm" />
                 Study
               </h3>
-              <ul class="flex flex-col gap-1.5">
+              <ul class="flex-1 min-h-0 overflow-y-auto scrollbar-none flex flex-col gap-1.5">
                 <li v-for="todo in sortedStudyTodos" :key="todo.id" class="flex items-center gap-3 group">
                   <CheckboxRoot
                     :model-value="todo.done"
@@ -503,9 +506,8 @@ function isOverdue(dateStr: string | null): boolean {
                 </li>
                 <li v-if="!studyTodos.length" class="text-xs opacity-40 py-1">No study items yet</li>
               </ul>
-              
               <!-- Add study form -->
-              <div v-if="showStudyForm" class="mt-2 space-y-2 p-3 rounded-lg bg-purple-500/5 border border-purple-500/20">
+              <div v-if="showStudyForm" class="mt-2 space-y-2 p-3 rounded-lg bg-purple-500/5 border border-purple-500/20 shrink-0">
                 <input
                   v-model="newStudyTask"
                   type="text"
@@ -538,7 +540,7 @@ function isOverdue(dateStr: string | null): boolean {
               <button
                 v-else
                 type="button"
-                class="mt-2 text-xs text-purple-500/60 hover:text-purple-500 transition-colors cursor-pointer"
+                class="mt-2 text-xs text-purple-500/60 hover:text-purple-500 transition-colors cursor-pointer shrink-0"
                 @click="showStudyForm = true"
               >
                 + Add study item
@@ -546,12 +548,12 @@ function isOverdue(dateStr: string | null): boolean {
             </section>
 
             <!-- EVENTS (pink, with due dates) -->
-            <section>
-              <h3 class="text-xs font-medium text-pink-600 dark:text-pink-400 uppercase tracking-wider mb-2 flex items-center gap-2">
+            <section class="flex flex-col min-h-0" :style="{ flex: sectionFlex.event }">
+              <h3 class="text-xs font-medium text-pink-600 dark:text-pink-400 uppercase tracking-wider mb-2 flex items-center gap-2 shrink-0">
                 <div class="i-mdi:calendar-star text-sm" />
                 Important Events
               </h3>
-              <ul class="flex flex-col gap-1.5">
+              <ul class="flex-1 min-h-0 overflow-y-auto scrollbar-none flex flex-col gap-1.5">
                 <li v-for="todo in sortedEventTodos" :key="todo.id" class="flex items-center gap-3 group">
                   <CheckboxRoot
                     :model-value="todo.done"
@@ -589,9 +591,8 @@ function isOverdue(dateStr: string | null): boolean {
                 </li>
                 <li v-if="!eventTodos.length" class="text-xs opacity-40 py-1">No events yet</li>
               </ul>
-              
               <!-- Add event form -->
-              <div v-if="showEventForm" class="mt-2 space-y-2 p-3 rounded-lg bg-pink-500/5 border border-pink-500/20">
+              <div v-if="showEventForm" class="mt-2 space-y-2 p-3 rounded-lg bg-pink-500/5 border border-pink-500/20 shrink-0">
                 <input
                   v-model="newEventTask"
                   type="text"
@@ -624,13 +625,12 @@ function isOverdue(dateStr: string | null): boolean {
               <button
                 v-else
                 type="button"
-                class="mt-2 text-xs text-pink-500/60 hover:text-pink-500 transition-colors cursor-pointer"
+                class="mt-2 text-xs text-pink-500/60 hover:text-pink-500 transition-colors cursor-pointer shrink-0"
                 @click="showEventForm = true"
               >
                 + Add event
               </button>
             </section>
-
           </div>
         </div>
       </TooltipProvider>
