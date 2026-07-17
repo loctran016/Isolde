@@ -17,7 +17,7 @@ const props = defineProps<{
 }>()
 const supabase = useSupabaseClient()
 
-const open = ref(false)
+const open = defineModel<boolean>('open', { default: false })
 
 interface SetInput {
   reps: number | null

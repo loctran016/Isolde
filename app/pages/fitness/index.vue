@@ -40,6 +40,15 @@ watch(
   () => nextTick(syncEchartsTextColor),
 )
 
+// add near your other refs
+const editingRecord = ref(null)
+const editDialogOpen = ref(false)
+
+function openEdit(items) {
+  editingRecord.value = items
+  editDialogOpen.value = true
+}
+
 const client = useSupabaseClient()
 const {
   data: strengthExercises,
@@ -521,14 +530,16 @@ const splitOption = computed(() => {
           />
         </NuxtLink>
       </h2>
+      <!-- All Workouts grid -->
       <ul class="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 items-stretch w-full gap-2 mt-4">
-        <StrengthForm v-for="items in strengthExercises" :key="items.id" :edit-record="items">
-          <ExerciseCard
-            :exercise="items"
-            variant="all"
-            class="cursor-pointer hover:opacity-90 transition-opacity"
-          />
-        </StrengthForm>
+        <ExerciseCard
+          v-for="items in strengthExercises"
+          :key="items.id"
+          :exercise="items"
+          variant="all"
+          class="cursor-pointer hover:opacity-90 transition-opacity"
+          @click="openEdit(items)"
+        />
 
         <StrengthForm>
           <li
@@ -539,6 +550,9 @@ const splitOption = computed(() => {
           </li>
         </StrengthForm>
       </ul>
+
+      <!-- one single shared edit dialog, no trigger slot content needed -->
+      <StrengthForm v-model:open="editDialogOpen" :edit-record="editingRecord" />
     </div>
   </div>
 </template>
