@@ -24,13 +24,12 @@ interface SetInput {
   kg: number | null
 }
 
-function emptySets(): SetInput[] {
-  // 3 starting rows for convenience; validation still only requires 2 complete
-  return [
-    { reps: null, kg: null },
-    { reps: null, kg: null },
-    { reps: null, kg: null },
-  ]
+const REPS_STEP = 1
+const KG_STEP = 2.5
+
+function emptySets(prefill?: SetInput): SetInput[] {
+  const base = prefill ?? { reps: null, kg: null }
+  return [{ ...base }, { ...base }, { ...base }]
 }
 
 const form = ref<{ exercise: StrengthExercise | null; sets: SetInput[] }>({
@@ -72,12 +71,29 @@ const { r$ } = useRegle(form, {
 const loading = ref(false)
 const errorMsg = ref('')
 const successMsg = ref('')
+const prefilling = ref(false)
 
 function addSet() {
-  form.value.sets.push({ reps: null, kg: null })
+  // New sets default to a copy of the last row, not blank — matches
+  // "80% of the time, just tap save" goal for sets 3+ too.
+  const last = form.value.sets[form.value.sets.length - 1]
+  form.value.sets.push(last ? { ...last } : { reps: null, kg: null })
 }
 function removeSet(index: number) {
   form.value.sets.splice(index, 1)
+}
+function duplicateSet(index: number) {
+  const source = form.value.sets[index]
+  form.value.sets.splice(index + 1, 0, { ...source })
+}
+
+function stepReps(index: number, delta: number) {
+  const current = form.value.sets[index].reps ?? 0
+  form.value.sets[index].reps = Math.max(0, current + delta)
+}
+function stepKg(index: number, delta: number) {
+  const current = form.value.sets[index].kg ?? 0
+  form.value.sets[index].kg = Math.max(0, Math.round((current + delta) * 10) / 10)
 }
 
 // Epley formula — standard 1RM estimate, most reliable in the 1–10 rep range
@@ -91,21 +107,55 @@ function resetForm() {
   r$.$reset({ toInitialState: true })
 }
 
+// --- Smart pre-fill: pull the last logged set for the selected exercise ---
+async function prefillFromHistory(exercise: StrengthExercise) {
+  prefilling.value = true
+  try {
+    const { data, error } = await supabase
+      .from('strength')
+      .select('sets')
+      .eq('exercise', exercise)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
+    if (error) throw error
+    if (!data?.sets?.length) return
+
+    const [reps, kg] = data.sets[data.sets.length - 1]
+    // Only prefill if the user hasn't already started typing values themselves
+    const untouched = form.value.sets.every((s) => s.reps == null && s.kg == null)
+    if (untouched) form.value.sets = emptySets({ reps, kg })
+  } catch (e) {
+    console.error('Failed to prefill from history', e)
+  } finally {
+    prefilling.value = false
+  }
+}
+
 watch(open, (v) => {
   if (!v) return
   errorMsg.value = ''
   successMsg.value = ''
 
   if (props.editRecord) {
-    // Editing an existing entry — lock exercise, prefill its logged sets
     form.value.exercise = props.editRecord.exercise
     form.value.sets = props.editRecord.sets.length
       ? props.editRecord.sets.map(([reps, kg]) => ({ reps, kg }))
       : emptySets()
   } else if (props.presetExercise) {
     form.value.exercise = props.presetExercise
+    prefillFromHistory(props.presetExercise)
   }
 })
+
+// Also prefill when the exercise is picked manually (add-mode only)
+watch(
+  () => form.value.exercise,
+  (exercise) => {
+    if (!isEditMode.value && exercise) prefillFromHistory(exercise)
+  },
+)
 
 async function onSubmit() {
   errorMsg.value = ''
@@ -196,6 +246,7 @@ async function onSubmit() {
         <p v-if="r$.exercise.$error" class="text-sm text-red-600 dark:text-red-400 mt-1">
           {{ r$.exercise.$errors[0] }}
         </p>
+        <p v-if="prefilling" class="text-xs opacity-50 mt-1">Loading last workout…</p>
       </div>
 
       <div>
@@ -206,7 +257,16 @@ async function onSubmit() {
             :key="r$.sets.$each[index]?.$id ?? index"
             class="space-y-1"
           >
-            <div class="grid grid-cols-[1fr_auto_1fr_auto_auto] items-center gap-2">
+            <div class="flex items-center gap-1.5">
+              <!-- Reps stepper -->
+              <button
+                type="button"
+                class="shrink-0 w-8 h-8 rounded-md border opacity-20 hover:opacity-80 duration-200 border-stone-800/20 dark:border-stone-100/20 hover:border-purple-400/50 hover:bg-purple-400/10 flex items-center justify-center text-lg cursor-pointer"
+                aria-label="Decrease reps"
+                @click="stepReps(index, -REPS_STEP)"
+              >
+                −
+              </button>
               <input
                 v-model.number="set.reps"
                 type="number"
@@ -214,27 +274,66 @@ async function onSubmit() {
                 min="0"
                 step="1"
                 placeholder="reps"
-                class="w-full focus:outline-none border-b-gray-500/30 dark:border-b-gray-100/50 focus:border-purple-600 transition-all duration-200 border px-3 py-2 border-0 border-b-2"
+                class="w-14 text-center focus:outline-none border-b-gray-500/30 dark:border-b-gray-100/50 focus:border-purple-600 transition-all duration-200 border px-1 py-2 border-0 border-b-2"
               />
-              <span class="text-sm">reps x</span>
+              <button
+                type="button"
+                class="shrink-0 w-8 h-8 rounded-md border opacity-20 hover:opacity-80 duration-200 border-stone-800/20 dark:border-stone-100/20 hover:border-purple-400/50 hover:bg-purple-400/10 flex items-center justify-center text-lg cursor-pointer"
+                aria-label="Increase reps"
+                @click="stepReps(index, REPS_STEP)"
+              >
+                +
+              </button>
+
+              <span class="text-sm px-1 shrink-0">x</span>
+
+              <!-- Weight stepper -->
+              <button
+                type="button"
+                class="shrink-0 w-8 h-8 rounded-md border opacity-20 hover:opacity-80 duration-200 border-stone-800/20 dark:border-stone-100/20 hover:border-purple-400/50 hover:bg-purple-400/10 flex items-center justify-center text-lg cursor-pointer"
+                aria-label="Decrease weight"
+                @click="stepKg(index, -KG_STEP)"
+              >
+                −
+              </button>
               <input
                 v-model.number="set.kg"
                 type="number"
-                inputmode="numeric"
+                inputmode="decimal"
                 min="0"
                 step="0.5"
                 placeholder="kg"
-                class="w-full focus:outline-none focus:border-purple-600 border-b-gray-500/30 dark:border-b-gray-100/50 transition-all duration-200 border px-3 py-2 border-0 border-b-2"
+                class="w-16 text-center focus:outline-none focus:border-purple-600 border-b-gray-500/30 dark:border-b-gray-100/50 transition-all duration-200 border px-1 py-2 border-0 border-b-2"
               />
-              <span class="text-sm">kg</span>
+              <button
+                type="button"
+                class="shrink-0 w-8 h-8 rounded-md border opacity-20 hover:opacity-80 duration-200 border-stone-800/20 dark:border-stone-100/20 hover:border-purple-400/50 hover:bg-purple-400/10 flex items-center justify-center text-lg cursor-pointer"
+                aria-label="Increase weight"
+                @click="stepKg(index, KG_STEP)"
+              >
+                +
+              </button>
+              <span class="text-sm shrink-0">kg</span>
+
+              <!-- Duplicate / remove actions -->
+              <button
+                type="button"
+                class="shrink-0 ml-auto p-1.5 text-stone-500 hover:text-purple-600 dark:hover:text-purple-400 cursor-pointer"
+                aria-label="Duplicate this set"
+                title="Duplicate this set"
+                @click="duplicateSet(index)"
+              >
+                <div class="i-mdi:content-copy text-base" />
+              </button>
               <button
                 v-if="form.sets.length > 2"
                 type="button"
-                class="text-sm text-gray-500 hover:text-red-600 dark:hover:text-red-400"
+                class="shrink-0 p-1.5 text-stone-500 hover:text-red-600 dark:hover:text-red-400 cursor-pointer"
                 aria-label="Remove set"
+                title="Remove set"
                 @click="removeSet(index)"
               >
-                ✕
+                <div class="i-mdi:trash-can-outline text-base" />
               </button>
             </div>
 
