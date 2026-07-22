@@ -89,5 +89,18 @@ const visibleNavItems = computed(() =>
         </li>
       </template>
     </ClientOnly>
+        <li v-for="item in visibleNavItems" :key="item.to">
+      <NuxtLink
+        to="/login"
+        aria-label="Login"
+        title="Login"
+        active-class="bg-stone-800/10 dark:bg-stone-100/10"
+        class="block opacity-10 rounded-full transition-colors"
+      >
+        <IconNavBarWrapper>
+          <div class="i-solar:user-linear" />
+        </IconNavBarWrapper>
+      </NuxtLink>
+    </li>
   </ul>
 </template>
