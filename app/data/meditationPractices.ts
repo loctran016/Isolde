@@ -12,7 +12,7 @@ export const MEDITATION_PRACTICES: MeditationPractice[] = [
   { key: 'tri_tung_21_tara', label: 'Trì tụng 21 Tara', unit: 'Lần', firstValue: 3, stepValue: 1 },
   { key: 'lay_dai', label: 'Lạy dài', unit: 'Lần', firstValue: 21, stepValue: 21 },
   { key: 'van_thu_su_loi', label: 'Văn Thù Sư Lợi', unit: 'Tràng', firstValue: 1, stepValue: 1 },
-  { key: 'lien_hoa_sinh', label: 'Liên Hoa Sinh', unit: 'Lần', firstValue: 1, stepValue: 1 },
+  { key: 'lien_hoa_sinh', label: 'Liên Hoa Sinh', unit: 'Tràng', firstValue: 1, stepValue: 1 },
   { key: 'kim_cang_tat_doa', label: 'Kim Cang Tát Đỏa', unit: 'Lần', firstValue: 1, stepValue: 1 },
   { key: 'bat_nha_tam_kinh', label: 'Bát nhã Tâm Kinh', unit: 'Biến', firstValue: 1, stepValue: 1 },
   {
