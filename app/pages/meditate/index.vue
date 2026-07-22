@@ -244,7 +244,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="my-2 grid grid-cols-2 lg:grid-cols-6 gap-3 sm:gap-4 sm:py-4 mx-auto font-sans dark:text-gray-100">
+  <div class="my-2 grid grid-cols-2 lg:grid-cols-6 gap-3 sm:gap-4 py-4 mx-auto font-sans dark:text-gray-100">
     <!-- Quick actions -->
     <div class="card col-span-full">
       <h2 class="card-title">
