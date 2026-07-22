@@ -45,7 +45,7 @@ useHead({
         </header>
 
         <main
-          class="mx-auto px-4 sm:max-w-9/10 lg:max-w-7/10 xl:max-w-5/6 h-full w-full min-h-[calc(100vh-var(--header-height))]"
+          class="mx-auto px-4 sm:max-w-9/10 xl:max-w-5/6 h-full w-full min-h-[calc(100vh-var(--header-height))]"
         >
           <slot />
         </main>
