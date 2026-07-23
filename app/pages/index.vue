@@ -31,12 +31,9 @@ import { getIsland } from '~/data/islands'
 
 const TIME_ZONE = 'Asia/Ho_Chi_Minh'
 
-const todayDate = useState('home-today', () => today(TIME_ZONE).toString())
-const date = computed(() => parseDate(todayDate.value))
-
-const isDateUnavailable: CalendarRootProps['isDateUnavailable'] = (date) => {
-  return date.day === 317
-}
+// Plain const instead of useState — no SSR/hydration mismatch risk for static value
+const todayIso = today(TIME_ZONE).toString()
+const date = parseDate(todayIso)
 
 const island = getIsland('/')!
 
@@ -130,7 +127,7 @@ function sortByDueDate(items: TodoItem[]) {
 
 const sortedEventTodos = computed(() => sortByDueDate(eventTodos.value))
 
-// Section flex values: Tasks 1, Events 1
+// Section flex values: Tasks 1.25, Events 1
 const sectionFlex = { task: 1.25, event: 1 }
 
 // --- Add new items ---
@@ -232,8 +229,7 @@ async function removeTodo(todo: TodoItem) {
 function dueDateMeta(dateStr: string | null): { label: string; overdue: boolean } {
   if (!dateStr) return { label: 'Today', overdue: false }
   const due = parseDate(dateStr)
-  const todayDate = date
-  const diff = due.compare(todayDate)
+  const diff = due.compare(date)
 
   if (diff === 0) return { label: 'Today', overdue: false }
   if (diff === 1) return { label: 'Tomorrow', overdue: false }
@@ -245,6 +241,16 @@ function dueDateMeta(dateStr: string | null): { label: string; overdue: boolean 
     overdue: false,
   }
 }
+
+// Precompute due date metadata for all event todos — avoids calling
+// dueDateMeta in every render cycle via v-for template trick
+const dueDateMetaMap = computed(() => {
+  const map = new Map<number, { label: string; overdue: boolean }>()
+  for (const todo of sortedEventTodos.value) {
+    map.set(todo.id, dueDateMeta(todo.due_date))
+  }
+  return map
+})
 </script>
 
 <template>
@@ -256,7 +262,6 @@ function dueDateMeta(dateStr: string | null): { label: string; overdue: boolean 
       <ClientOnly>
         <CalendarRoot
           v-slot="{ weekDays, grid }"
-          :is-date-unavailable="isDateUnavailable"
           :default-value="date"
           class="sm:text-lg card lg:col-start-1 lg:col-span-2 lg:row-start-1 lg:row-span-3"
           fixed-weeks
@@ -297,7 +302,7 @@ function dueDateMeta(dateStr: string | null): { label: string; overdue: boolean 
               <CalendarGridBody class="grid gap-1">
                 <CalendarGridRow
                   v-for="(weekDates, index) in month.rows"
-                  :key="`weekDate-${index}`"
+                  :key="`week-${month.value.toString()}-${index}`"
                   class="grid grid-cols-7 justify-items-center"
                 >
                   <CalendarCell
@@ -306,8 +311,11 @@ function dueDateMeta(dateStr: string | null): { label: string; overdue: boolean 
                     :date="weekDate"
                     class="relative text-center text-base"
                   >
-                    <TooltipRoot :disabled="!eventsForDate(weekDate).length">
-                      <template v-for="cellEvents in [eventsForDate(weekDate)]" :key="'events'">
+                    <template
+                      v-for="cellEvents in [eventsForDate(weekDate)]"
+                      :key="`cell-${weekDate.toString()}`"
+                    >
+                      <TooltipRoot :disabled="!cellEvents.length">
                         <TooltipTrigger as-child>
                           <CalendarCellTrigger
                             :day="weekDate"
@@ -333,8 +341,8 @@ function dueDateMeta(dateStr: string | null): { label: string; overdue: boolean 
                             <TooltipArrow class="fill-stone-900 dark:fill-stone-100" />
                           </TooltipContent>
                         </TooltipPortal>
-                      </template>
-                    </TooltipRoot>
+                      </TooltipRoot>
+                    </template>
                   </CalendarCell>
                 </CalendarGridRow>
               </CalendarGridBody>
@@ -347,6 +355,7 @@ function dueDateMeta(dateStr: string | null): { label: string; overdue: boolean 
           />
         </template>
       </ClientOnly>
+
       <!-- Holy days: 1 row x 2 cols, below calendar -->
       <div class="card lg:col-start-1 lg:col-span-2 lg:row-start-4 lg:row-span-1">
         <h2 class="card-title">
@@ -369,7 +378,7 @@ function dueDateMeta(dateStr: string | null): { label: string; overdue: boolean 
           <span class="text-xs opacity-50">{{ taskTodos.length + eventTodos.length }} items</span>
         </div>
 
-        <!-- Sections with proportional heights, no outer scroll -->
+        <!-- Sections with proportional heights -->
         <div class="flex flex-col gap-5 flex-1 min-h-0">
           <!-- TASKS (no due date) -->
           <section class="flex flex-col min-h-0" :style="{ flex: sectionFlex.task }">
@@ -420,7 +429,7 @@ function dueDateMeta(dateStr: string | null): { label: string; overdue: boolean 
                 <li v-if="!taskTodos.length" class="text-xs opacity-40 py-1">No tasks yet</li>
               </ul>
             </PurpleScrollArea>
-            <!-- Add task form – always visible -->
+            <!-- Add task form -->
             <form class="flex gap-2 mt-2 shrink-0" @submit.prevent="addTodo">
               <input
                 v-model="newTaskText"
@@ -480,14 +489,16 @@ function dueDateMeta(dateStr: string | null): { label: string; overdue: boolean 
                       </EditableArea>
                     </EditableRoot>
                   </div>
-                  <template v-for="meta in [dueDateMeta(todo.due_date)]" :key="'date'">
-                    <span
-                      class="text-[11px] shrink-0"
-                      :class="meta.overdue ? 'text-red-500 font-medium' : 'text-pink-500/70'"
-                    >
-                      {{ meta.label }}
-                    </span>
-                  </template>
+                  <span
+                    class="text-[11px] shrink-0"
+                    :class="
+                      dueDateMetaMap.get(todo.id)?.overdue
+                        ? 'text-red-500 font-medium'
+                        : 'text-pink-500/70'
+                    "
+                  >
+                    {{ dueDateMetaMap.get(todo.id)?.label }}
+                  </span>
                 </li>
                 <li v-if="!eventTodos.length" class="text-xs opacity-40 py-1">No events yet</li>
               </ul>
