@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { Separator } from 'reka-ui'
+import { useMediaQuery } from '@vueuse/core'
 import { ISLANDS } from '~/data/islands'
 
-const navItems = ISLANDS.filter((i) => i.key !== 'home' || true) // adjust if Home shouldn't appear, or keep as-is
+const navItems = ISLANDS.filter((i) => i.key !== 'home' || true)
   .map((i) => ({ to: i.path, icon: i.titleIcon, label: i.navLabel }))
 
 const { themePref, cycleTheme } = useTheme()
@@ -13,13 +14,11 @@ const iconClass = computed(() => {
   if (themePref.value === 'dark') return 'i-mdi:weather-night'
   return 'i-mdi:white-balance-sunny'
 })
-
 const themeLabel = computed(() => {
   if (themePref.value === 'system') return 'Theme: system'
   if (themePref.value === 'dark') return 'Theme: dark'
   return 'Theme: light'
 })
-
 const buttonClass = computed(() => {
   if (themePref.value === 'system')
     return 'hover:text-pink-700 hover:bg-pink-400/40 dark:hover:text-pink-400 dark:hover:bg-pink-600/30'
@@ -32,15 +31,11 @@ const visibleNavItems = computed(() =>
   navItems.filter((item) => !['/musical', '/gallery'].includes(item.to)),
 )
 
-// const navItems = [
-//   { to: '/', icon: 'i-mdi:home', label: 'Home' },
-//   { to: '/fitness', icon: 'i-mdi:weight-lifter', label: 'Fitness' },
-//   { to: '/musical', icon: 'i-mdi:music-clef-treble', label: 'Musical' },
-//   { to: '/gallery', icon: 'i-solar:gallery-round-bold', label: 'Gallery' },
-//   { to: '/habit', icon: 'i-solar:star-rainbow-bold', label: 'Motivation' },
-// ]
+// --- Login link: only for signed-out users on screens below "laptop" (lg, 1024px) ---
+const user = useSupabaseUser()
+const isBelowLaptop = useMediaQuery('(max-width: 1023px)')
+const showLogin = computed(() => !user.value && isBelowLaptop.value)
 </script>
-
 <template>
   <ul
     class="flex gap-1 sm:gap-1.5 items-center justify-center rounded-full border border-white/40 dark:border-white/10 bg-white/20 dark:bg-stone-500/20 backdrop-blur-md p-.75 sm:p-1 text-base lg:text-lg"
@@ -89,18 +84,20 @@ const visibleNavItems = computed(() =>
         </li>
       </template>
     </ClientOnly>
-        <li>
-      <NuxtLink
-        to="/login"
-        aria-label="Login"
-        title="Login"
-        active-class="bg-stone-800/10 dark:bg-stone-100/10"
-        class="block opacity-10 rounded-full transition-colors"
-      >
-        <IconNavBarWrapper>
-          <div class="i-solar:user-linear" />
-        </IconNavBarWrapper>
-      </NuxtLink>
-    </li>
+        <ClientOnly>
+  <li v-if="showLogin">
+    <NuxtLink
+      to="/login"
+      aria-label="Login"
+      title="Login"
+      active-class="bg-stone-800/10 dark:bg-stone-100/10"
+      class="block rounded-full transition-colors"
+    >
+      <IconNavBarWrapper>
+        <div class="i-solar:user-linear" />
+      </IconNavBarWrapper>
+    </NuxtLink>
+  </li>
+</ClientOnly>
   </ul>
 </template>
