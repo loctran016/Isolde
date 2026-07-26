@@ -6,6 +6,8 @@ import { getIsland } from '~/data/islands'
 
 const island = getIsland('/gallery')!
 
+const VueEasyLightbox = defineAsyncComponent(() => import('vue-easy-lightbox'))
+
 useHead({
   title: island.pageTitle,
   meta: [{ name: 'description', content: island.description }],
@@ -132,13 +134,14 @@ function openLightbox(publicId: string) {
       No photos match {{ selectedCategory }} / {{ selectedTag }}.
     </p>
 
-    <Teleport to="body">
-      <VueEasyLightbox
-        :visible="lightboxVisible"
-        :imgs="lightboxImgs"
-        :index="lightboxIndex"
-        @hide="lightboxVisible = false"
-      />
-    </Teleport>
+    <ClientOnly>
+      <Teleport to="body">
+        <VueEasyLightbox
+          :visible="lightboxVisible"
+          :imgs="lightboxImgs"
+          :index="lightboxIndex"
+          @hide="lightboxVisible = false"
+        /> </Teleport
+    ></ClientOnly>
   </div>
 </template>

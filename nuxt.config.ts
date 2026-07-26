@@ -3,20 +3,8 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
   watch: ['~/uno.config.ts'],
-  modules: [
-    '@unocss/nuxt',
-    '@formkit/auto-animate',
-    '@vueuse/nuxt',
-    'motion-v/nuxt',
-    '@nuxtjs/supabase',
-    'nuxt-echarts',
-    '@nuxt/eslint',
-    '@vite-pwa/nuxt',
-    '@regle/nuxt',
-    '@nuxtjs/cloudinary',
-    'nuxt-easy-lightbox',
-    '@vercel/speed-insights',
-  ],
+  modules: ['@unocss/nuxt', '@formkit/auto-animate', '@vueuse/nuxt', 'motion-v/nuxt', '@nuxtjs/supabase', 'nuxt-echarts', '@nuxt/eslint', '@vite-pwa/nuxt', '@regle/nuxt', '@nuxtjs/cloudinary', // 'nuxt-easy-lightbox',
+  '@vercel/speed-insights', '@nuxt/fonts'],
 
   vite: {
     optimizeDeps: {
@@ -60,8 +48,14 @@ export default defineNuxtConfig({
     cloudinaryApiKey: process.env.CLOUDINARY_API_KEY,
     cloudinaryApiSecret: process.env.CLOUDINARY_API_SECRET,
   },
+  fonts: {
+    families: [
+      { name: 'Inter', provider: 'google' },
+      { name: 'Space Grotesk', provider: 'google' },
+    ],
+  },
   echarts: {
-    renderer: 'svg',
+    renderer: 'canvas',
     charts: ['LineChart', 'PieChart', 'HeatmapChart'],
     components: [
       'GridComponent',
@@ -112,7 +106,7 @@ export default defineNuxtConfig({
       image: 'public/logo.svg',
     },
     workbox: {
-      globPatterns: ['**/*.{js,css,html,png,svg,ico,woff2}'],
+      globPatterns: ['**/*.{js,css,html,png,svg,ico}'],
       navigateFallback: '/',
       navigateFallbackDenylist: [/^\/api\//], // optional, good practice
     },
