@@ -54,6 +54,9 @@ const showLogin = computed(() => !user.value && isBelowLaptop.value)
       </NuxtLink>
     </li>
     <div class="i-solar:hand-stars-bold hidden" />
+    <div class="i-mdi:weight-lifter hidden" />
+    <div class="i-mdi:home hidden" />
+    <div class="i-solar:star-rainbow-bold hidden" />
     <Separator
       class="bg-purple-300/40 self-stretch mx-.75 my-1.5 sm:mx-1 sm:my-2 data-[orientation=vertical]:w-px"
       decorative
