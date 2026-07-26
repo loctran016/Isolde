@@ -50,7 +50,7 @@ export default defineNuxtConfig({
     // ISR on static content pages – regenerate every 2 minutes
     '/musical': { swr: 300 },
     '/gallery': { swr: 300 },
-    '/': { swr: 120 },
+    '/': { swr: 30 },
 
     // All other pages remain dynamic SSR (default)
     // '/fitness': { ssr: true },   ← implicit, no rule needed
