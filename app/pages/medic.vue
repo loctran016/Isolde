@@ -134,7 +134,7 @@ function resetForm() {
 </script>
 
 <template>
-  <div class="mx-auto max-w-4xl px-4 py-6 font-sans dark:text-gray-100">
+  <div class="mx-auto my-2 grid grid-cols-1  gap-3 p-3 sm:gap-4 sm:px-4 sm:py-4 mx-auto font-sans dark:text-gray-100 max-w-4xl dark:text-gray-100">
     <h1 class="text-xl font-bold mb-6">
       BẢNG KIỂM KỸ NĂNG HỎI BỆNH SỬ
     </h1>
