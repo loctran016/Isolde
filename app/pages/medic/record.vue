@@ -1,5 +1,9 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
+import {
+  CheckboxIndicator,
+  CheckboxRoot,
+} from 'reka-ui'
 import { checklists } from '~/data/medic'
 
 // ---------- Checklist data ----------
@@ -22,18 +26,28 @@ const displayNameToKey = Object.fromEntries(
   Object.entries(displayNameByKey).map(([key, label]) => [label, key])
 )
 
+// Reason‑for‑visit select
 const reasonDisplay = ref('Tiêu phân đen')
 const selectedChecklistKey = computed(() => displayNameToKey[reasonDisplay.value] ?? 'tieu-phan-den')
 
+// Split the checklist sections
 const allSections = computed(() => checklists[selectedChecklistKey.value] ?? [])
 
+// Only HỎI BỆNH SỬ for the timeline
 const historySections = computed(() =>
   allSections.value.filter(s => s.title === 'HỎI BỆNH SỬ')
 )
 
+// Only TIỀN CĂN for the separate past history block
 const tienCanSections = computed(() =>
   allSections.value.filter(s => s.title === 'TIỀN CĂN')
 )
+
+// ---------- Helper: detect confirmation questions ----------
+function isConfirmationQuestion(mainQuestionTitle: string): boolean {
+  const lower = mainQuestionTitle.toLowerCase()
+  return lower.includes('có thực sự') || lower.includes('có thật sự')
+}
 
 // ---------- Removable symptom IDs (only "Triệu chứng kèm theo") ----------
 const removableSymptomIds = computed(() => {
@@ -69,21 +83,22 @@ const age = computed(() => {
   return a > 0 ? `${a} tuổi` : ''
 })
 
-// ---------- Timeline events with per‑event hiding (only for removable symptoms) ----------
+// ---------- Timeline events ----------
 interface TimelineEvent {
   id: string
   timeLabel: string
-  answers: Record<string, string>
-  hiddenSymptomIds: string[]      // only removable symptoms can be hidden
+  answers: Record<string, string | boolean>   // boolean for confirmation checkboxes
+  hiddenSymptomIds: string[]                  // only removable symptoms can be hidden
 }
 let eventCounter = 0
 
-function createEmptyHistoryAnswers(): Record<string, string> {
-  const ans: Record<string, string> = {}
+function createEmptyHistoryAnswers(): Record<string, string | boolean> {
+  const ans: Record<string, string | boolean> = {}
   for (const section of historySections.value) {
     for (const mq of section.mainQuestions) {
+      const isCheckbox = isConfirmationQuestion(mq.title)
       for (const sq of mq.subQuestions) {
-        ans[sq.id] = ''
+        ans[sq.id] = isCheckbox ? false : ''
       }
     }
   }
@@ -99,6 +114,7 @@ const timeline = ref<TimelineEvent[]>([
   }
 ])
 
+// When checklist changes, re‑init timeline and tiền căn
 watch(selectedChecklistKey, () => {
   timeline.value.forEach(ev => {
     ev.answers = createEmptyHistoryAnswers()
@@ -119,15 +135,16 @@ function removeEvent(index: number) {
   if (timeline.value.length > 1) timeline.value.splice(index, 1)
 }
 
+// Hide / restore removable symptoms
 function hideSymptom(eventIdx: number, symptomId: string) {
   if (!removableSymptomIds.value.has(symptomId)) return
   const ev = timeline.value[eventIdx]
   if (!ev.hiddenSymptomIds.includes(symptomId)) {
     ev.hiddenSymptomIds.push(symptomId)
-    ev.answers[symptomId] = ''
+    // reset the answer
+    ev.answers[symptomId] = typeof ev.answers[symptomId] === 'boolean' ? false : ''
   }
 }
-
 function restoreSymptom(eventIdx: number, symptomId: string) {
   if (!removableSymptomIds.value.has(symptomId)) return
   const ev = timeline.value[eventIdx]
@@ -154,9 +171,9 @@ function symptomLabel(id: string): string {
   return id
 }
 
-// ---------- TIỀN CĂN (separate) ----------
-function createEmptyTienCanAnswers(): Record<string, string> {
-  const ans: Record<string, string> = {}
+// ---------- TIỀN CĂN (separate, not in timeline) ----------
+function createEmptyTienCanAnswers(): Record<string, string | boolean> {
+  const ans: Record<string, string | boolean> = {}
   for (const section of tienCanSections.value) {
     for (const mq of section.mainQuestions) {
       for (const sq of mq.subQuestions) {
@@ -166,7 +183,7 @@ function createEmptyTienCanAnswers(): Record<string, string> {
   }
   return ans
 }
-const tienCanAnswers = ref<Record<string, string>>(createEmptyTienCanAnswers())
+const tienCanAnswers = ref<Record<string, string | boolean>>(createEmptyTienCanAnswers())
 
 // ---------- Physical Exam ----------
 const vitalSigns = ref({
@@ -306,15 +323,16 @@ async function handleSave() {
       </div>
     </section>
 
-    <!-- III. Bệnh sử (Timeline with removable symptoms) -->
+    <!-- III. Bệnh sử (Timeline with toggleable symptoms & checkboxes) -->
     <section class="card p-4">
       <h2 class="card-title">III. Bệnh sử (Theo mốc thời gian)</h2>
       <div class="space-y-4 mt-3">
         <div v-for="(ev, idx) in timeline" :key="ev.id" class="border border-stone-200 dark:border-stone-700 rounded-lg p-3">
+          <!-- Event header -->
           <div class="flex items-start justify-between gap-2 mb-3">
             <input v-model="ev.timeLabel" type="text" class="input-field flex-1" placeholder="VD: CNV 19 giờ, 10/07/2026" />
             <div class="flex items-center gap-2">
-              <!-- Restore button (only shown if there are hidden removable symptoms) -->
+              <!-- Restore button (only if hidden removable symptoms exist) -->
               <button
                 v-if="ev.hiddenSymptomIds.some(id => removableSymptomIds.has(id))"
                 @click="restoreEventIdx = (restoreEventIdx === idx ? -1 : idx)"
@@ -327,7 +345,10 @@ async function handleSave() {
           </div>
 
           <!-- Restore popup -->
-          <div v-if="restoreEventIdx === idx && ev.hiddenSymptomIds.some(id => removableSymptomIds.has(id))" class="mb-3 p-2 bg-white dark:bg-stone-800 border rounded shadow">
+          <div
+            v-if="restoreEventIdx === idx && ev.hiddenSymptomIds.some(id => removableSymptomIds.has(id))"
+            class="mb-3 p-2 bg-white dark:bg-stone-800 border rounded shadow"
+          >
             <p class="text-xs font-medium mb-1">Triệu chứng đã ẩn:</p>
             <div class="flex flex-wrap gap-1">
               <button
@@ -342,20 +363,33 @@ async function handleSave() {
             </div>
           </div>
 
-          <!-- Render history sub‑questions, only show removable ones with hide logic -->
+          <!-- Render history sub‑questions -->
           <div v-for="section in historySections" :key="section.title">
             <div v-for="mq in section.mainQuestions" :key="mq.id" class="mb-3">
               <h4 class="text-sm font-semibold opacity-90 mb-2">{{ mq.title }}</h4>
-              <div v-if="mq.subQuestions.length > 0" class="ml-3 space-y-2">
+              <div v-if="mq.subQuestions.length > 0">
+                <!-- Confirmation (checkbox) sub‑questions -->
                 <div
-                  v-for="sq in mq.subQuestions"
-                  :key="sq.id"
-                  v-show="!removableSymptomIds.has(sq.id) || !ev.hiddenSymptomIds.includes(sq.id)"
-                  class="flex flex-col gap-1"
+                  v-if="isConfirmationQuestion(mq.title)"
+                  class="ml-3 space-y-2"
                 >
-                  <div class="flex items-center gap-2">
-                    <label :for="`q-${ev.id}-${sq.id}`" class="text-sm opacity-70 flex-1">{{ sq.text }}</label>
-                    <!-- Trash icon only for removable symptoms -->
+                  <div
+                    v-for="sq in mq.subQuestions"
+                    :key="sq.id"
+                    v-show="!removableSymptomIds.has(sq.id) || !ev.hiddenSymptomIds.includes(sq.id)"
+                    class="flex items-center gap-2"
+                  >
+                    <CheckboxRoot
+                      :model-value="!!ev.answers[sq.id]"
+                      class="shrink-0 w-5 h-5 rounded-md border border-stone-800/40 dark:border-stone-100/40 flex items-center justify-center data-[state=checked]:bg-purple-500 data-[state=checked]:border-purple-500 focus-visible:ring-2 focus-visible:ring-purple-400 focus-visible:ring-offset-2 outline-none cursor-pointer transition-colors"
+                      @update:model-value="(value: boolean) => ev.answers[sq.id] = value"
+                    >
+                      <CheckboxIndicator>
+                        <div class="i-mdi:check text-white text-sm" />
+                      </CheckboxIndicator>
+                    </CheckboxRoot>
+                    <label class="text-sm opacity-70 cursor-pointer">{{ sq.text }}</label>
+                    <!-- Trash icon (only if removable) -->
                     <button
                       v-if="removableSymptomIds.has(sq.id)"
                       @click="hideSymptom(idx, sq.id)"
@@ -365,21 +399,51 @@ async function handleSave() {
                       <div class="i-mdi:trash-can-outline text-sm" />
                     </button>
                   </div>
-                  <input
-                    :id="`q-${ev.id}-${sq.id}`"
-                    v-model="ev.answers[sq.id]"
-                    type="text"
-                    class="input-field"
-                    placeholder="Nhập câu trả lời..."
-                  />
+                  <p
+                    v-if="mq.subQuestions.every(sq => ev.hiddenSymptomIds.includes(sq.id))"
+                    class="text-xs opacity-50 italic ml-3"
+                  >
+                    Tất cả triệu chứng đã bị ẩn.
+                  </p>
                 </div>
-                <!-- If all removable symptoms in this group are hidden -->
-                <p
-                  v-if="mq.title.includes('Triệu chứng') && mq.subQuestions.every(sq => ev.hiddenSymptomIds.includes(sq.id))"
-                  class="text-xs opacity-50 italic ml-3"
+
+                <!-- Regular text sub‑questions -->
+                <div
+                  v-else
+                  class="ml-3 space-y-2"
                 >
-                  Tất cả triệu chứng đã bị ẩn.
-                </p>
+                  <div
+                    v-for="sq in mq.subQuestions"
+                    :key="sq.id"
+                    v-show="!removableSymptomIds.has(sq.id) || !ev.hiddenSymptomIds.includes(sq.id)"
+                    class="flex flex-col gap-1"
+                  >
+                    <div class="flex items-center gap-2">
+                      <label :for="`q-${ev.id}-${sq.id}`" class="text-sm opacity-70 flex-1">{{ sq.text }}</label>
+                      <button
+                        v-if="removableSymptomIds.has(sq.id)"
+                        @click="hideSymptom(idx, sq.id)"
+                        class="text-stone-400 hover:text-red-500 transition-colors shrink-0"
+                        :aria-label="`Ẩn triệu chứng: ${sq.text}`"
+                      >
+                        <div class="i-mdi:trash-can-outline text-sm" />
+                      </button>
+                    </div>
+                    <input
+                      :id="`q-${ev.id}-${sq.id}`"
+                      v-model="ev.answers[sq.id]"
+                      type="text"
+                      class="input-field"
+                      placeholder="Nhập câu trả lời..."
+                    />
+                  </div>
+                  <p
+                    v-if="mq.subQuestions.every(sq => ev.hiddenSymptomIds.includes(sq.id))"
+                    class="text-xs opacity-50 italic ml-3"
+                  >
+                    Tất cả triệu chứng đã bị ẩn.
+                  </p>
+                </div>
               </div>
               <p v-else class="ml-3 text-xs opacity-60 italic">Quan sát kỹ năng này trong quá trình hỏi bệnh.</p>
             </div>
