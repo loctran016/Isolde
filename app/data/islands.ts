@@ -56,6 +56,15 @@ export const ISLANDS: Island[] = [
     titleIcon: 'i-solar:hand-stars-bold',
     description: 'Daily practice counts, logged with a tap.',
   },
+  {
+    key: 'medic',
+    path: '/medic',
+    navLabel: 'Medic Island',
+    pageTitle: 'Medic Island',
+    titleIcon: 'i-solar:document-medicine-bold',
+    description: 'Medical record editor.',
+  },
+  //   definePageMeta({ title: 'Medic Island', titleIcon: '' })
 ]
 
 // Convenience lookup, so a page can grab its own entry by path

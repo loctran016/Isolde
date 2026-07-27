@@ -4,8 +4,11 @@ import { Separator } from 'reka-ui'
 import { useMediaQuery } from '@vueuse/core'
 import { ISLANDS } from '~/data/islands'
 
-const navItems = ISLANDS.filter((i) => i.key !== 'home' || true)
-  .map((i) => ({ to: i.path, icon: i.titleIcon, label: i.navLabel }))
+const navItems = ISLANDS.filter((i) => i.key !== 'home' || true).map((i) => ({
+  to: i.path,
+  icon: i.titleIcon,
+  label: i.navLabel,
+}))
 
 const { themePref, cycleTheme } = useTheme()
 
@@ -56,6 +59,7 @@ const showLogin = computed(() => !user.value && isBelowLaptop.value)
     <div class="i-solar:hand-stars-bold hidden" />
     <div class="i-mdi:weight-lifter hidden" />
     <div class="i-mdi:home hidden" />
+    <div class="i-solar:document-medicine-bold hidden" />
     <div class="i-solar:star-rainbow-bold hidden" />
     <Separator
       class="bg-purple-300/40 self-stretch mx-.75 my-1.5 sm:mx-1 sm:my-2 data-[orientation=vertical]:w-px"
@@ -87,20 +91,20 @@ const showLogin = computed(() => !user.value && isBelowLaptop.value)
         </li>
       </template>
     </ClientOnly>
-        <ClientOnly>
-  <li v-if="showLogin">
-    <NuxtLink
-      to="/login"
-      aria-label="Login"
-      title="Login"
-      active-class="bg-stone-800/10 dark:bg-stone-100/10"
-      class="block rounded-full transition-colors"
-    >
-      <IconNavBarWrapper>
-        <div class="i-solar:user-linear" />
-      </IconNavBarWrapper>
-    </NuxtLink>
-  </li>
-</ClientOnly>
+    <ClientOnly>
+      <li v-if="showLogin">
+        <NuxtLink
+          to="/login"
+          aria-label="Login"
+          title="Login"
+          active-class="bg-stone-800/10 dark:bg-stone-100/10"
+          class="block rounded-full transition-colors"
+        >
+          <IconNavBarWrapper>
+            <div class="i-solar:user-linear" />
+          </IconNavBarWrapper>
+        </NuxtLink>
+      </li>
+    </ClientOnly>
   </ul>
 </template>

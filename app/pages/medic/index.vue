@@ -2,8 +2,6 @@
 import { ref, computed, watch } from 'vue'
 import { checklists } from '~/data/medic'
 
-definePageMeta({ title: 'Medic Island', titleIcon: 'i-solar:document-medicine-bold' })
-
 // --- Friendly names for the checklist keys ---
 const displayNameByKey: Record<string, string> = {
   'tieu-phan-den': 'Tiêu phân đen',
@@ -11,18 +9,18 @@ const displayNameByKey: Record<string, string> = {
   'dau-nguc': 'Đau ngực',
   'kho-tho': 'Khó thở',
   'ho-ra-mau': 'Ho ra máu',
-  'sot': 'Sốt',
+  sot: 'Sốt',
   'tang-huyet-ap': 'Tăng huyết áp',
   'bang-bung': 'Báng bụng',
   'vang-da': 'Vàng da',
   'tieu-mau': 'Tiểu máu',
   'tieu-it': 'Tiểu ít',
-  'phu': 'Phù',
+  phu: 'Phù',
 }
 
 // Reverse mapping for easy key lookup
 const displayNameToKey = Object.fromEntries(
-  Object.entries(displayNameByKey).map(([key, label]) => [label, key])
+  Object.entries(displayNameByKey).map(([key, label]) => [label, key]),
 )
 
 // --- Reason‑for‑visit select ---
@@ -39,7 +37,7 @@ watch(reasonDisplay, (newDisplay) => {
 // --- Checklist sections (hide "KỸ NĂNG GIAO TIẾP") ---
 const sections = computed(() => {
   const raw = checklists[selectedChecklistKey.value] ?? []
-  return raw.filter(section => section.title !== 'KỸ NĂNG GIAO TIẾP')
+  return raw.filter((section) => section.title !== 'KỸ NĂNG GIAO TIẾP')
 })
 
 // --- Patient info ---
@@ -53,17 +51,21 @@ const ward = ref('')
 const answers = ref<Record<string, string>>({})
 
 // When the checklist changes, re‑initialize answers
-watch(selectedChecklistKey, () => {
-  const newAnswers: Record<string, string> = {}
-  for (const section of sections.value) {
-    for (const mq of section.mainQuestions) {
-      for (const sq of mq.subQuestions) {
-        newAnswers[sq.id] = ''
+watch(
+  selectedChecklistKey,
+  () => {
+    const newAnswers: Record<string, string> = {}
+    for (const section of sections.value) {
+      for (const mq of section.mainQuestions) {
+        for (const sq of mq.subQuestions) {
+          newAnswers[sq.id] = ''
+        }
       }
     }
-  }
-  answers.value = newAnswers
-}, { immediate: true })
+    answers.value = newAnswers
+  },
+  { immediate: true },
+)
 
 // --- Auto‑calculate age ---
 const age = computed(() => {
@@ -134,10 +136,21 @@ function resetForm() {
 </script>
 
 <template>
-  <div class="mx-auto my-2 grid grid-cols-1 gap-3 p-3 sm:gap-4 sm:px-4 sm:py-4 mx-auto font-sans dark:text-gray-100 max-w-4xl dark:text-gray-100">
-    <h1 class="text-3xl font-bold mb-4">
-      BẢNG KIỂM KỸ NĂNG HỎI BỆNH SỬ
-    </h1>
+  <div
+    class="mx-auto my-2 grid grid-cols-1 gap-3 p-3 sm:gap-4 sm:px-4 sm:py-4 mx-auto font-sans dark:text-gray-100 max-w-4xl dark:text-gray-100"
+  >
+    <h1 class="text-3xl font-bold mb-4">BẢNG KIỂM KỸ NĂNG HỎI BỆNH SỬ</h1>
+    <NuxtLink
+      to="/medic/record"
+      aria-label="Full Workout Table"
+      title="Full Table"
+      class="ml-auto"
+      target="_blank"
+    >
+      <div
+        class="i-solar:arrow-right-up-line-duotone dark:i-solar:arrow-right-up-bold-duotone text-2xl cursor-pointer"
+      />
+    </NuxtLink>
 
     <!-- Patient info card -->
     <div class="card p-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -201,50 +214,29 @@ function resetForm() {
     <div class="card p-4">
       <div class="flex flex-col sm:flex-row sm:items-center gap-3">
         <span class="text-sm font-medium opacity-80">
-          Lí do đến khám / nhập viện <span class="opacity-50">(Triệu chứng cơ năng khiến BN lo lắng nhất)</span>
+          Lí do đến khám / nhập viện
+          <span class="opacity-50">(Triệu chứng cơ năng khiến BN lo lắng nhất)</span>
         </span>
-        <Select
-          v-model="reasonDisplay"
-          :options="reasonOptions"
-          class="sm:w-64"
-        />
+        <Select v-model="reasonDisplay" :options="reasonOptions" class="sm:w-64" />
       </div>
     </div>
 
     <!-- Questions (dynamic per selected checklist) -->
     <div class="space-y-6">
-      <section
-        v-for="section in sections"
-        :key="section.title"
-        class="card p-4"
-      >
+      <section v-for="section in sections" :key="section.title" class="card p-4">
         <h2 class="text-base font-semibold mb-4 text-purple-600 dark:text-purple-400">
           {{ section.title }}
         </h2>
 
-        <div
-          v-for="mq in section.mainQuestions"
-          :key="mq.id || mq.title"
-          class="mb-6"
-        >
+        <div v-for="mq in section.mainQuestions" :key="mq.id || mq.title" class="mb-6">
           <h3 class="text-sm font-semibold mb-2 opacity-90">
             {{ mq.title }}
           </h3>
 
           <!-- Sub‑questions with text inputs -->
-          <div
-            v-if="mq.subQuestions.length > 0"
-            class="ml-4 space-y-3"
-          >
-            <div
-              v-for="sq in mq.subQuestions"
-              :key="sq.id"
-              class="flex flex-col gap-1"
-            >
-              <label
-                :for="`q-${sq.id}`"
-                class="text-sm opacity-70"
-              >
+          <div v-if="mq.subQuestions.length > 0" class="ml-4 space-y-3">
+            <div v-for="sq in mq.subQuestions" :key="sq.id" class="flex flex-col gap-1">
+              <label :for="`q-${sq.id}`" class="text-sm opacity-70">
                 {{ sq.text }}
               </label>
               <input
@@ -258,10 +250,7 @@ function resetForm() {
           </div>
 
           <!-- Main questions with no sub‑questions: skill observation -->
-          <p
-            v-else
-            class="ml-4 text-sm opacity-60 italic"
-          >
+          <p v-else class="ml-4 text-sm opacity-60 italic">
             Quan sát kỹ năng này trong quá trình hỏi bệnh.
           </p>
         </div>
@@ -287,17 +276,9 @@ function resetForm() {
         Làm mới
       </button>
 
-      <p
-        v-if="saved"
-        class="text-sm text-green-600 dark:text-green-400"
-      >
-        ✅ Đã lưu thành công!
-      </p>
+      <p v-if="saved" class="text-sm text-green-600 dark:text-green-400">✅ Đã lưu thành công!</p>
 
-      <p
-        v-if="saveError"
-        class="text-sm text-red-500"
-      >
+      <p v-if="saveError" class="text-sm text-red-500">
         {{ saveError }}
       </p>
     </div>
