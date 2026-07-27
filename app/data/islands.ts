@@ -61,7 +61,7 @@ export const ISLANDS: Island[] = [
     path: '/medic',
     navLabel: 'Medic Island',
     pageTitle: 'Medic Island',
-    titleIcon: 'i-solar:document-medicine-bold',
+    titleIcon: 'i-solar:health-bold',
     description: 'Medical record editor.',
   },
   //   definePageMeta({ title: 'Medic Island', titleIcon: '' })
