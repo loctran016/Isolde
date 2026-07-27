@@ -134,13 +134,14 @@ function resetForm() {
 </script>
 
 <template>
-  <div class="mx-auto my-2 grid grid-cols-1  gap-3 p-3 sm:gap-4 sm:px-4 sm:py-4 mx-auto font-sans dark:text-gray-100 max-w-4xl dark:text-gray-100">
-    <h1 class="text-xl font-bold mb-6">
+  <div class="mx-auto my-2 grid grid-cols-1 gap-3 p-3 sm:gap-4 sm:px-4 sm:py-4 mx-auto font-sans dark:text-gray-100 max-w-4xl dark:text-gray-100">
+    <h1 class="text-3xl font-bold mb-4">
       BẢNG KIỂM KỸ NĂNG HỎI BỆNH SỬ
     </h1>
 
     <!-- Patient info card -->
     <div class="card p-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <h2 class="card-title">Hành chính</h2>
       <label class="flex flex-col gap-1">
         <span class="text-xs font-medium opacity-60">Họ và tên</span>
         <input
@@ -197,7 +198,7 @@ function resetForm() {
     </div>
 
     <!-- Reason for visit / admission -->
-    <div class="card p-4 mb-6">
+    <div class="card p-4">
       <div class="flex flex-col sm:flex-row sm:items-center gap-3">
         <span class="text-sm font-medium opacity-80">
           Lí do đến khám / nhập viện <span class="opacity-50">(Triệu chứng cơ năng khiến BN lo lắng nhất)</span>
