@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { checklists } from '~/data/medic'
 
-// --- Checklist selection ---
-const checklistLabels: Record<string, string> = {
+// --- Friendly names for the checklist keys ---
+const displayNameByKey: Record<string, string> = {
   'tieu-phan-den': 'Tiêu phân đen',
   'non-ra-mau': 'Nôn ra máu',
   'dau-nguc': 'Đau ngực',
@@ -18,10 +18,27 @@ const checklistLabels: Record<string, string> = {
   'phu': 'Phù',
 }
 
-const selectedChecklistKey = ref('tieu-phan-den')
-const checklistOptions = computed(() => Object.keys(checklists))
+// Reverse mapping for easy key lookup
+const displayNameToKey = Object.fromEntries(
+  Object.entries(displayNameByKey).map(([key, label]) => [label, key])
+)
 
-const sections = computed(() => checklists[selectedChecklistKey.value] ?? [])
+// --- Reason‑for‑visit select ---
+const reasonDisplay = ref('Tiêu phân đen') // default display name
+const reasonOptions = Object.values(displayNameByKey) // array of friendly names
+
+// When the display name changes, update the actual checklist key
+const selectedChecklistKey = ref('tieu-phan-den')
+watch(reasonDisplay, (newDisplay) => {
+  const key = displayNameToKey[newDisplay]
+  if (key) selectedChecklistKey.value = key
+})
+
+// --- Checklist sections (hide "KỸ NĂNG GIAO TIẾP") ---
+const sections = computed(() => {
+  const raw = checklists[selectedChecklistKey.value] ?? []
+  return raw.filter(section => section.title !== 'KỸ NĂNG GIAO TIẾP')
+})
 
 // --- Patient info ---
 const patientName = ref('')
@@ -33,10 +50,8 @@ const ward = ref('')
 // --- Answers state ---
 const answers = ref<Record<string, string>>({})
 
-// Watch for checklist changes to re‑initialize answers
-import { watch } from 'vue'
+// When the checklist changes, re‑initialize answers
 watch(selectedChecklistKey, () => {
-  // Reset answers when switching checklists
   const newAnswers: Record<string, string> = {}
   for (const section of sections.value) {
     for (const mq of section.mainQuestions) {
@@ -118,16 +133,9 @@ function resetForm() {
 
 <template>
   <div class="mx-auto max-w-4xl px-4 py-6 font-sans dark:text-gray-100">
-    <div class="flex items-center justify-between mb-6">
-      <h1 class="text-xl font-bold">
-        BẢNG KIỂM KỸ NĂNG HỎI BỆNH SỬ
-      </h1>
-      <Select
-        v-model="selectedChecklistKey"
-        :options="checklistOptions"
-        class="w-48"
-      />
-    </div>
+    <h1 class="text-xl font-bold mb-6">
+      BẢNG KIỂM KỸ NĂNG HỎI BỆNH SỬ
+    </h1>
 
     <!-- Patient info card -->
     <div class="card p-5 mb-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -186,6 +194,20 @@ function resetForm() {
       </label>
     </div>
 
+    <!-- Reason for visit / admission -->
+    <div class="card p-4 mb-6">
+      <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+        <span class="text-sm font-medium opacity-80">
+          Lí do đến khám / nhập viện <span class="opacity-50">(Triệu chứng cơ năng khiến BN lo lắng nhất)</span>
+        </span>
+        <Select
+          v-model="reasonDisplay"
+          :options="reasonOptions"
+          class="sm:w-64"
+        />
+      </div>
+    </div>
+
     <!-- Questions (dynamic per selected checklist) -->
     <div class="space-y-6">
       <section
@@ -206,7 +228,7 @@ function resetForm() {
             {{ mq.title }}
           </h3>
 
-          <!-- If there are sub‑questions, show text inputs -->
+          <!-- Sub‑questions with text inputs -->
           <div
             v-if="mq.subQuestions.length > 0"
             class="ml-4 space-y-3"
@@ -232,7 +254,7 @@ function resetForm() {
             </div>
           </div>
 
-          <!-- If no sub‑questions, this is a pure skill observation — display as a note -->
+          <!-- Main questions with no sub‑questions: skill observation -->
           <p
             v-else
             class="ml-4 text-sm opacity-60 italic"
