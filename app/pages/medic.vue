@@ -2,6 +2,8 @@
 import { ref, computed, watch } from 'vue'
 import { checklists } from '~/data/medic'
 
+definePageMeta({ title: 'Medic Island', titleIcon: 'i-solar:document-medicine-bold' })
+
 // --- Friendly names for the checklist keys ---
 const displayNameByKey: Record<string, string> = {
   'tieu-phan-den': 'Tiêu phân đen',
