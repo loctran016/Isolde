@@ -58,11 +58,12 @@ const age = computed(() => {
   return a > 0 ? `${a} tuổi` : ''
 })
 
-// ---------- Timeline events (only history) ----------
+// ---------- Timeline events with per‑event hiding ----------
 interface TimelineEvent {
   id: string
   timeLabel: string
-  answers: Record<string, string>   // keys = sub‑question ids from historySections
+  answers: Record<string, string>
+  hiddenSymptomIds: string[]      // IDs of hidden sub‑questions
 }
 let eventCounter = 0
 
@@ -79,15 +80,20 @@ function createEmptyHistoryAnswers(): Record<string, string> {
 }
 
 const timeline = ref<TimelineEvent[]>([
-  { id: `ev${++eventCounter}`, timeLabel: '', answers: createEmptyHistoryAnswers() }
+  {
+    id: `ev${++eventCounter}`,
+    timeLabel: '',
+    answers: createEmptyHistoryAnswers(),
+    hiddenSymptomIds: []            // start fully visible
+  }
 ])
 
-// When checklist changes, re‑init timeline answers and tiền căn answers
+// When checklist changes, re‑init timeline and tiền căn
 watch(selectedChecklistKey, () => {
   timeline.value.forEach(ev => {
     ev.answers = createEmptyHistoryAnswers()
+    ev.hiddenSymptomIds = []        // reset visibility
   })
-  // also reset tiền căn answers
   tienCanAnswers.value = createEmptyTienCanAnswers()
 })
 
@@ -95,11 +101,52 @@ function addEvent() {
   timeline.value.push({
     id: `ev${++eventCounter}`,
     timeLabel: '',
-    answers: createEmptyHistoryAnswers()
+    answers: createEmptyHistoryAnswers(),
+    hiddenSymptomIds: []
   })
 }
 function removeEvent(index: number) {
   if (timeline.value.length > 1) timeline.value.splice(index, 1)
+}
+
+// Hide a symptom row
+function hideSymptom(eventIdx: number, symptomId: string) {
+  const ev = timeline.value[eventIdx]
+  if (!ev.hiddenSymptomIds.includes(symptomId)) {
+    ev.hiddenSymptomIds.push(symptomId)
+    // optionally clear the answer
+    ev.answers[symptomId] = ''
+  }
+}
+
+// Restore a previously hidden symptom
+function restoreSymptom(eventIdx: number, symptomId: string) {
+  const ev = timeline.value[eventIdx]
+  const idx = ev.hiddenSymptomIds.indexOf(symptomId)
+  if (idx !== -1) ev.hiddenSymptomIds.splice(idx, 1)
+}
+
+// Which event's restore popup is open (-1 = none)
+const restoreEventIdx = ref(-1)
+
+// Computed list of hidden symptoms for the currently selected restore event
+const hiddenSymptomsForRestore = computed(() => {
+  if (restoreEventIdx.value === -1) return []
+  const ev = timeline.value[restoreEventIdx.value]
+  const allIds = Object.keys(ev.answers)
+  return allIds.filter(id => ev.hiddenSymptomIds.includes(id))
+})
+
+// Get the label of a symptom id by searching through all sub‑questions
+function symptomLabel(id: string): string {
+  for (const section of historySections.value) {
+    for (const mq of section.mainQuestions) {
+      for (const sq of mq.subQuestions) {
+        if (sq.id === id) return sq.text
+      }
+    }
+  }
+  return id
 }
 
 // ---------- TIỀN CĂN (separate, not in timeline) ----------
@@ -254,25 +301,74 @@ async function handleSave() {
       </div>
     </section>
 
-    <!-- III. Bệnh sử (Timeline) -->
+    <!-- III. Bệnh sử (Timeline with toggleable symptoms) -->
     <section class="card p-4">
       <h2 class="card-title">III. Bệnh sử (Theo mốc thời gian)</h2>
       <div class="space-y-4 mt-3">
         <div v-for="(ev, idx) in timeline" :key="ev.id" class="border border-stone-200 dark:border-stone-700 rounded-lg p-3">
           <div class="flex items-start justify-between gap-2 mb-3">
             <input v-model="ev.timeLabel" type="text" class="input-field flex-1" placeholder="VD: CNV 19 giờ, 10/07/2026" />
-            <button v-if="timeline.length > 1" @click="removeEvent(idx)" class="text-red-500 hover:text-red-700 text-sm">Xoá</button>
+            <div class="flex items-center gap-2">
+              <!-- Restore button -->
+              <button
+                @click="restoreEventIdx = (restoreEventIdx === idx ? -1 : idx)"
+                class="text-xs text-purple-600 hover:underline whitespace-nowrap"
+              >
+                + Khôi phục triệu chứng
+              </button>
+              <button v-if="timeline.length > 1" @click="removeEvent(idx)" class="text-red-500 hover:text-red-700 text-sm">Xoá</button>
+            </div>
           </div>
 
-          <!-- Render only history sub‑questions for this event -->
+          <!-- Restore popup -->
+          <div v-if="restoreEventIdx === idx" class="mb-3 p-2 bg-white dark:bg-stone-800 border rounded shadow">
+            <p class="text-xs font-medium mb-1">Triệu chứng đã ẩn:</p>
+            <div class="flex flex-wrap gap-1">
+              <button
+                v-for="sid in hiddenSymptomsForRestore"
+                :key="sid"
+                @click="restoreSymptom(idx, sid)"
+                class="text-xs bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-200 px-2 py-0.5 rounded-full hover:bg-purple-200 transition-colors"
+              >
+                {{ symptomLabel(sid) }}
+              </button>
+              <span v-if="hiddenSymptomsForRestore.length === 0" class="text-xs opacity-50">Không có</span>
+            </div>
+          </div>
+
+          <!-- Render history sub‑questions, only visible ones -->
           <div v-for="section in historySections" :key="section.title">
             <div v-for="mq in section.mainQuestions" :key="mq.id" class="mb-3">
               <h4 class="text-sm font-semibold opacity-90 mb-2">{{ mq.title }}</h4>
               <div v-if="mq.subQuestions.length > 0" class="ml-3 space-y-2">
-                <div v-for="sq in mq.subQuestions" :key="sq.id" class="flex flex-col gap-1">
-                  <label :for="`q-${ev.id}-${sq.id}`" class="text-sm opacity-70">{{ sq.text }}</label>
-                  <input :id="`q-${ev.id}-${sq.id}`" v-model="ev.answers[sq.id]" type="text" class="input-field" placeholder="Nhập câu trả lời..." />
+                <div
+                  v-for="sq in mq.subQuestions"
+                  :key="sq.id"
+                  v-show="!ev.hiddenSymptomIds.includes(sq.id)"
+                  class="flex flex-col gap-1"
+                >
+                  <div class="flex items-center gap-2">
+                    <label :for="`q-${ev.id}-${sq.id}`" class="text-sm opacity-70 flex-1">{{ sq.text }}</label>
+                    <button
+                      @click="hideSymptom(idx, sq.id)"
+                      class="text-stone-400 hover:text-red-500 transition-colors shrink-0"
+                      :aria-label="`Ẩn triệu chứng: ${sq.text}`"
+                    >
+                      <div class="i-mdi:trash-can-outline text-sm" />
+                    </button>
+                  </div>
+                  <input
+                    :id="`q-${ev.id}-${sq.id}`"
+                    v-model="ev.answers[sq.id]"
+                    type="text"
+                    class="input-field"
+                    placeholder="Nhập câu trả lời..."
+                  />
                 </div>
+                <!-- If all sub-questions are hidden -->
+                <p v-if="mq.subQuestions.every(sq => ev.hiddenSymptomIds.includes(sq.id))" class="text-xs opacity-50 italic ml-3">
+                  Tất cả triệu chứng đã bị ẩn.
+                </p>
               </div>
               <p v-else class="ml-3 text-xs opacity-60 italic">Quan sát kỹ năng này trong quá trình hỏi bệnh.</p>
             </div>
