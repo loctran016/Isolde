@@ -2,7 +2,7 @@
 import { ref, computed, watch } from 'vue'
 import { checklists } from '~/data/medic'
 
-// ---------- Checklist data & symptom vocabulary ----------
+// ---------- Checklist data ----------
 const displayNameByKey: Record<string, string> = {
   'tieu-phan-den': 'Tiêu phân đen',
   'non-ra-mau': 'Nôn ra máu',
@@ -26,21 +26,10 @@ const displayNameToKey = Object.fromEntries(
 const reasonDisplay = ref('Tiêu phân đen')
 const selectedChecklistKey = computed(() => displayNameToKey[reasonDisplay.value] ?? 'tieu-phan-den')
 
-// Get all sub‑questions from the selected checklist to serve as symptom vocabulary
-const symptomVocabulary = computed(() => {
+// Get the full list of sections (excluding KỸ NĂNG GIAO TIẾP) for rendering sub‑questions
+const checklistSections = computed(() => {
   const raw = checklists[selectedChecklistKey.value] ?? []
-  const items: { id: string; text: string }[] = []
-  for (const section of raw) {
-    for (const mq of section.mainQuestions) {
-      for (const sq of mq.subQuestions) {
-        // Only include sub‑questions that are actual symptoms (skip "Mô tả" or very generic ones)
-        if (sq.text !== 'Mô tả') {
-          items.push({ id: sq.id, text: sq.text })
-        }
-      }
-    }
-  }
-  return items
+  return raw.filter(s => s.title !== 'KỸ NĂNG GIAO TIẾP')
 })
 
 // ---------- Patient info ----------
@@ -62,50 +51,47 @@ const age = computed(() => {
   return a > 0 ? `${a} tuổi` : ''
 })
 
-// ---------- Timeline events ----------
+// ---------- Timeline events with full sub‑questions ----------
 interface TimelineEvent {
   id: string
   timeLabel: string
-  narrative: string
-  symptomIds: string[]
+  answers: Record<string, string> // key = sub‑question id
 }
 let eventCounter = 0
-const timeline = ref<TimelineEvent[]>([{ id: `ev${++eventCounter}`, timeLabel: '', narrative: '', symptomIds: [] }])
+
+// Helper to create a blank answers object for all sub‑questions
+function createEmptyAnswers(): Record<string, string> {
+  const answers: Record<string, string> = {}
+  for (const section of checklistSections.value) {
+    for (const mq of section.mainQuestions) {
+      for (const sq of mq.subQuestions) {
+        answers[sq.id] = ''
+      }
+    }
+  }
+  return answers
+}
+
+const timeline = ref<TimelineEvent[]>([
+  { id: `ev${++eventCounter}`, timeLabel: '', answers: createEmptyAnswers() }
+])
+
+// Watch for checklist changes to re‑initialize existing events' answers
+watch(selectedChecklistKey, () => {
+  timeline.value.forEach(ev => {
+    ev.answers = createEmptyAnswers()
+  })
+})
 
 function addEvent() {
-  timeline.value.push({ id: `ev${++eventCounter}`, timeLabel: '', narrative: '', symptomIds: [] })
+  timeline.value.push({
+    id: `ev${++eventCounter}`,
+    timeLabel: '',
+    answers: createEmptyAnswers()
+  })
 }
 function removeEvent(index: number) {
   if (timeline.value.length > 1) timeline.value.splice(index, 1)
-}
-
-// Symptom picker within an event (open by clicking a button)
-const symptomSearch = ref('')
-const activeEventIndex = ref<number | null>(null)
-const filteredSymptoms = computed(() => {
-  const q = symptomSearch.value.toLowerCase().trim()
-  if (!q) return symptomVocabulary.value
-  return symptomVocabulary.value.filter(s => s.text.toLowerCase().includes(q))
-})
-
-function openSymptomPicker(eventIdx: number) {
-  activeEventIndex.value = eventIdx
-  symptomSearch.value = ''
-}
-function closeSymptomPicker() {
-  activeEventIndex.value = null
-  symptomSearch.value = ''
-}
-function toggleSymptom(symptomId: string) {
-  if (activeEventIndex.value === null) return
-  const ev = timeline.value[activeEventIndex.value]
-  const idx = ev.symptomIds.indexOf(symptomId)
-  if (idx === -1) ev.symptomIds.push(symptomId)
-  else ev.symptomIds.splice(idx, 1)
-}
-function isSelected(symptomId: string) {
-  if (activeEventIndex.value === null) return false
-  return timeline.value[activeEventIndex.value].symptomIds.includes(symptomId)
 }
 
 // ---------- Physical Exam ----------
@@ -167,7 +153,6 @@ async function handleSave() {
       vitalSigns: JSON.parse(JSON.stringify(vitalSigns.value)),
       systems: JSON.parse(JSON.stringify(examSystems.value)),
     },
-    review_of_systems: {}, // placeholder for future
     lab_results: JSON.parse(JSON.stringify(labs.value.filter(l => l.testName.trim() !== ''))),
     diagnosis: {
       working: workingDiagnosis.value,
@@ -175,7 +160,7 @@ async function handleSave() {
       final: finalDiagnosis.value,
     },
     reasoning: reasoning.value,
-    summary: '', // can be auto-generated later
+    summary: '',
   }
 
   try {
@@ -246,33 +231,35 @@ async function handleSave() {
       </div>
     </section>
 
-    <!-- Bệnh sử & Tiền căn (Timeline) -->
+    <!-- Bệnh sử & Tiền căn (Timeline with full sub‑questions) -->
     <section class="card p-4">
-      <h2 class="card-title">III. Bệnh sử & Tiền căn (Timeline)</h2>
+      <h2 class="card-title">III. Bệnh sử & Tiền căn (Theo mốc thời gian)</h2>
       <div class="space-y-4 mt-3">
         <div v-for="(ev, idx) in timeline" :key="ev.id" class="border border-stone-200 dark:border-stone-700 rounded-lg p-3">
-          <div class="flex items-start justify-between gap-2">
+          <div class="flex items-start justify-between gap-2 mb-3">
             <input v-model="ev.timeLabel" type="text" class="input-field flex-1" placeholder="CNV 19 giờ..." />
             <button v-if="timeline.length > 1" @click="removeEvent(idx)" class="text-red-500 hover:text-red-700 text-sm">Xoá</button>
           </div>
-          <textarea v-model="ev.narrative" rows="3" class="input-field mt-2 w-full" placeholder="Diễn biến..."></textarea>
-          <!-- Symptoms -->
-          <div class="mt-2 flex flex-wrap gap-1">
-            <span v-for="sid in ev.symptomIds" :key="sid" class="bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-200 text-xs px-2 py-0.5 rounded-full">
-              {{ symptomVocabulary.find(s => s.id === sid)?.text || sid }}
-            </span>
-            <button @click="openSymptomPicker(idx)" class="text-xs text-purple-600 hover:underline">+ Thêm triệu chứng</button>
-          </div>
-          <!-- Symptom picker popup -->
-          <div v-if="activeEventIndex === idx" class="mt-2 p-2 bg-white dark:bg-stone-800 border rounded shadow">
-            <input v-model="symptomSearch" type="text" class="input-field mb-2 w-full" placeholder="Tìm triệu chứng..." />
-            <div class="max-h-40 overflow-y-auto space-y-1">
-              <label v-for="s in filteredSymptoms" :key="s.id" class="flex items-center gap-2 text-sm cursor-pointer">
-                <input type="checkbox" :checked="isSelected(s.id)" @change="toggleSymptom(s.id)" class="accent-purple-500" />
-                {{ s.text }}
-              </label>
+
+          <!-- Render full checklist for this event -->
+          <div v-for="section in checklistSections" :key="section.title" class="mb-4">
+            <h3 class="text-sm font-semibold text-purple-600 dark:text-purple-400 mb-2">{{ section.title }}</h3>
+            <div v-for="mq in section.mainQuestions" :key="mq.id" class="mb-3">
+              <h4 class="text-sm font-medium opacity-90 mb-1">{{ mq.title }}</h4>
+              <div v-if="mq.subQuestions.length > 0" class="ml-3 space-y-2">
+                <div v-for="sq in mq.subQuestions" :key="sq.id" class="flex flex-col gap-1">
+                  <label :for="`q-${ev.id}-${sq.id}`" class="text-sm opacity-70">{{ sq.text }}</label>
+                  <input
+                    :id="`q-${ev.id}-${sq.id}`"
+                    v-model="ev.answers[sq.id]"
+                    type="text"
+                    class="input-field"
+                    placeholder="Nhập câu trả lời..."
+                  />
+                </div>
+              </div>
+              <p v-else class="ml-3 text-xs opacity-60 italic">Quan sát kỹ năng này trong quá trình hỏi bệnh.</p>
             </div>
-            <button @click="closeSymptomPicker" class="mt-2 text-xs text-purple-600">Đóng</button>
           </div>
         </div>
         <button @click="addEvent" class="text-sm text-purple-600 hover:underline">+ Thêm mốc thời gian</button>
