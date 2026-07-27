@@ -26,11 +26,18 @@ const displayNameToKey = Object.fromEntries(
 const reasonDisplay = ref('Tiêu phân đen')
 const selectedChecklistKey = computed(() => displayNameToKey[reasonDisplay.value] ?? 'tieu-phan-den')
 
-// Get the full list of sections (excluding KỸ NĂNG GIAO TIẾP) for rendering sub‑questions
-const checklistSections = computed(() => {
-  const raw = checklists[selectedChecklistKey.value] ?? []
-  return raw.filter(s => s.title !== 'KỸ NĂNG GIAO TIẾP')
-})
+// Split the checklist sections
+const allSections = computed(() => checklists[selectedChecklistKey.value] ?? [])
+
+// Only HỎI BỆNH SỬ for the timeline
+const historySections = computed(() =>
+  allSections.value.filter(s => s.title === 'HỎI BỆNH SỬ')
+)
+
+// Only TIỀN CĂN for the separate past history block
+const tienCanSections = computed(() =>
+  allSections.value.filter(s => s.title === 'TIỀN CĂN')
+)
 
 // ---------- Patient info ----------
 const patientName = ref('')
@@ -51,48 +58,63 @@ const age = computed(() => {
   return a > 0 ? `${a} tuổi` : ''
 })
 
-// ---------- Timeline events with full sub‑questions ----------
+// ---------- Timeline events (only history) ----------
 interface TimelineEvent {
   id: string
   timeLabel: string
-  answers: Record<string, string> // key = sub‑question id
+  answers: Record<string, string>   // keys = sub‑question ids from historySections
 }
 let eventCounter = 0
 
-// Helper to create a blank answers object for all sub‑questions
-function createEmptyAnswers(): Record<string, string> {
-  const answers: Record<string, string> = {}
-  for (const section of checklistSections.value) {
+function createEmptyHistoryAnswers(): Record<string, string> {
+  const ans: Record<string, string> = {}
+  for (const section of historySections.value) {
     for (const mq of section.mainQuestions) {
       for (const sq of mq.subQuestions) {
-        answers[sq.id] = ''
+        ans[sq.id] = ''
       }
     }
   }
-  return answers
+  return ans
 }
 
 const timeline = ref<TimelineEvent[]>([
-  { id: `ev${++eventCounter}`, timeLabel: '', answers: createEmptyAnswers() }
+  { id: `ev${++eventCounter}`, timeLabel: '', answers: createEmptyHistoryAnswers() }
 ])
 
-// Watch for checklist changes to re‑initialize existing events' answers
+// When checklist changes, re‑init timeline answers and tiền căn answers
 watch(selectedChecklistKey, () => {
   timeline.value.forEach(ev => {
-    ev.answers = createEmptyAnswers()
+    ev.answers = createEmptyHistoryAnswers()
   })
+  // also reset tiền căn answers
+  tienCanAnswers.value = createEmptyTienCanAnswers()
 })
 
 function addEvent() {
   timeline.value.push({
     id: `ev${++eventCounter}`,
     timeLabel: '',
-    answers: createEmptyAnswers()
+    answers: createEmptyHistoryAnswers()
   })
 }
 function removeEvent(index: number) {
   if (timeline.value.length > 1) timeline.value.splice(index, 1)
 }
+
+// ---------- TIỀN CĂN (separate, not in timeline) ----------
+function createEmptyTienCanAnswers(): Record<string, string> {
+  const ans: Record<string, string> = {}
+  for (const section of tienCanSections.value) {
+    for (const mq of section.mainQuestions) {
+      for (const sq of mq.subQuestions) {
+        ans[sq.id] = ''
+      }
+    }
+  }
+  return ans
+}
+const tienCanAnswers = ref<Record<string, string>>(createEmptyTienCanAnswers())
 
 // ---------- Physical Exam ----------
 const vitalSigns = ref({
@@ -149,6 +171,7 @@ async function handleSave() {
     admission_time: admissionTime.value || null,
     chief_complaint: reasonDisplay.value,
     timeline: JSON.parse(JSON.stringify(timeline.value)),
+    tien_can: JSON.parse(JSON.stringify(tienCanAnswers.value)),
     physical_exam: {
       vitalSigns: JSON.parse(JSON.stringify(vitalSigns.value)),
       systems: JSON.parse(JSON.stringify(examSystems.value)),
@@ -179,7 +202,7 @@ async function handleSave() {
   <div class="mx-auto max-w-4xl px-4 py-6 font-sans dark:text-gray-100 space-y-6">
     <h1 class="text-xl font-bold">BỆNH ÁN TOÀN DIỆN</h1>
 
-    <!-- Hành chính -->
+    <!-- I. Hành chính -->
     <section class="card p-4">
       <h2 class="card-title">I. Hành chính</h2>
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-3">
@@ -222,7 +245,7 @@ async function handleSave() {
       </div>
     </section>
 
-    <!-- Lý do nhập viện -->
+    <!-- II. Lý do nhập viện -->
     <section class="card p-4">
       <h2 class="card-title">II. Lý do nhập viện</h2>
       <div class="flex items-center gap-3 mt-3">
@@ -231,31 +254,24 @@ async function handleSave() {
       </div>
     </section>
 
-    <!-- Bệnh sử & Tiền căn (Timeline with full sub‑questions) -->
+    <!-- III. Bệnh sử (Timeline) -->
     <section class="card p-4">
-      <h2 class="card-title">III. Bệnh sử & Tiền căn (Theo mốc thời gian)</h2>
+      <h2 class="card-title">III. Bệnh sử (Theo mốc thời gian)</h2>
       <div class="space-y-4 mt-3">
         <div v-for="(ev, idx) in timeline" :key="ev.id" class="border border-stone-200 dark:border-stone-700 rounded-lg p-3">
           <div class="flex items-start justify-between gap-2 mb-3">
-            <input v-model="ev.timeLabel" type="text" class="input-field flex-1" placeholder="CNV 19 giờ..." />
+            <input v-model="ev.timeLabel" type="text" class="input-field flex-1" placeholder="VD: CNV 19 giờ, 10/07/2026" />
             <button v-if="timeline.length > 1" @click="removeEvent(idx)" class="text-red-500 hover:text-red-700 text-sm">Xoá</button>
           </div>
 
-          <!-- Render full checklist for this event -->
-          <div v-for="section in checklistSections" :key="section.title" class="mb-4">
-            <h3 class="text-sm font-semibold text-purple-600 dark:text-purple-400 mb-2">{{ section.title }}</h3>
+          <!-- Render only history sub‑questions for this event -->
+          <div v-for="section in historySections" :key="section.title">
             <div v-for="mq in section.mainQuestions" :key="mq.id" class="mb-3">
-              <h4 class="text-sm font-medium opacity-90 mb-1">{{ mq.title }}</h4>
+              <h4 class="text-sm font-semibold opacity-90 mb-2">{{ mq.title }}</h4>
               <div v-if="mq.subQuestions.length > 0" class="ml-3 space-y-2">
                 <div v-for="sq in mq.subQuestions" :key="sq.id" class="flex flex-col gap-1">
                   <label :for="`q-${ev.id}-${sq.id}`" class="text-sm opacity-70">{{ sq.text }}</label>
-                  <input
-                    :id="`q-${ev.id}-${sq.id}`"
-                    v-model="ev.answers[sq.id]"
-                    type="text"
-                    class="input-field"
-                    placeholder="Nhập câu trả lời..."
-                  />
+                  <input :id="`q-${ev.id}-${sq.id}`" v-model="ev.answers[sq.id]" type="text" class="input-field" placeholder="Nhập câu trả lời..." />
                 </div>
               </div>
               <p v-else class="ml-3 text-xs opacity-60 italic">Quan sát kỹ năng này trong quá trình hỏi bệnh.</p>
@@ -266,9 +282,28 @@ async function handleSave() {
       </div>
     </section>
 
-    <!-- Khám lâm sàng -->
+    <!-- IV. Tiền căn (separate) -->
+    <section v-if="tienCanSections.length > 0" class="card p-4">
+      <h2 class="card-title">IV. Tiền căn</h2>
+      <div class="space-y-4 mt-3">
+        <div v-for="section in tienCanSections" :key="section.title">
+          <div v-for="mq in section.mainQuestions" :key="mq.id" class="mb-3">
+            <h4 class="text-sm font-semibold opacity-90 mb-2">{{ mq.title }}</h4>
+            <div v-if="mq.subQuestions.length > 0" class="ml-3 space-y-2">
+              <div v-for="sq in mq.subQuestions" :key="sq.id" class="flex flex-col gap-1">
+                <label :for="`tien-can-${sq.id}`" class="text-sm opacity-70">{{ sq.text }}</label>
+                <input :id="`tien-can-${sq.id}`" v-model="tienCanAnswers[sq.id]" type="text" class="input-field" placeholder="Nhập câu trả lời..." />
+              </div>
+            </div>
+            <p v-else class="ml-3 text-xs opacity-60 italic">Quan sát kỹ năng này trong quá trình hỏi bệnh.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- V. Khám lâm sàng -->
     <section class="card p-4">
-      <h2 class="card-title">IV. Khám lâm sàng</h2>
+      <h2 class="card-title">V. Khám lâm sàng</h2>
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-3">
         <label class="flex flex-col gap-1">
           <span class="text-xs font-medium opacity-60">Mạch (l/ph)</span>
@@ -319,9 +354,9 @@ async function handleSave() {
       </div>
     </section>
 
-    <!-- Cận lâm sàng -->
+    <!-- VI. Cận lâm sàng -->
     <section class="card p-4">
-      <h2 class="card-title">V. Cận lâm sàng</h2>
+      <h2 class="card-title">VI. Cận lâm sàng</h2>
       <div class="overflow-x-auto mt-3">
         <table class="text-sm w-full border-collapse">
           <thead>
@@ -349,9 +384,9 @@ async function handleSave() {
       </div>
     </section>
 
-    <!-- Chẩn đoán & Biện luận -->
+    <!-- VII. Chẩn đoán & Biện luận -->
     <section class="card p-4">
-      <h2 class="card-title">VI. Chẩn đoán & Biện luận</h2>
+      <h2 class="card-title">VII. Chẩn đoán & Biện luận</h2>
       <div class="space-y-3 mt-3">
         <label class="flex flex-col gap-1">
           <span class="text-xs font-medium opacity-60">Chẩn đoán sơ bộ</span>
