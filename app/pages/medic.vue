@@ -1,105 +1,54 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { checklists } from '~/data/medic'
 
-// --- Meta & Island (optional, keep your existing island system) ---
-useHead({
-  title: 'Bảng kiểm Tiêu phân đen – Medic Island',
-  meta: [{ name: 'description', content: 'Practice history-taking for melena' }],
-})
-definePageMeta({ title: 'Medic Island', titleIcon: 'i-mdi:clipboard-check' })
+// --- Checklist selection ---
+const checklistLabels: Record<string, string> = {
+  'tieu-phan-den': 'Tiêu phân đen',
+  'non-ra-mau': 'Nôn ra máu',
+  'dau-nguc': 'Đau ngực',
+  'kho-tho': 'Khó thở',
+  'ho-ra-mau': 'Ho ra máu',
+  'sot': 'Sốt',
+  'tang-huyet-ap': 'Tăng huyết áp',
+  'bang-bung': 'Báng bụng',
+  'vang-da': 'Vàng da',
+  'tieu-mau': 'Tiểu máu',
+  'tieu-it': 'Tiểu ít',
+  'phu': 'Phù',
+}
 
-// --- Checklist data (hierarchical) ---
-const sections = [
-  {
-    title: 'HỎI BỆNH SỬ',
-    mainQuestions: [
-      {
-        id: 'h7',
-        title: 'Có thực sự là tiêu phân đen',
-        subQuestions: [
-          { id: 'h7a', text: 'Có sử dụng thực phẩm: tiết canh, thức ăn màu đỏ?' },
-          { id: 'h7b', text: 'Có dùng thuốc trị dạ dày (Bismuth), thực phẩm bổ sung sắt?' },
-          { id: 'h7c', text: 'Chấn thương? Dập nát cơ?' },
-        ],
-      },
-      {
-        id: 'h8',
-        title: 'Tính chất tiêu phân đen',
-        subQuestions: [
-          { id: 'h8a', text: 'Hoàn cảnh khởi phát? Cách đây bao lâu?' },
-          { id: 'h8b', text: 'Lượng? Số lần?' },
-          { id: 'h8c', text: 'Màu sắc? (Đen toàn bãi? Lẫn vàng?)' },
-          { id: 'h8d', text: 'Kèm nhầy? Máu đỏ? Bóng?' },
-          { id: 'h8e', text: 'Mùi? (hôi, tanh)' },
-          { id: 'h8f', text: 'Lỏng / đặc / sệt' },
-          { id: 'h8g', text: 'Tăng/giảm (độ lỏng, số lần, lượng)' },
-        ],
-      },
-      {
-        id: 'h9',
-        title: 'Triệu chứng kèm theo',
-        subQuestions: [
-          { id: 'h9a', text: 'Lạnh run, vã mồ hôi, khát nước' },
-          { id: 'h9b', text: 'Chóng mặt, choáng váng, ngất' },
-          { id: 'h9c', text: 'Nước tiểu (đánh giá biến chứng suy thận cấp)' },
-          { id: 'h9d', text: 'Nôn, nôn ra máu (khai thác đầy đủ tính chất nôn ra máu)' },
-          { id: 'h9e', text: 'Đau bụng (thượng vị, …)' },
-          { id: 'h9f', text: 'Mệt mỏi, chán ăn, sụt cân?' },
-          { id: 'h9g', text: 'Ợ hơi, ợ chua' },
-        ],
-      },
-    ],
-  },
-  {
-    title: 'TIỀN CĂN',
-    mainQuestions: [
-      {
-        id: 't10',
-        title: 'Tiền căn tiêu phân đen? Giống lần này? (đi khám và chẩn đoán gì?)',
-        subQuestions: [
-          { id: 't10a', text: 'Mô tả' },
-        ],
-      },
-      {
-        id: 't11',
-        title: 'Bệnh lý nội khoa',
-        subQuestions: [
-          { id: 't11a', text: 'Tiền căn nội soi tiêu hoá' },
-          { id: 't11b', text: 'Bệnh lý đường tiêu hoá: trào ngược dạ dày thực quản (nuốt khó, ợ nóng, ợ chua, buồn nôn), nhiễm Hp, trĩ' },
-          { id: 't11c', text: 'Viêm gan siêu vi, chích ngừa viêm gan, xơ gan, ung thư' },
-          { id: 't11d', text: 'Bệnh lý khác: Đái tháo đường, THA, bệnh tim mạch, huyết học' },
-        ],
-      },
-      {
-        id: 't12',
-        title: 'Bệnh lý ngoại khoa: Phẫu thuật? Sản khoa - PARA',
-        subQuestions: [
-          { id: 't12a', text: 'Mô tả' },
-        ],
-      },
-    ],
-  },
-]
+const selectedChecklistKey = ref('tieu-phan-den')
+const checklistOptions = computed(() => Object.keys(checklists))
+
+const sections = computed(() => checklists[selectedChecklistKey.value] ?? [])
 
 // --- Patient info ---
 const patientName = ref('')
-const dob = ref('') // ISO date string
+const dob = ref('')
 const occupation = ref('')
 const address = ref('')
 const ward = ref('')
 
 // --- Answers state ---
 const answers = ref<Record<string, string>>({})
-// Initialize all sub-questions with empty strings
-for (const section of sections) {
-  for (const mq of section.mainQuestions) {
-    for (const sq of mq.subQuestions) {
-      answers.value[sq.id] = ''
+
+// Watch for checklist changes to re‑initialize answers
+import { watch } from 'vue'
+watch(selectedChecklistKey, () => {
+  // Reset answers when switching checklists
+  const newAnswers: Record<string, string> = {}
+  for (const section of sections.value) {
+    for (const mq of section.mainQuestions) {
+      for (const sq of mq.subQuestions) {
+        newAnswers[sq.id] = ''
+      }
     }
   }
-}
+  answers.value = newAnswers
+}, { immediate: true })
 
-// --- Auto‑calculate age from DOB ---
+// --- Auto‑calculate age ---
 const age = computed(() => {
   if (!dob.value) return ''
   const birth = new Date(dob.value)
@@ -119,7 +68,6 @@ const saved = ref(false)
 const saveError = ref<string | null>(null)
 
 async function handleSave() {
-  // Basic validation
   if (!patientName.value.trim() || !dob.value) {
     saveError.value = 'Vui lòng điền ít nhất Họ tên và Ngày tháng năm sinh.'
     return
@@ -136,7 +84,7 @@ async function handleSave() {
       occupation: occupation.value.trim(),
       address: address.value.trim(),
       ward: ward.value.trim(),
-      answers: JSON.parse(JSON.stringify(answers.value)), // ensure plain object
+      answers: JSON.parse(JSON.stringify(answers.value)),
     })
 
     if (error) throw error
@@ -154,9 +102,15 @@ function resetForm() {
   occupation.value = ''
   address.value = ''
   ward.value = ''
-  for (const key of Object.keys(answers.value)) {
-    answers.value[key] = ''
+  const newAnswers: Record<string, string> = {}
+  for (const section of sections.value) {
+    for (const mq of section.mainQuestions) {
+      for (const sq of mq.subQuestions) {
+        newAnswers[sq.id] = ''
+      }
+    }
   }
+  answers.value = newAnswers
   saved.value = false
   saveError.value = null
 }
@@ -164,9 +118,16 @@ function resetForm() {
 
 <template>
   <div class="mx-auto max-w-4xl px-4 py-6 font-sans dark:text-gray-100">
-    <h1 class="text-xl font-bold mb-6">
-      BẢNG KIỂM KỸ NĂNG HỎI BỆNH SỬ TIÊU PHÂN ĐEN
-    </h1>
+    <div class="flex items-center justify-between mb-6">
+      <h1 class="text-xl font-bold">
+        BẢNG KIỂM KỸ NĂNG HỎI BỆNH SỬ
+      </h1>
+      <Select
+        v-model="selectedChecklistKey"
+        :options="checklistOptions"
+        class="w-48"
+      />
+    </div>
 
     <!-- Patient info card -->
     <div class="card p-5 mb-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -225,7 +186,7 @@ function resetForm() {
       </label>
     </div>
 
-    <!-- Questions -->
+    <!-- Questions (dynamic per selected checklist) -->
     <div class="space-y-6">
       <section
         v-for="section in sections"
@@ -245,7 +206,11 @@ function resetForm() {
             {{ mq.title }}
           </h3>
 
-          <div class="ml-4 space-y-3">
+          <!-- If there are sub‑questions, show text inputs -->
+          <div
+            v-if="mq.subQuestions.length > 0"
+            class="ml-4 space-y-3"
+          >
             <div
               v-for="sq in mq.subQuestions"
               :key="sq.id"
@@ -266,6 +231,14 @@ function resetForm() {
               />
             </div>
           </div>
+
+          <!-- If no sub‑questions, this is a pure skill observation — display as a note -->
+          <p
+            v-else
+            class="ml-4 text-sm opacity-60 italic"
+          >
+            Quan sát kỹ năng này trong quá trình hỏi bệnh.
+          </p>
         </div>
       </section>
     </div>
