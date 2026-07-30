@@ -145,7 +145,6 @@ function resetForm() {
       aria-label="Full Workout Table"
       title="Full Table"
       class="ml-auto"
-      target="_blank"
     >
       <div
         class="i-solar:arrow-right-up-line-duotone dark:i-solar:arrow-right-up-bold-duotone text-2xl cursor-pointer"
