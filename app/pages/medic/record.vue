@@ -203,6 +203,32 @@ function symptomLabel(id: string): string {
   return id
 }
 
+// ---------- Auto‑generated summary of the history ----------
+const historySummary = computed(() => {
+  return timeline.value.map(ev => {
+    const items: { label: string; answer: string }[] = []
+    for (const section of historySections.value) {
+      for (const mq of section.mainQuestions) {
+        for (const sq of mq.subQuestions) {
+          // Skip hidden removable symptoms
+          if (removableSymptomIds.value.has(sq.id) && !ev.symptomOrder.includes(sq.id)) continue
+          const value = ev.answers[sq.id]
+          let answer = ''
+          if (typeof value === 'boolean') {
+            answer = value ? 'Có' : 'Không'
+          } else if (value === '') {
+            answer = '—'
+          } else {
+            answer = value
+          }
+          items.push({ label: sq.text, answer })
+        }
+      }
+    }
+    return { timeLabel: ev.timeLabel, items }
+  })
+})
+
 // ---------- TIỀN CĂN (separate, not in timeline) ----------
 function createEmptyTienCanAnswers(): Record<string, string | boolean> {
   const ans: Record<string, string | boolean> = {}
@@ -505,6 +531,19 @@ async function handleSave() {
           </div>
         </div>
         <button @click="addEvent" class="text-sm text-purple-600 hover:underline">+ Thêm mốc thời gian</button>
+      </div>
+    </section>
+
+    <!-- Tóm tắt bệnh sử (auto‑generated) -->
+    <section v-if="timeline.length > 0" class="card p-4">
+      <h2 class="card-title">Tóm tắt bệnh sử</h2>
+      <div v-for="(ev, idx) in historySummary" :key="idx" class="mb-4">
+        <p class="text-sm font-semibold opacity-80 mb-1">{{ ev.timeLabel || '(Chưa có mốc thời gian)' }}</p>
+        <ul class="space-y-1">
+          <li v-for="(item, i) in ev.items" :key="i" class="text-sm">
+            <span class="opacity-60">{{ item.label }}:</span> {{ item.answer }}
+          </li>
+        </ul>
       </div>
     </section>
 
