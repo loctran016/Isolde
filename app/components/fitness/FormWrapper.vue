@@ -43,11 +43,12 @@ const open = defineModel<boolean>('open', { default: false })
               :animate="{ opacity: 1, top: '50%' }"
               :exit="{ opacity: 0, top: '30%' }"
             >
-              <DialogTitle
-                class="font-semibold font-head text-lg mb-5 leading-normal dark:text-gray-100"
-              >
-                {{ title }}
-              </DialogTitle>
+              <div class="mb-5 flex items-center justify-between gap-2">
+                <DialogTitle class="font-semibold font-head text-lg leading-normal dark:text-gray-100">
+                  {{ title }}
+                </DialogTitle>
+                <slot name="title-actions" />
+              </div>
 
               <slot />
 
