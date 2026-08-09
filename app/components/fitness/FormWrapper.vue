@@ -10,7 +10,15 @@ import {
 } from 'reka-ui'
 import { AnimatePresence, Motion } from 'motion-v'
 
-defineProps<{ title: string }>()
+const props = withDefaults(
+  defineProps<{
+    title: string
+    contentClass?: string
+  }>(),
+  {
+    contentClass: '',
+  },
+)
 const open = defineModel<boolean>('open', { default: false })
 </script>
 
@@ -36,7 +44,10 @@ const open = defineModel<boolean>('open', { default: false })
 
           <DialogContent
             as-child
-            class="fixed top-1/2 left-1/2 max-h-[85vh] w-[90vw] max-w-[450px] -translate-x-1/2 -translate-y-1/2 card dark:text-gray-100 shadow-[hsl(206_22%_7%_/_35%)_0px_10px_38px_-10px,hsl(206_22%_7%_/_20%)_0px_10px_20px_-15px] focus:outline-none z-10"
+            :class="[
+              'fixed top-1/2 left-1/2 max-h-[85vh] w-[90vw] max-w-[450px] -translate-x-1/2 -translate-y-1/2 card dark:text-gray-100 shadow-[hsl(206_22%_7%_/_35%)_0px_10px_38px_-10px,hsl(206_22%_7%_/_20%)_0px_10px_20px_-15px] focus:outline-none z-10',
+              props.contentClass,
+            ]"
           >
             <Motion
               :initial="{ opacity: 0, top: '30%' }"
@@ -45,7 +56,7 @@ const open = defineModel<boolean>('open', { default: false })
             >
               <div class="mb-5 flex items-center justify-between gap-2">
                 <DialogTitle class="font-semibold font-head text-lg leading-normal dark:text-gray-100">
-                  {{ title }}
+                  {{ props.title }}
                 </DialogTitle>
                 <slot name="title-actions" />
               </div>

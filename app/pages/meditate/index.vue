@@ -343,7 +343,11 @@ onBeforeUnmount(() => {
         <ClientOnly>
           <div class="flex items-center gap-2">
             <SelectGrouped v-model="selectedMonthYear" :groups="monthYearGroups" />
-            <FormWrapper v-model:open="isEditDialogOpen" title="Edit Meditation Log">
+            <FormWrapper
+              v-model:open="isEditDialogOpen"
+              title="Edit Meditation Log"
+              content-class="max-h-[80vh] w-[95vw] max-w-[760px] lt-sm:overflow-y-auto"
+            >
               <template #trigger>
                 <button
                   type="button"
@@ -364,11 +368,11 @@ onBeforeUnmount(() => {
                 />
               </template>
 
-              <form class="space-y-3" @submit.prevent="saveEditLogs">
+              <form class="grid gap-3 sm:grid-cols-2 sm:gap-4" @submit.prevent="saveEditLogs">
                 <div
                   v-for="practice in MEDITATION_PRACTICES"
                   :key="`edit-${practice.key}`"
-                  class="grid grid-cols-[1fr_auto] items-center gap-3"
+                  class="rounded-md border border-stone-800/10 dark:border-stone-100/10 p-2 grid grid-cols-[1fr_auto] items-center gap-3"
                 >
                   <div class="min-w-0">
                     <p class="text-sm font-medium truncate">{{ practice.label }}</p>
@@ -384,14 +388,17 @@ onBeforeUnmount(() => {
                   />
                 </div>
 
-                <p v-if="editError" class="text-sm text-red-600 dark:text-red-400 bg-red-950/60">
+                <p
+                  v-if="editError"
+                  class="text-sm text-red-600 dark:text-red-400 bg-red-950/60 sm:col-span-2"
+                >
                   {{ editError }}
                 </p>
 
                 <button
                   type="submit"
                   :disabled="editSaving"
-                  class="flex ml-auto px-3 py-2 mt-6 hover:scale-101 hover:-translate-y-0.5 hover:shadow-lg items-center justify-center border-1 border-stone-700/90 dark:border-stone-100/50 hover:dark:border-stone-100/80 transition-all duration-200 rounded-md px-[15px] leading-none focus:shadow-[0_0_0_2px] focus:outline-none cursor-pointer disabled:opacity-60"
+                  class="flex ml-auto sm:col-span-2 px-3 py-2 mt-2 hover:scale-101 hover:-translate-y-0.5 hover:shadow-lg items-center justify-center border-1 border-stone-700/90 dark:border-stone-100/50 hover:dark:border-stone-100/80 transition-all duration-200 rounded-md px-[15px] leading-none focus:shadow-[0_0_0_2px] focus:outline-none cursor-pointer disabled:opacity-60"
                 >
                   {{ editSaving ? 'Saving...' : 'Save changes' }}
                 </button>
