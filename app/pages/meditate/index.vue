@@ -1,5 +1,5 @@
 <script setup>
-import { h, ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { h, ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { today, parseDate } from '@internationalized/date'
 import { createColumnHelper, FlexRender, getCoreRowModel, useVueTable } from '@tanstack/vue-table'
 import { MEDITATION_PRACTICES } from '~/data/meditationPractices'
@@ -39,6 +39,11 @@ const logIndex = computed(() => {
 })
 
 const pending = ref({})
+const isEditDialogOpen = ref(false)
+const selectedEditDate = ref(todayIso)
+const editCounts = ref({})
+const editSaving = ref(false)
+const editError = ref('')
 
 async function tapPractice(practice) {
   if (pending.value[practice.key]) return
@@ -70,6 +75,65 @@ async function tapPractice(practice) {
 
 function todayCountFor(key) {
   return logIndex.value[key]?.[todayIso]?.count ?? 0
+}
+
+function hydrateEditCounts() {
+  const next = {}
+  for (const practice of MEDITATION_PRACTICES) {
+    next[practice.key] = logIndex.value[practice.key]?.[selectedEditDate.value]?.count ?? 0
+  }
+  editCounts.value = next
+}
+
+watch([selectedEditDate, logs], hydrateEditCounts, { immediate: true })
+
+watch(isEditDialogOpen, (open) => {
+  if (!open) return
+  editError.value = ''
+  hydrateEditCounts()
+})
+
+async function saveEditLogs() {
+  if (editSaving.value) return
+
+  editError.value = ''
+  editSaving.value = true
+
+  try {
+    const ops = []
+    for (const practice of MEDITATION_PRACTICES) {
+      const parsed = Number(editCounts.value[practice.key] ?? 0)
+      const nextCount = Number.isFinite(parsed) ? Math.max(0, Math.trunc(parsed)) : 0
+      const existing = logIndex.value[practice.key]?.[selectedEditDate.value]
+
+      if (existing) {
+        if (nextCount <= 0) {
+          ops.push(supabase.from('meditation_logs').delete().eq('id', existing.id))
+        } else if (existing.count !== nextCount) {
+          ops.push(supabase.from('meditation_logs').update({ count: nextCount }).eq('id', existing.id))
+        }
+      } else if (nextCount > 0) {
+        ops.push(supabase.from('meditation_logs').insert({
+          practice_key: practice.key,
+          date: selectedEditDate.value,
+          count: nextCount,
+        }))
+      }
+    }
+
+    if (ops.length) {
+      const results = await Promise.all(ops)
+      const failed = results.find((result) => result.error)
+      if (failed?.error) throw failed.error
+    }
+
+    await refreshLogs()
+    isEditDialogOpen.value = false
+  } catch (e) {
+    editError.value = e?.message ?? 'Failed to save meditation logs.'
+  } finally {
+    editSaving.value = false
+  }
 }
 
 const MONTH_NAMES = [
@@ -279,6 +343,67 @@ onBeforeUnmount(() => {
         <ClientOnly>
           <div class="flex items-center gap-2">
             <SelectGrouped v-model="selectedMonthYear" :groups="monthYearGroups" />
+            <FormWrapper
+              v-model:open="isEditDialogOpen"
+              title="Edit Meditation Log"
+              content-class="max-h-[80vh] w-[95vw] max-w-[760px] lt-sm:overflow-y-auto"
+            >
+              <template #trigger>
+                <button
+                  type="button"
+                  class="p-2 rounded-lg border border-stone-800/20 dark:border-stone-100/20 hover:border-purple-400/50 hover:bg-purple-400/10 transition-colors cursor-pointer"
+                  aria-label="Edit meditation log"
+                  title="Edit meditation log"
+                >
+                  <div class="i-solar:pen-2-bold-duotone text-lg" />
+                </button>
+              </template>
+
+              <template #title-actions>
+                <input
+                  v-model="selectedEditDate"
+                  type="date"
+                  class="h-7 px-2 rounded-md border border-stone-800/20 dark:border-stone-100/20 bg-transparent text-xs focus:outline-none focus:border-purple-400/70"
+                  aria-label="Select date to edit"
+                />
+              </template>
+
+              <form class="grid gap-3 sm:grid-cols-2 sm:gap-4" @submit.prevent="saveEditLogs">
+                <div
+                  v-for="practice in MEDITATION_PRACTICES"
+                  :key="`edit-${practice.key}`"
+                  class="rounded-md border border-stone-800/10 dark:border-stone-100/10 p-2 grid grid-cols-[1fr_auto] items-center gap-3"
+                >
+                  <div class="min-w-0">
+                    <p class="text-sm font-medium truncate">{{ practice.label }}</p>
+                    <p class="text-xs opacity-60 truncate">{{ practice.unit }}</p>
+                  </div>
+                  <input
+                    v-model.number="editCounts[practice.key]"
+                    type="number"
+                    inputmode="numeric"
+                    min="0"
+                    step="1"
+                    class="w-20 text-right focus:outline-none border-b-gray-500/30 dark:border-b-gray-100/50 focus:border-purple-600 transition-all duration-200 border px-2 py-1 border-0 border-b-2"
+                  />
+                </div>
+
+                <p
+                  v-if="editError"
+                  class="text-sm text-red-600 dark:text-red-400 bg-red-950/60 sm:col-span-2"
+                >
+                  {{ editError }}
+                </p>
+
+                <button
+                  type="submit"
+                  :disabled="editSaving"
+                  class="flex ml-auto sm:col-span-2 px-3 py-2 mt-2 hover:scale-101 hover:-translate-y-0.5 hover:shadow-lg items-center justify-center border-1 border-stone-700/90 dark:border-stone-100/50 hover:dark:border-stone-100/80 transition-all duration-200 rounded-md px-[15px] leading-none focus:shadow-[0_0_0_2px] focus:outline-none cursor-pointer disabled:opacity-60"
+                >
+                  {{ editSaving ? 'Saving...' : 'Save changes' }}
+                </button>
+              </form>
+            </FormWrapper>
             <button
               type="button"
               class="p-2 rounded-lg border border-stone-800/20 dark:border-stone-100/20 hover:border-purple-400/50 hover:bg-purple-400/10 transition-colors cursor-pointer"
