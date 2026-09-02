@@ -329,7 +329,7 @@ async function onSubmit() {
               >
                 +
               </button>
-              <span class="text-sm shrink-0">kg</span>
+              <span class="lt-sm:hidden text-sm shrink-0">kg</span>
 
               <!--
                 Duplicate / remove actions — grouped so they wrap together
