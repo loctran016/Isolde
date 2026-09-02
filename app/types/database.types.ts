@@ -31,6 +31,10 @@ export type StrengthExercise =
   | 'Cable Fly'
   | 'Incline Cable Fly'
   | 'Pec Deck Fly'
+  | 'TNG Chest Press'
+  | 'TNG Pure Chest Press'
+  | 'TNG Pectoral Fly'
+  | 'TNG Pure Pectoral Fly'
 
   // Front delts
   | 'Barbell Overhead Press'
@@ -38,6 +42,8 @@ export type StrengthExercise =
   | 'Arnold Press'
   | 'Machine Shoulder Press'
   | 'Front Raise'
+  | 'TNG Shoulder Press'
+  | 'TNG Pure Shoulder Press'
 
   // Side delts
   | 'DB Lateral Raise'
@@ -45,6 +51,8 @@ export type StrengthExercise =
   | 'Machine Lateral Raise'
   | 'Leaning Cable Lateral Raise'
   | 'Upright Row'
+  | 'TNG Lateral Raise'
+  | 'TNG Pure Lateral Raise'
 
   // Rear delts
   | 'Rear Delt Fly'
@@ -52,6 +60,8 @@ export type StrengthExercise =
   | 'Face Pull'
   | 'Cable Rear Delt Fly'
   | 'Chest-Supported Rear Delt Raise'
+  | 'TNG Rear Delt Fly'
+  | 'TNG Pure Rear Delt Fly'
 
   // Lats
   | 'Pull-Up'
@@ -61,6 +71,11 @@ export type StrengthExercise =
   | 'Single-Arm Lat Pulldown'
   | 'Chest-supported Row'
   | 'DB Row'
+  | 'TNG Lat Pulldown'
+  | 'TNG Pure Lat Pulldown'
+  | 'TNG Pulley'
+  | 'TNG Row'
+  | 'TNG Pure Row'
 
   // Traps
   | 'DB Shrug'
@@ -90,6 +105,9 @@ export type StrengthExercise =
   | 'Overhead Triceps Extension'
   | 'Cable Overhead Triceps Extension'
   | 'Bench Dip'
+  | 'TNG Triceps Pushdown'
+  | 'TNG Pure Triceps Pushdown'
+  | 'TNG Dip'
 
   // Biceps
   | 'Barbell Curl'
@@ -99,6 +117,8 @@ export type StrengthExercise =
   | 'Preacher Curl'
   | 'Cable Curl'
   | 'Concentration Curl'
+  | 'TNG Biceps Curl'
+  | 'TNG Pure Biceps Curl'
 
 export type Split = 'Push' | 'Pull'
 
@@ -118,6 +138,10 @@ export const EXERCISE_TO_SPLIT: Record<StrengthExercise, Split> = {
   'Cable Fly': 'Push',
   'Incline Cable Fly': 'Push',
   'Pec Deck Fly': 'Push',
+  'TNG Chest Press': 'Push',
+  'TNG Pure Chest Press': 'Push',
+  'TNG Pectoral Fly': 'Push',
+  'TNG Pure Pectoral Fly': 'Push',
 
   // Front Delts (Push)
   'Barbell Overhead Press': 'Push',
@@ -125,6 +149,8 @@ export const EXERCISE_TO_SPLIT: Record<StrengthExercise, Split> = {
   'Arnold Press': 'Push',
   'Machine Shoulder Press': 'Push',
   'Front Raise': 'Push',
+  'TNG Shoulder Press': 'Push',
+  'TNG Pure Shoulder Press': 'Push',
 
   // Side Delts (Typically Push, though involved in some pulling mechanics)
   'DB Lateral Raise': 'Push',
@@ -132,6 +158,8 @@ export const EXERCISE_TO_SPLIT: Record<StrengthExercise, Split> = {
   'Machine Lateral Raise': 'Push',
   'Leaning Cable Lateral Raise': 'Push',
   'Upright Row': 'Push',
+  'TNG Lateral Raise': 'Push',
+  'TNG Pure Lateral Raise': 'Push',
 
   // Rear Delts (Pull)
   'Rear Delt Fly': 'Pull',
@@ -139,6 +167,8 @@ export const EXERCISE_TO_SPLIT: Record<StrengthExercise, Split> = {
   'Face Pull': 'Pull',
   'Cable Rear Delt Fly': 'Pull',
   'Chest-Supported Rear Delt Raise': 'Pull',
+  'TNG Rear Delt Fly': 'Pull',
+  'TNG Pure Rear Delt Fly': 'Pull',
 
   // Lats (Pull)
   'Pull-Up': 'Pull',
@@ -148,6 +178,11 @@ export const EXERCISE_TO_SPLIT: Record<StrengthExercise, Split> = {
   'Single-Arm Lat Pulldown': 'Pull',
   'Chest-supported Row': 'Pull',
   'DB Row': 'Pull',
+  'TNG Lat Pulldown': 'Pull',
+  'TNG Pure Lat Pulldown': 'Pull',
+  'TNG Pulley': 'Pull',
+  'TNG Row': 'Pull',
+  'TNG Pure Row': 'Pull',
 
   // Traps (Pull)
   'DB Shrug': 'Pull',
@@ -177,6 +212,9 @@ export const EXERCISE_TO_SPLIT: Record<StrengthExercise, Split> = {
   'Overhead Triceps Extension': 'Push',
   'Cable Overhead Triceps Extension': 'Push',
   'Bench Dip': 'Push',
+  'TNG Triceps Pushdown': 'Push',
+  'TNG Pure Triceps Pushdown': 'Push',
+  'TNG Dip': 'Push',
 
   // Biceps (Pull)
   'Barbell Curl': 'Pull',
@@ -186,6 +224,8 @@ export const EXERCISE_TO_SPLIT: Record<StrengthExercise, Split> = {
   'Preacher Curl': 'Pull',
   'Cable Curl': 'Pull',
   'Concentration Curl': 'Pull',
+  'TNG Biceps Curl': 'Pull',
+  'TNG Pure Biceps Curl': 'Pull',
 }
 
 export const SPLIT_TO_EXERCISE: Record<Split, StrengthExercise[]> = {
@@ -204,22 +244,33 @@ export const SPLIT_TO_EXERCISE: Record<Split, StrengthExercise[]> = {
     'Cable Fly',
     'Incline Cable Fly',
     'Pec Deck Fly',
+    'TNG Chest Press',
+    'TNG Pure Chest Press',
+    'TNG Pectoral Fly',
+    'TNG Pure Pectoral Fly',
     'Barbell Overhead Press',
     'DB Shoulder Press',
     'Arnold Press',
     'Machine Shoulder Press',
     'Front Raise',
+    'TNG Shoulder Press',
+    'TNG Pure Shoulder Press',
     'DB Lateral Raise',
     'Cable Lateral Raise',
     'Machine Lateral Raise',
     'Leaning Cable Lateral Raise',
     'Upright Row',
+    'TNG Lateral Raise',
+    'TNG Pure Lateral Raise',
     'Close-Grip Bench Press',
     'Skull Crusher',
     'Triceps Pushdown',
     'Overhead Triceps Extension',
     'Cable Overhead Triceps Extension',
     'Bench Dip',
+    'TNG Triceps Pushdown',
+    'TNG Pure Triceps Pushdown',
+    'TNG Dip',
   ],
   Pull: [
     'Rear Delt Fly',
@@ -227,6 +278,8 @@ export const SPLIT_TO_EXERCISE: Record<Split, StrengthExercise[]> = {
     'Face Pull',
     'Cable Rear Delt Fly',
     'Chest-Supported Rear Delt Raise',
+    'TNG Rear Delt Fly',
+    'TNG Pure Rear Delt Fly',
     'Pull-Up',
     'Chin-Up',
     'Lat Pulldown',
@@ -234,6 +287,11 @@ export const SPLIT_TO_EXERCISE: Record<Split, StrengthExercise[]> = {
     'Single-Arm Lat Pulldown',
     'Chest-supported Row',
     'DB Row',
+    'TNG Lat Pulldown',
+    'TNG Pure Lat Pulldown',
+    'TNG Pulley',
+    'TNG Row',
+    'TNG Pure Row',
     'DB Shrug',
     'Barbell Shrug',
     'Trap Bar Shrug',
@@ -256,8 +314,11 @@ export const SPLIT_TO_EXERCISE: Record<Split, StrengthExercise[]> = {
     'Preacher Curl',
     'Cable Curl',
     'Concentration Curl',
+    'TNG Biceps Curl',
+    'TNG Pure Biceps Curl',
   ],
 }
+
 export const STRENGTH_EXERCISES = [
   'DB Bench Press',
   'Incline DB Bench Press',
@@ -273,16 +334,24 @@ export const STRENGTH_EXERCISES = [
   'Cable Fly',
   'Incline Cable Fly',
   'Pec Deck Fly',
+  'TNG Chest Press',
+  'TNG Pure Chest Press',
+  'TNG Pectoral Fly',
+  'TNG Pure Pectoral Fly',
   'Barbell Overhead Press',
   'DB Shoulder Press',
   'Arnold Press',
   'Machine Shoulder Press',
   'Front Raise',
+  'TNG Shoulder Press',
+  'TNG Pure Shoulder Press',
   'DB Lateral Raise',
   'Cable Lateral Raise',
   'Machine Lateral Raise',
   'Leaning Cable Lateral Raise',
   'Upright Row',
+  'TNG Lateral Raise',
+  'TNG Pure Lateral Raise',
   'Chest-supported Row',
   'DB Row',
   'Rear Delt Fly',
@@ -290,11 +359,18 @@ export const STRENGTH_EXERCISES = [
   'Face Pull',
   'Cable Rear Delt Fly',
   'Chest-Supported Rear Delt Raise',
+  'TNG Rear Delt Fly',
+  'TNG Pure Rear Delt Fly',
   'Pull-Up',
   'Chin-Up',
   'Lat Pulldown',
   'Straight-Arm Pulldown',
   'Single-Arm Lat Pulldown',
+  'TNG Lat Pulldown',
+  'TNG Pure Lat Pulldown',
+  'TNG Pulley',
+  'TNG Row',
+  'TNG Pure Row',
   'DB Shrug',
   'Barbell Shrug',
   'Trap Bar Shrug',
@@ -316,6 +392,9 @@ export const STRENGTH_EXERCISES = [
   'Overhead Triceps Extension',
   'Cable Overhead Triceps Extension',
   'Bench Dip',
+  'TNG Triceps Pushdown',
+  'TNG Pure Triceps Pushdown',
+  'TNG Dip',
   'Barbell Curl',
   'EZ-Bar Curl',
   'Incline DB Curl',
@@ -323,6 +402,8 @@ export const STRENGTH_EXERCISES = [
   'Preacher Curl',
   'Cable Curl',
   'Concentration Curl',
+  'TNG Biceps Curl',
+  'TNG Pure Biceps Curl',
 ] as const satisfies readonly StrengthExercise[]
 
 export const EXERCISE_TO_MUSCLES = {
@@ -341,6 +422,10 @@ export const EXERCISE_TO_MUSCLES = {
   'Cable Fly': ['Middle chest'],
   'Incline Cable Fly': ['Upper chest'],
   'Pec Deck Fly': ['Middle chest'],
+  'TNG Chest Press': ['Middle chest', 'Front delts', 'Triceps'],
+  'TNG Pure Chest Press': ['Middle chest', 'Front delts', 'Triceps'],
+  'TNG Pectoral Fly': ['Middle chest'],
+  'TNG Pure Pectoral Fly': ['Middle chest'],
 
   // Front delts
   'Barbell Overhead Press': ['Front delts', 'Triceps', 'Side delts'],
@@ -348,6 +433,8 @@ export const EXERCISE_TO_MUSCLES = {
   'Arnold Press': ['Front delts', 'Side delts', 'Triceps'],
   'Machine Shoulder Press': ['Front delts', 'Triceps', 'Side delts'],
   'Front Raise': ['Front delts'],
+  'TNG Shoulder Press': ['Front delts', 'Triceps', 'Side delts'],
+  'TNG Pure Shoulder Press': ['Front delts', 'Triceps', 'Side delts'],
 
   // Side delts
   'DB Lateral Raise': ['Side delts'],
@@ -355,6 +442,8 @@ export const EXERCISE_TO_MUSCLES = {
   'Machine Lateral Raise': ['Side delts'],
   'Leaning Cable Lateral Raise': ['Side delts'],
   'Upright Row': ['Side delts', 'Traps'],
+  'TNG Lateral Raise': ['Side delts'],
+  'TNG Pure Lateral Raise': ['Side delts'],
 
   // Rear delts
   'Rear Delt Fly': ['Rear delts'],
@@ -362,6 +451,8 @@ export const EXERCISE_TO_MUSCLES = {
   'Face Pull': ['Rear delts', 'Traps'],
   'Cable Rear Delt Fly': ['Rear delts'],
   'Chest-Supported Rear Delt Raise': ['Rear delts'],
+  'TNG Rear Delt Fly': ['Rear delts'],
+  'TNG Pure Rear Delt Fly': ['Rear delts'],
 
   // Lats / upper back pulling
   'Pull-Up': ['Lats', 'Biceps', 'Forearm'],
@@ -371,6 +462,11 @@ export const EXERCISE_TO_MUSCLES = {
   'Single-Arm Lat Pulldown': ['Lats', 'Biceps'],
   'Chest-supported Row': ['Lats', 'Traps'],
   'DB Row': ['Lats', 'Triceps'],
+  'TNG Lat Pulldown': ['Lats', 'Biceps', 'Forearm'],
+  'TNG Pure Lat Pulldown': ['Lats', 'Biceps', 'Forearm'],
+  'TNG Pulley': ['Lats', 'Biceps'],
+  'TNG Row': ['Lats', 'Traps'],
+  'TNG Pure Row': ['Lats', 'Traps'],
 
   // Traps
   'DB Shrug': ['Traps', 'Forearm'],
@@ -400,6 +496,9 @@ export const EXERCISE_TO_MUSCLES = {
   'Overhead Triceps Extension': ['Triceps'],
   'Cable Overhead Triceps Extension': ['Triceps'],
   'Bench Dip': ['Triceps', 'Lower chest', 'Front delts'],
+  'TNG Triceps Pushdown': ['Triceps'],
+  'TNG Pure Triceps Pushdown': ['Triceps'],
+  'TNG Dip': ['Triceps', 'Lower chest', 'Front delts'],
 
   // Biceps
   'Barbell Curl': ['Biceps', 'Forearm'],
@@ -409,6 +508,8 @@ export const EXERCISE_TO_MUSCLES = {
   'Preacher Curl': ['Biceps'],
   'Cable Curl': ['Biceps'],
   'Concentration Curl': ['Biceps'],
+  'TNG Biceps Curl': ['Biceps', 'Forearm'],
+  'TNG Pure Biceps Curl': ['Biceps', 'Forearm'],
 } as const satisfies Record<StrengthExercise, readonly MuscleGroup[]>
 
 // Optional helper map: muscle -> exercises
@@ -428,6 +529,10 @@ export const MUSCLE_TO_EXERCISES: Record<MuscleGroup, StrengthExercise[]> = {
     'Cable Fly',
     'Pec Deck Fly',
     'Close-Grip Bench Press',
+    'TNG Chest Press',
+    'TNG Pure Chest Press',
+    'TNG Pectoral Fly',
+    'TNG Pure Pectoral Fly',
   ],
   'Lower chest': [
     'Decline DB Bench Press',
@@ -451,6 +556,11 @@ export const MUSCLE_TO_EXERCISES: Record<MuscleGroup, StrengthExercise[]> = {
     'Front Raise',
     'Close-Grip Bench Press',
     'Bench Dip',
+    'TNG Chest Press',
+    'TNG Pure Chest Press',
+    'TNG Shoulder Press',
+    'TNG Pure Shoulder Press',
+    'TNG Dip',
   ],
   'Side delts': [
     'Barbell Overhead Press',
@@ -463,6 +573,10 @@ export const MUSCLE_TO_EXERCISES: Record<MuscleGroup, StrengthExercise[]> = {
     'Leaning Cable Lateral Raise',
     'Upright Row',
     'High Pull',
+    'TNG Shoulder Press',
+    'TNG Pure Shoulder Press',
+    'TNG Lateral Raise',
+    'TNG Pure Lateral Raise',
   ],
   'Rear delts': [
     'Rear Delt Fly',
@@ -470,6 +584,8 @@ export const MUSCLE_TO_EXERCISES: Record<MuscleGroup, StrengthExercise[]> = {
     'Face Pull',
     'Cable Rear Delt Fly',
     'Chest-Supported Rear Delt Raise',
+    'TNG Rear Delt Fly',
+    'TNG Pure Rear Delt Fly',
   ],
   'Upper Abs': ['Push-Up', 'Weighted Push-Up'],
   'Lower Abs': ['Conventional Deadlift', 'Good Morning'],
@@ -482,6 +598,11 @@ export const MUSCLE_TO_EXERCISES: Record<MuscleGroup, StrengthExercise[]> = {
     'Single-Arm Lat Pulldown',
     'Chest-supported Row',
     'DB Row',
+    'TNG Lat Pulldown',
+    'TNG Pure Lat Pulldown',
+    'TNG Pulley',
+    'TNG Row',
+    'TNG Pure Row',
   ],
   Traps: [
     'Upright Row',
@@ -493,6 +614,8 @@ export const MUSCLE_TO_EXERCISES: Record<MuscleGroup, StrengthExercise[]> = {
     'High Pull',
     'Conventional Deadlift',
     'Farmer Hold',
+    'TNG Row',
+    'TNG Pure Row',
   ],
   'Lower back': [
     'Conventional Deadlift',
@@ -515,6 +638,10 @@ export const MUSCLE_TO_EXERCISES: Record<MuscleGroup, StrengthExercise[]> = {
     'Hammer Curl',
     'Farmer Hold',
     'Plate Pinch Hold',
+    'TNG Lat Pulldown',
+    'TNG Pure Lat Pulldown',
+    'TNG Biceps Curl',
+    'TNG Pure Biceps Curl',
   ],
   Triceps: [
     'DB Bench Press',
@@ -537,6 +664,13 @@ export const MUSCLE_TO_EXERCISES: Record<MuscleGroup, StrengthExercise[]> = {
     'Overhead Triceps Extension',
     'Cable Overhead Triceps Extension',
     'Bench Dip',
+    'TNG Chest Press',
+    'TNG Pure Chest Press',
+    'TNG Shoulder Press',
+    'TNG Pure Shoulder Press',
+    'TNG Triceps Pushdown',
+    'TNG Pure Triceps Pushdown',
+    'TNG Dip',
   ],
   Biceps: [
     'Pull-Up',
@@ -551,6 +685,11 @@ export const MUSCLE_TO_EXERCISES: Record<MuscleGroup, StrengthExercise[]> = {
     'Preacher Curl',
     'Cable Curl',
     'Concentration Curl',
+    'TNG Lat Pulldown',
+    'TNG Pure Lat Pulldown',
+    'TNG Pulley',
+    'TNG Biceps Curl',
+    'TNG Pure Biceps Curl',
   ],
 }
 
