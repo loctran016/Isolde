@@ -13,28 +13,49 @@ definePageMeta({ title: island.pageTitle, titleIcon: island.titleIcon })
 const TIME_ZONE = 'Asia/Ho_Chi_Minh'
 const supabase = useSupabaseClient()
 
+const PRACTICE_KEYS = MEDITATION_PRACTICES.map((p) => p.key)
+
 // Plain consts — no SSR/hydration mismatch risk, no reactive overhead
 const todayIso = today(TIME_ZONE).toString()
 const todayCalendarDate = parseDate(todayIso)
+
+const selectColumns = computed(() => ['id', 'date', ...PRACTICE_KEYS].join(', '))
 
 const { data: logs, refresh: refreshLogs } = await useAsyncData(
   'meditation-logs',
   async () => {
     const { data, error } = await supabase
       .from('meditation_logs')
-      .select('id, practice_key, date, count')
+      .select(selectColumns.value)
     if (error) throw error
     return data ?? []
   },
   { deep: false },
 )
 
+// date -> full row (with all practice columns)
+const logByDate = computed(() => {
+  const map = {}
+  for (const row of logs.value ?? []) {
+    map[row.date] = row
+  }
+  return map
+})
+
+// Keep old lookup shape to minimize UI changes: logIndex[practiceKey][date] = { id, count }
 const logIndex = computed(() => {
   const map = {}
-  for (const log of logs.value ?? []) {
-    if (!map[log.practice_key]) map[log.practice_key] = {}
-    map[log.practice_key][log.date] = { id: log.id, count: log.count }
+  for (const key of PRACTICE_KEYS) map[key] = {}
+
+  for (const row of logs.value ?? []) {
+    for (const key of PRACTICE_KEYS) {
+      map[key][row.date] = {
+        id: row.id,
+        count: Number(row[key] ?? 0),
+      }
+    }
   }
+
   return map
 })
 
@@ -50,21 +71,17 @@ async function tapPractice(practice) {
   pending.value[practice.key] = true
 
   try {
-    const existing = logIndex.value[practice.key]?.[todayIso]
-    if (existing) {
-      const { error } = await supabase
-        .from('meditation_logs')
-        .update({ count: existing.count + practice.stepValue })
-        .eq('id', existing.id)
-      if (error) throw error
-    } else {
-      const { error } = await supabase.from('meditation_logs').insert({
-        practice_key: practice.key,
-        date: todayIso,
-        count: practice.firstValue,
-      })
-      if (error) throw error
-    }
+    const existingDay = logByDate.value[todayIso]
+    const current = Number(existingDay?.[practice.key] ?? 0)
+    const next = Math.max(0, current + practice.stepValue)
+
+    const payload = { date: todayIso, [practice.key]: next }
+
+    const { error } = await supabase
+      .from('meditation_logs')
+      .upsert(payload, { onConflict: 'date' })
+
+    if (error) throw error
     await refreshLogs()
   } catch (e) {
     console.error('Failed to log practice', practice.key, e)
@@ -74,13 +91,14 @@ async function tapPractice(practice) {
 }
 
 function todayCountFor(key) {
-  return logIndex.value[key]?.[todayIso]?.count ?? 0
+  return Number(logByDate.value[todayIso]?.[key] ?? 0)
 }
 
 function hydrateEditCounts() {
+  const day = logByDate.value[selectedEditDate.value]
   const next = {}
   for (const practice of MEDITATION_PRACTICES) {
-    next[practice.key] = logIndex.value[practice.key]?.[selectedEditDate.value]?.count ?? 0
+    next[practice.key] = Number(day?.[practice.key] ?? 0)
   }
   editCounts.value = next
 }
@@ -100,32 +118,18 @@ async function saveEditLogs() {
   editSaving.value = true
 
   try {
-    const ops = []
+    const payload = { date: selectedEditDate.value }
+
     for (const practice of MEDITATION_PRACTICES) {
       const parsed = Number(editCounts.value[practice.key] ?? 0)
-      const nextCount = Number.isFinite(parsed) ? Math.max(0, Math.trunc(parsed)) : 0
-      const existing = logIndex.value[practice.key]?.[selectedEditDate.value]
-
-      if (existing) {
-        if (nextCount <= 0) {
-          ops.push(supabase.from('meditation_logs').delete().eq('id', existing.id))
-        } else if (existing.count !== nextCount) {
-          ops.push(supabase.from('meditation_logs').update({ count: nextCount }).eq('id', existing.id))
-        }
-      } else if (nextCount > 0) {
-        ops.push(supabase.from('meditation_logs').insert({
-          practice_key: practice.key,
-          date: selectedEditDate.value,
-          count: nextCount,
-        }))
-      }
+      payload[practice.key] = Number.isFinite(parsed) ? Math.max(0, Math.trunc(parsed)) : 0
     }
 
-    if (ops.length) {
-      const results = await Promise.all(ops)
-      const failed = results.find((result) => result.error)
-      if (failed?.error) throw failed.error
-    }
+    const { error } = await supabase
+      .from('meditation_logs')
+      .upsert(payload, { onConflict: 'date' })
+
+    if (error) throw error
 
     await refreshLogs()
     isEditDialogOpen.value = false
@@ -166,7 +170,7 @@ function pad(n) {
 
 function countForDay(practiceKey, day) {
   const iso = `${selectedYear.value}-${pad(selectedMonth.value)}-${pad(day)}`
-  return logIndex.value[practiceKey]?.[iso]?.count ?? null
+  return Number(logByDate.value[iso]?.[practiceKey] ?? 0) || null
 }
 
 // --- Pivoted table ---
@@ -240,7 +244,7 @@ async function handleExport() {
 const monthYearGroups = computed(() => {
   return availableYears.value.map((year) => ({
     label: String(year),
-    options: MONTH_NAMES.map((month, idx) => `${month} ${year}`).reverse(),
+    options: MONTH_NAMES.map((month) => `${month} ${year}`).reverse(),
   }))
 })
 
@@ -320,7 +324,7 @@ onBeforeUnmount(() => {
           v-for="practice in MEDITATION_PRACTICES"
           :key="practice.key"
           type="button"
-          class="flex flex-col items-center gap-1 rounded-lg px-3 py-3 text-sm border border-stone-800/20 dark:border-stone-100/20 hover:border-purple-400/50 hover:bg-purple-400/10 transition-colors cursor-pointer disabled:opacity-50"
+          class="flex flex-col items-center gap-1 rounded-lg px-3 py-3 text-sm border border-stone-800/20 dark:border-stone-100/20 hover:border-purple-400/50 hover:bg-purple-400/10 transition-colors cursor-pointer"
           :disabled="pending[practice.key]"
           @click="tapPractice(practice)"
         >
@@ -398,7 +402,7 @@ onBeforeUnmount(() => {
                 <button
                   type="submit"
                   :disabled="editSaving"
-                  class="flex ml-auto sm:col-span-2 px-3 py-2 mt-2 hover:scale-101 hover:-translate-y-0.5 hover:shadow-lg items-center justify-center border-1 border-stone-700/90 dark:border-stone-100/50 hover:dark:border-stone-100/80 transition-all duration-200 rounded-md px-[15px] leading-none focus:shadow-[0_0_0_2px] focus:outline-none cursor-pointer disabled:opacity-60"
+                  class="flex ml-auto sm:col-span-2 px-3 py-2 mt-2 hover:scale-101 hover:-translate-y-0.5 hover:shadow-lg items-center justify-center border-1 border-stone-700/90 dark:border-stone-100/30 rounded-lg"
                 >
                   {{ editSaving ? 'Saving...' : 'Save changes' }}
                 </button>
