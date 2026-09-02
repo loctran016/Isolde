@@ -31,7 +31,7 @@ const buttonClass = computed(() => {
 })
 
 const visibleNavItems = computed(() =>
-  navItems.filter((item) => !['/musical', '/gallery'].includes(item.to)),
+  navItems.filter((item) => !['/musical', '/gallery', '/medic'].includes(item.to)),
 )
 
 // --- Login link: only for signed-out users on screens below "laptop" (lg, 1024px) ---
