@@ -90,6 +90,9 @@ export type StrengthExercise =
   | 'Back Extension'
   | 'Good Morning'
   | 'Superman Hold'
+  | 'TNG Back Extension'
+  | 'TNG Pure Back Extension'
+  | 'TNG Hyperextension'
 
   // Forearm
   | 'Wrist Curl'
@@ -119,6 +122,25 @@ export type StrengthExercise =
   | 'Concentration Curl'
   | 'TNG Biceps Curl'
   | 'TNG Pure Biceps Curl'
+
+  // Abs
+  | 'Cable Crunch'
+  | 'Machine Crunch'
+  | 'Rope Crunch'
+  | 'Ab Wheel Rollout'
+  | 'Decline Crunch'
+  | 'Weighted Sit-Up'
+  | 'V-Up'
+  | 'Leg Raise'
+  | 'Hanging Leg Raise'
+  | 'Decline Leg Raise'
+  | 'Ab Machine'
+  | 'Cable Woodchop'
+  | 'Landmine Rotation'
+  | 'TNG Ab Crunch'
+  | 'TNG Pure Ab Crunch'
+  | 'TNG Ab Machine'
+  | 'TNG Core Rotation'
 
 export type Split = 'Push' | 'Pull'
 
@@ -197,6 +219,9 @@ export const EXERCISE_TO_SPLIT: Record<StrengthExercise, Split> = {
   'Back Extension': 'Pull',
   'Good Morning': 'Pull',
   'Superman Hold': 'Pull',
+  'TNG Back Extension': 'Pull',
+  'TNG Pure Back Extension': 'Pull',
+  'TNG Hyperextension': 'Pull',
 
   // Forearm (Pull)
   'Wrist Curl': 'Pull',
@@ -226,6 +251,25 @@ export const EXERCISE_TO_SPLIT: Record<StrengthExercise, Split> = {
   'Concentration Curl': 'Pull',
   'TNG Biceps Curl': 'Pull',
   'TNG Pure Biceps Curl': 'Pull',
+
+  // Abs (Push)
+  'Cable Crunch': 'Push',
+  'Machine Crunch': 'Push',
+  'Rope Crunch': 'Push',
+  'Ab Wheel Rollout': 'Push',
+  'Decline Crunch': 'Push',
+  'Weighted Sit-Up': 'Push',
+  'V-Up': 'Push',
+  'Leg Raise': 'Pull',
+  'Hanging Leg Raise': 'Pull',
+  'Decline Leg Raise': 'Pull',
+  'Ab Machine': 'Push',
+  'Cable Woodchop': 'Push',
+  'Landmine Rotation': 'Push',
+  'TNG Ab Crunch': 'Push',
+  'TNG Pure Ab Crunch': 'Push',
+  'TNG Ab Machine': 'Push',
+  'TNG Core Rotation': 'Push',
 }
 
 export const SPLIT_TO_EXERCISE: Record<Split, StrengthExercise[]> = {
@@ -271,6 +315,20 @@ export const SPLIT_TO_EXERCISE: Record<Split, StrengthExercise[]> = {
     'TNG Triceps Pushdown',
     'TNG Pure Triceps Pushdown',
     'TNG Dip',
+    'Cable Crunch',
+    'Machine Crunch',
+    'Rope Crunch',
+    'Ab Wheel Rollout',
+    'Decline Crunch',
+    'Weighted Sit-Up',
+    'V-Up',
+    'Ab Machine',
+    'Cable Woodchop',
+    'Landmine Rotation',
+    'TNG Ab Crunch',
+    'TNG Pure Ab Crunch',
+    'TNG Ab Machine',
+    'TNG Core Rotation',
   ],
   Pull: [
     'Rear Delt Fly',
@@ -302,6 +360,9 @@ export const SPLIT_TO_EXERCISE: Record<Split, StrengthExercise[]> = {
     'Back Extension',
     'Good Morning',
     'Superman Hold',
+    'TNG Back Extension',
+    'TNG Pure Back Extension',
+    'TNG Hyperextension',
     'Wrist Curl',
     'Reverse Wrist Curl',
     'Hammer Curl',
@@ -316,6 +377,9 @@ export const SPLIT_TO_EXERCISE: Record<Split, StrengthExercise[]> = {
     'Concentration Curl',
     'TNG Biceps Curl',
     'TNG Pure Biceps Curl',
+    'Leg Raise',
+    'Hanging Leg Raise',
+    'Decline Leg Raise',
   ],
 }
 
@@ -381,6 +445,9 @@ export const STRENGTH_EXERCISES = [
   'Back Extension',
   'Good Morning',
   'Superman Hold',
+  'TNG Back Extension',
+  'TNG Pure Back Extension',
+  'TNG Hyperextension',
   'Wrist Curl',
   'Reverse Wrist Curl',
   'Hammer Curl',
@@ -404,6 +471,23 @@ export const STRENGTH_EXERCISES = [
   'Concentration Curl',
   'TNG Biceps Curl',
   'TNG Pure Biceps Curl',
+  'Cable Crunch',
+  'Machine Crunch',
+  'Rope Crunch',
+  'Ab Wheel Rollout',
+  'Decline Crunch',
+  'Weighted Sit-Up',
+  'V-Up',
+  'Leg Raise',
+  'Hanging Leg Raise',
+  'Decline Leg Raise',
+  'Ab Machine',
+  'Cable Woodchop',
+  'Landmine Rotation',
+  'TNG Ab Crunch',
+  'TNG Pure Ab Crunch',
+  'TNG Ab Machine',
+  'TNG Core Rotation',
 ] as const satisfies readonly StrengthExercise[]
 
 export const EXERCISE_TO_MUSCLES = {
@@ -481,6 +565,9 @@ export const EXERCISE_TO_MUSCLES = {
   'Good Morning': ['Lower back', 'Lower Abs'],
   'Back Extension': ['Lower back'],
   'Superman Hold': ['Lower back'],
+  'TNG Back Extension': ['Lower back'],
+  'TNG Pure Back Extension': ['Lower back'],
+  'TNG Hyperextension': ['Lower back'],
 
   // Forearm
   'Wrist Curl': ['Forearm'],
@@ -510,6 +597,25 @@ export const EXERCISE_TO_MUSCLES = {
   'Concentration Curl': ['Biceps'],
   'TNG Biceps Curl': ['Biceps', 'Forearm'],
   'TNG Pure Biceps Curl': ['Biceps', 'Forearm'],
+
+  // Abs
+  'Cable Crunch': ['Upper Abs'],
+  'Machine Crunch': ['Upper Abs'],
+  'Rope Crunch': ['Upper Abs'],
+  'Ab Wheel Rollout': ['Upper Abs', 'Lower Abs'],
+  'Decline Crunch': ['Upper Abs'],
+  'Weighted Sit-Up': ['Upper Abs', 'Lower Abs'],
+  'V-Up': ['Upper Abs', 'Lower Abs'],
+  'Leg Raise': ['Lower Abs', 'Obliques'],
+  'Hanging Leg Raise': ['Lower Abs', 'Obliques'],
+  'Decline Leg Raise': ['Lower Abs', 'Obliques'],
+  'Ab Machine': ['Upper Abs', 'Lower Abs'],
+  'Cable Woodchop': ['Obliques'],
+  'Landmine Rotation': ['Obliques'],
+  'TNG Ab Crunch': ['Upper Abs'],
+  'TNG Pure Ab Crunch': ['Upper Abs'],
+  'TNG Ab Machine': ['Upper Abs', 'Lower Abs'],
+  'TNG Core Rotation': ['Obliques'],
 } as const satisfies Record<StrengthExercise, readonly MuscleGroup[]>
 
 // Optional helper map: muscle -> exercises
@@ -587,9 +693,43 @@ export const MUSCLE_TO_EXERCISES: Record<MuscleGroup, StrengthExercise[]> = {
     'TNG Rear Delt Fly',
     'TNG Pure Rear Delt Fly',
   ],
-  'Upper Abs': ['Push-Up', 'Weighted Push-Up'],
-  'Lower Abs': ['Conventional Deadlift', 'Good Morning'],
-  Obliques: ['Farmer Carry', 'Farmer Hold'],
+  'Upper Abs': [
+    'Push-Up',
+    'Weighted Push-Up',
+    'Cable Crunch',
+    'Machine Crunch',
+    'Rope Crunch',
+    'Ab Wheel Rollout',
+    'Decline Crunch',
+    'Weighted Sit-Up',
+    'V-Up',
+    'Ab Machine',
+    'TNG Ab Crunch',
+    'TNG Pure Ab Crunch',
+    'TNG Ab Machine',
+  ],
+  'Lower Abs': [
+    'Conventional Deadlift',
+    'Good Morning',
+    'Ab Wheel Rollout',
+    'Weighted Sit-Up',
+    'V-Up',
+    'Leg Raise',
+    'Hanging Leg Raise',
+    'Decline Leg Raise',
+    'Ab Machine',
+    'TNG Ab Machine',
+  ],
+  Obliques: [
+    'Farmer Carry',
+    'Farmer Hold',
+    'Leg Raise',
+    'Hanging Leg Raise',
+    'Decline Leg Raise',
+    'Cable Woodchop',
+    'Landmine Rotation',
+    'TNG Core Rotation',
+  ],
   Lats: [
     'Pull-Up',
     'Chin-Up',
@@ -623,6 +763,9 @@ export const MUSCLE_TO_EXERCISES: Record<MuscleGroup, StrengthExercise[]> = {
     'Back Extension',
     'Good Morning',
     'Superman Hold',
+    'TNG Back Extension',
+    'TNG Pure Back Extension',
+    'TNG Hyperextension',
   ],
   Forearm: [
     'Pull-Up',
