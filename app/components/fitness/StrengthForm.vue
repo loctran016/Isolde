@@ -267,11 +267,17 @@ async function onSubmit() {
             :key="r$.sets.$each[index]?.$id ?? index"
             class="space-y-1"
           >
-            <div class="flex items-center gap-1.5">
+            <!--
+              Mobile-first (iPhone 11 / <sm): gap-1 + flex-wrap so the
+              duplicate/trash group can drop to its own line instead of
+              overflowing the card. sm: and up restores the original
+              single-row, fixed-size layout untouched.
+            -->
+            <div class="flex items-center gap-1 flex-wrap sm:flex-nowrap sm:gap-1.5">
               <!-- Reps stepper -->
               <button
                 type="button"
-                class="shrink-0 w-8 h-8 rounded-md border opacity-20 hover:opacity-80 duration-200 border-stone-800/20 dark:border-stone-100/20 hover:border-purple-400/50 hover:bg-purple-400/10 flex items-center justify-center text-lg cursor-pointer"
+                class="shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-md border opacity-20 hover:opacity-80 duration-200 border-stone-800/20 dark:border-stone-100/20 hover:border-purple-400/50 hover:bg-purple-400/10 flex items-center justify-center text-lg cursor-pointer"
                 aria-label="Decrease reps"
                 @click="stepReps(index, -REPS_STEP)"
               >
@@ -284,11 +290,11 @@ async function onSubmit() {
                 min="0"
                 step="1"
                 placeholder="reps"
-                class="w-14 text-center focus:outline-none border-b-gray-500/30 dark:border-b-gray-100/50 focus:border-purple-600 transition-all duration-200 border px-1 py-2 border-0 border-b-2"
+                class="w-12 sm:w-14 text-center focus:outline-none border-b-gray-500/30 dark:border-b-gray-100/50 focus:border-purple-600 transition-all duration-200 border px-1 py-2 border-0 border-b-2"
               />
               <button
                 type="button"
-                class="shrink-0 w-8 h-8 rounded-md border opacity-20 hover:opacity-80 duration-200 border-stone-800/20 dark:border-stone-100/20 hover:border-purple-400/50 hover:bg-purple-400/10 flex items-center justify-center text-lg cursor-pointer"
+                class="shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-md border opacity-20 hover:opacity-80 duration-200 border-stone-800/20 dark:border-stone-100/20 hover:border-purple-400/50 hover:bg-purple-400/10 flex items-center justify-center text-lg cursor-pointer"
                 aria-label="Increase reps"
                 @click="stepReps(index, REPS_STEP)"
               >
@@ -300,7 +306,7 @@ async function onSubmit() {
               <!-- Weight stepper -->
               <button
                 type="button"
-                class="shrink-0 w-8 h-8 rounded-md border opacity-20 hover:opacity-80 duration-200 border-stone-800/20 dark:border-stone-100/20 hover:border-purple-400/50 hover:bg-purple-400/10 flex items-center justify-center text-lg cursor-pointer"
+                class="shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-md border opacity-20 hover:opacity-80 duration-200 border-stone-800/20 dark:border-stone-100/20 hover:border-purple-400/50 hover:bg-purple-400/10 flex items-center justify-center text-lg cursor-pointer"
                 aria-label="Decrease weight"
                 @click="stepKg(index, -KG_STEP)"
               >
@@ -313,11 +319,11 @@ async function onSubmit() {
                 min="0"
                 step="0.5"
                 placeholder="kg"
-                class="w-16 text-center focus:outline-none focus:border-purple-600 border-b-gray-500/30 dark:border-b-gray-100/50 transition-all duration-200 border px-1 py-2 border-0 border-b-2"
+                class="w-14 sm:w-16 text-center focus:outline-none focus:border-purple-600 border-b-gray-500/30 dark:border-b-gray-100/50 transition-all duration-200 border px-1 py-2 border-0 border-b-2"
               />
               <button
                 type="button"
-                class="shrink-0 w-8 h-8 rounded-md border opacity-20 hover:opacity-80 duration-200 border-stone-800/20 dark:border-stone-100/20 hover:border-purple-400/50 hover:bg-purple-400/10 flex items-center justify-center text-lg cursor-pointer"
+                class="shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-md border opacity-20 hover:opacity-80 duration-200 border-stone-800/20 dark:border-stone-100/20 hover:border-purple-400/50 hover:bg-purple-400/10 flex items-center justify-center text-lg cursor-pointer"
                 aria-label="Increase weight"
                 @click="stepKg(index, KG_STEP)"
               >
@@ -325,26 +331,32 @@ async function onSubmit() {
               </button>
               <span class="text-sm shrink-0">kg</span>
 
-              <!-- Duplicate / remove actions -->
-              <button
-                type="button"
-                class="shrink-0 ml-auto p-1.5 text-stone-500 hover:text-purple-600 dark:hover:text-purple-400 cursor-pointer"
-                aria-label="Duplicate this set"
-                title="Duplicate this set"
-                @click="duplicateSet(index)"
-              >
-                <div class="i-mdi:content-copy text-base" />
-              </button>
-              <button
-                v-if="form.sets.length > 2"
-                type="button"
-                class="shrink-0 p-1.5 text-stone-500 hover:text-red-600 dark:hover:text-red-400 cursor-pointer"
-                aria-label="Remove set"
-                title="Remove set"
-                @click="removeSet(index)"
-              >
-                <div class="i-mdi:trash-can-outline text-base" />
-              </button>
+              <!--
+                Duplicate / remove actions — grouped so they wrap together
+                as one unit on <sm instead of the trash icon spilling out
+                on its own. On sm+ this renders identically to before.
+              -->
+              <div class="flex items-center gap-1 ml-auto shrink-0">
+                <button
+                  type="button"
+                  class="p-1.5 text-stone-500 hover:text-purple-600 dark:hover:text-purple-400 cursor-pointer"
+                  aria-label="Duplicate this set"
+                  title="Duplicate this set"
+                  @click="duplicateSet(index)"
+                >
+                  <div class="i-mdi:content-copy text-base" />
+                </button>
+                <button
+                  v-if="form.sets.length > 2"
+                  type="button"
+                  class="p-1.5 text-stone-500 hover:text-red-600 dark:hover:text-red-400 cursor-pointer"
+                  aria-label="Remove set"
+                  title="Remove set"
+                  @click="removeSet(index)"
+                >
+                  <div class="i-mdi:trash-can-outline text-base" />
+                </button>
+              </div>
             </div>
 
             <p
