@@ -239,22 +239,32 @@ async function handleExport() {
 }
 
 // ---------- Month-Year grouped select ----------
-
 const monthYearGroups = computed(() => {
   return availableYears.value.map((year) => ({
-    label: String(year), // this is the group header (year)
-    options: MONTH_NAMES.slice(), // month only
+    label: String(year),
+    options: MONTH_NAMES.slice(), // month only in dropdown list
   }))
 })
 
 const selectedMonthYear = computed({
-  get: () => MONTH_NAMES[selectedMonth.value - 1],
+  get: () => `${selectedYear.value} ${MONTH_NAMES[selectedMonth.value - 1]}`, // "2026 November"
   set: (val) => {
-    // val is month only, so keep current selectedYear
-    selectedMonth.value = MONTH_NAMES.indexOf(val) + 1
+    const parts = val.trim().split(/\s+/)
+
+    // If value looks like "2026 November"
+    if (parts.length >= 2 && /^\d{4}$/.test(parts[0])) {
+      selectedYear.value = Number(parts[0])
+      const monthName = parts.slice(1).join(' ')
+      const idx = MONTH_NAMES.findIndex((m) => m.toLowerCase() === monthName.toLowerCase())
+      if (idx >= 0) selectedMonth.value = idx + 1
+      return
+    }
+
+    // If value is month-only from options, like "November"
+    const idx = MONTH_NAMES.findIndex((m) => m.toLowerCase() === val.toLowerCase())
+    if (idx >= 0) selectedMonth.value = idx + 1
   },
-})
-// ---------- Dynamic opacity on scroll ----------
+})// ---------- Dynamic opacity on scroll ----------
 const scrollContainer = ref(null)
 const columnOpacities = ref({})
 
