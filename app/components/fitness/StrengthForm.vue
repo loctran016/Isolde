@@ -234,7 +234,8 @@ async function onSubmit() {
       <slot />
     </template>
 
-    <form class="space-y-4" @submit.prevent="onSubmit">
+    <form class="space-y-4 [&_input]: text-base [&_select]: text-base [&_textarea]: text-base sm: [&_input]:text-sm sm: [&_select]: text-sm s
+m: [&_textarea]: text-sm" @submit.prevent="onSubmit">
       <div>
         <label class="mb-1 block text-sm font-medium">Exercise</label>
 
