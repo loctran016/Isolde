@@ -64,6 +64,7 @@ const selectedEditDate = ref(todayIso)
 const editCounts = ref({})
 const editSaving = ref(false)
 const editError = ref('')
+const isDuplicatingYesterday = ref(false)
 
 async function tapPractice(practice) {
   if (pending.value[practice.key]) return
@@ -91,6 +92,43 @@ async function tapPractice(practice) {
 
 function todayCountFor(key) {
   return Number(logByDate.value[todayIso]?.[key] ?? 0)
+}
+
+function getYesterdayIso() {
+  const today_date = parseDate(todayIso)
+  const yesterday = today_date.subtract({ days: 1 })
+  return yesterday.toString()
+}
+
+async function duplicateYesterday() {
+  if (isDuplicatingYesterday.value) return
+  isDuplicatingYesterday.value = true
+
+  try {
+    const yesterdayIso = getYesterdayIso()
+    const yesterdayLog = logByDate.value[yesterdayIso]
+
+    if (!yesterdayLog) {
+      console.warn('No meditation log found for yesterday')
+      return
+    }
+
+    const payload = { date: todayIso }
+    for (const key of PRACTICE_KEYS) {
+      payload[key] = Number(yesterdayLog[key] ?? 0)
+    }
+
+    const { error } = await supabase
+      .from('meditation_logs')
+      .upsert(payload, { onConflict: 'date' })
+
+    if (error) throw error
+    await refreshLogs()
+  } catch (e) {
+    console.error('Failed to duplicate yesterday\'s log', e)
+  } finally {
+    isDuplicatingYesterday.value = false
+  }
 }
 
 function hydrateEditCounts() {
@@ -312,16 +350,26 @@ onBeforeUnmount(() => {
   <div class="my-2 grid grid-cols-2 lg:grid-cols-6 gap-3 sm:gap-4 py-4 mx-auto font-sans dark:text-gray-100">
     <!-- Quick actions -->
     <div class="card col-span-full">
-      <h2 class="card-title">
-        <div class="i-solar:meditation-round-outline" />
-        Today's practice
-      </h2>
+      <div class="flex items-center justify-between flex-wrap gap-3 mb-4">
+        <h2 class="card-title">
+          <div class="i-solar:meditation-round-outline" />
+          Today's practice
+        </h2>
+        <button
+          type="button"
+          :disabled="isDuplicatingYesterday"
+          class="px-3 py-1 text-sm rounded-lg border border-stone-800/20 dark:border-stone-100/20 hover:border-purple-400/50 hover:bg-purple-400/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          @click="duplicateYesterday"
+        >
+          {{ isDuplicatingYesterday ? 'Duplicating...' : 'Duplicate Yesterday' }}
+        </button>
+      </div>
       <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 mt-4">
         <button
           v-for="practice in MEDITATION_PRACTICES"
           :key="practice.key"
           type="button"
-          class="flex flex-col items-center gap-1 rounded-lg px-3 py-3 text-sm border border-stone-800/20 dark:border-stone-100/20 hover:border-purple-400/50 hover:bg-purple-400/10 transition-colors cursor-pointer"
+          class="flex flex-col items-center gap-1 rounded-lg px-3 py-3 text-sm border border-stone-800/20 dark:border-stone-100/20 hover:border-purple-400/50 hover:bg-purple-400/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           :disabled="pending[practice.key]"
           @click="tapPractice(practice)"
         >
@@ -399,7 +447,7 @@ onBeforeUnmount(() => {
                 <button
                   type="submit"
                   :disabled="editSaving"
-                  class="flex ml-auto sm:col-span-2 px-3 py-2 mt-2 hover:scale-101 hover:-translate-y-0.5 hover:shadow-lg items-center justify-center border-1 border-stone-700/90 dark:border-stone-100/30 rounded-lg"
+                  class="flex ml-auto sm:col-span-2 px-3 py-2 mt-2 hover:scale-101 hover:-translate-y-0.5 hover:shadow-lg items-center justify-center border-1 border-stone-700/90 dark:border-stone-100/30 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {{ editSaving ? 'Saving...' : 'Save changes' }}
                 </button>
