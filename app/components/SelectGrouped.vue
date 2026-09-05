@@ -41,7 +41,7 @@ const modelValue = defineModel<T | null>({ default: null })
       >
         <SelectViewport class="max-h-[40vh] overflow-y-auto scrollbar-none p-1">
           <SelectGroup v-for="group in groups" :key="group.label">
-            <SelectLabel class="px-4 py-1.5 text-xs font-semibold text-purple-500 dark:text-purple-400 tracking-wide uppercase">
+            <SelectLabel class="px-4 py-1.5 sm:text-sm text-base font-semibold text-purple-500 dark:text-purple-400 tracking-wide uppercase">
               {{ group.label }}
             </SelectLabel>
             <SelectItem
