@@ -1,5 +1,4 @@
 <script setup>
-import { h, ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { today, parseDate } from '@internationalized/date'
 import { createColumnHelper, FlexRender, getCoreRowModel, useVueTable } from '@tanstack/vue-table'
 import { MEDITATION_PRACTICES } from '~/data/meditationPractices'
@@ -243,20 +242,18 @@ async function handleExport() {
 
 const monthYearGroups = computed(() => {
   return availableYears.value.map((year) => ({
-    label: String(year),
-    options: MONTH_NAMES.map((month) => `${month} ${year}`).reverse(),
+    label: String(year), // this is the group header (year)
+    options: MONTH_NAMES.slice(), // month only
   }))
 })
 
 const selectedMonthYear = computed({
-  get: () => `${MONTH_NAMES[selectedMonth.value - 1]} ${selectedYear.value}`,
+  get: () => MONTH_NAMES[selectedMonth.value - 1],
   set: (val) => {
-    const [monthName, yearStr] = val.split(' ')
-    selectedMonth.value = MONTH_NAMES.indexOf(monthName) + 1
-    selectedYear.value = Number(yearStr)
-  }
+    // val is month only, so keep current selectedYear
+    selectedMonth.value = MONTH_NAMES.indexOf(val) + 1
+  },
 })
-
 // ---------- Dynamic opacity on scroll ----------
 const scrollContainer = ref(null)
 const columnOpacities = ref({})
