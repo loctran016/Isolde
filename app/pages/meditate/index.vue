@@ -278,20 +278,32 @@ async function handleExport() {
 
 // ---------- Month-Year grouped select ----------
 
-const monthYearGroups = computed(() => {
-  return availableYears.value.map((year) => ({
-    label: String(year), // this is the group header (year)
-    options: MONTH_NAMES.slice(), // month only
-  }))
-})
+const monthYearGroups = computed(() =>
+  availableYears.value.map((year) => ({
+    label: String(year), // bigger year header in UI component
+    options: MONTH_NAMES.map((month, idx) => ({
+      label: month,                 // shown in dropdown
+      value: `${year}-${idx + 1}`,  // unique key, e.g. "2026-11"
+    })),
+  })),
+)
 
 const selectedMonthYear = computed({
-  get: () => MONTH_NAMES[selectedMonth.value - 1],
+  get: () => `${selectedYear.value}-${selectedMonth.value}`, // actual select value
   set: (val) => {
-    // val is month only, so keep current selectedYear
-    selectedMonth.value = MONTH_NAMES.indexOf(val) + 1
+    const [y, m] = String(val).split('-')
+    const year = Number(y)
+    const month = Number(m)
+    if (Number.isFinite(year) && Number.isFinite(month) && month >= 1 && month <= 12) {
+      selectedYear.value = year
+      selectedMonth.value = month
+    }
   },
 })
+
+const selectedMonthYearLabel = computed(
+  () => `${selectedYear.value} ${MONTH_NAMES[selectedMonth.value - 1]}`, // "2026 November"
+)
 // ---------- Dynamic opacity on scroll ----------
 const scrollContainer = ref(null)
 const columnOpacities = ref({})
@@ -391,7 +403,11 @@ onBeforeUnmount(() => {
         </h2>
         <ClientOnly>
           <div class="flex items-center gap-2">
-            <SelectGrouped v-model="selectedMonthYear" :groups="monthYearGroups" />
+            <SelectGrouped
+  v-model="selectedMonthYear"
+  :groups="monthYearGroups"
+  :display-value="selectedMonthYearLabel"
+/>
             <FormWrapper
               v-model:open="isEditDialogOpen"
               title="Edit Meditation Log"
