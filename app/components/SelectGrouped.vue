@@ -41,7 +41,7 @@ const modelValue = defineModel<T | null>({ default: null })
       <SelectContent position="popper" :side-offset="4" class="z-30 overflow-hidden rounded-xl border border-white/40 dark:border-white/10 bg-white/45 dark:bg-stone-800/50 backdrop-blur-xl backdrop-saturate-150" :class="['min-w-[var(--radix-select-trigger-width)]', 'max-w-[95vw]']">
         <SelectViewport class="max-h-[40vh] overflow-y-auto scrollbar-none p-1">
           <SelectGroup v-for="group in groups" :key="group.label">
-            <SelectLabel class="px-4 py-1.5 text-lg font-semibold text-purple-500 dark:text-purple-400 uppercase">
+            <SelectLabel class="px-4 py-1.5 text-base font-head font-semibold text-purple-500 dark:text-purple-400 uppercase">
               {{ group.label }}
             </SelectLabel>
             <SelectItem
