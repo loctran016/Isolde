@@ -33,6 +33,8 @@ export type StrengthExercise =
   | 'Pec Deck Fly'
   | 'TNG Chest Press'
   | 'TNG Pure Chest Press'
+  | 'TNG Incline Chest Press'
+  | 'TNG Pure Incline Chest Press'
   | 'TNG Pectoral Fly'
   | 'TNG Pure Pectoral Fly'
 
@@ -162,6 +164,8 @@ export const EXERCISE_TO_SPLIT: Record<StrengthExercise, Split> = {
   'Pec Deck Fly': 'Push',
   'TNG Chest Press': 'Push',
   'TNG Pure Chest Press': 'Push',
+  'TNG Incline Chest Press': 'Push',
+  'TNG Pure Incline Chest Press': 'Push',
   'TNG Pectoral Fly': 'Push',
   'TNG Pure Pectoral Fly': 'Push',
 
@@ -290,6 +294,8 @@ export const SPLIT_TO_EXERCISE: Record<Split, StrengthExercise[]> = {
     'Pec Deck Fly',
     'TNG Chest Press',
     'TNG Pure Chest Press',
+    'TNG Incline Chest Press',
+    'TNG Pure Incline Chest Press',
     'TNG Pectoral Fly',
     'TNG Pure Pectoral Fly',
     'Barbell Overhead Press',
@@ -400,6 +406,8 @@ export const STRENGTH_EXERCISES = [
   'Pec Deck Fly',
   'TNG Chest Press',
   'TNG Pure Chest Press',
+  'TNG Incline Chest Press',
+  'TNG Pure Incline Chest Press',
   'TNG Pectoral Fly',
   'TNG Pure Pectoral Fly',
   'Barbell Overhead Press',
@@ -508,6 +516,8 @@ export const EXERCISE_TO_MUSCLES = {
   'Pec Deck Fly': ['Middle chest'],
   'TNG Chest Press': ['Middle chest', 'Front delts', 'Triceps'],
   'TNG Pure Chest Press': ['Middle chest', 'Front delts', 'Triceps'],
+  'TNG Incline Chest Press': ['Upper chest', 'Front delts', 'Triceps'],
+  'TNG Pure Incline Chest Press': ['Upper chest', 'Front delts', 'Triceps'],
   'TNG Pectoral Fly': ['Middle chest'],
   'TNG Pure Pectoral Fly': ['Middle chest'],
 
@@ -625,6 +635,8 @@ export const MUSCLE_TO_EXERCISES: Record<MuscleGroup, StrengthExercise[]> = {
     'Incline Barbell Bench Press',
     'Incline Cable Fly',
     'Incline Machine Chest Press',
+    'TNG Incline Chest Press',
+    'TNG Pure Incline Chest Press',
   ],
   'Middle chest': [
     'DB Bench Press',

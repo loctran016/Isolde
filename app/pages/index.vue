@@ -414,7 +414,7 @@ const dueDateMetaMap = computed(() => {
       </div>
     </div>
     <div
-      class="grid grid-cols-2 lt-sm:order-0 lg:grid-cols-3 lg:grid-rows-2 lg:col-start-3 lg:row-span-2 lg:col-span-2 gap-2 sm:gap-3 text-gray-800 dark:text-gray-100"
+      class="grid lt-sm:order-0 grid-cols-3 lg:grid-rows-2 lg:col-start-3 lg:row-span-2 lg:col-span-2 gap-2 sm:gap-3 text-gray-800 dark:text-gray-100"
     >
       <!-- Four action btns -->
       <StrengthForm>
