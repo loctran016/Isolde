@@ -217,7 +217,7 @@ const dueDateMetaMap = computed(() => {
     <LazyHomeCalendar
       :events="events ?? []"
       :default-date="date"
-      class="sm:text-lg card lg:col-start-1 lg:col-span-2 lg:row-start-1 h-fit lg:row-span-4"
+      class="sm:text-lg order-0 card lg:col-start-1 lg:col-span-2 lg:row-start-1 h-fit lg:row-span-4"
     >
       <template #fallback>
         <div
@@ -414,7 +414,7 @@ const dueDateMetaMap = computed(() => {
       </div>
     </div>
     <div
-      class="grid lg:grid-cols-3 lg:grid-rows-2 lg:col-start-3 lg:row-span-2 lg:col-span-3 gap-2 sm:gap-3 text-gray-800 dark:text-gray-100"
+      class="grid grid-cols-2 lt-sm:order-0 lg:grid-cols-3 lg:grid-rows-2 lg:col-start-3 lg:row-span-2 lg:col-span-2 gap-2 sm:gap-3 text-gray-800 dark:text-gray-100"
     >
       <!-- Four action btns -->
       <StrengthForm>
