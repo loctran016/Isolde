@@ -211,13 +211,13 @@ const dueDateMetaMap = computed(() => {
 
 <template>
   <div
-    class="grid grid-cols-1 lt-sm:my-2 lg:grid-cols-4 lg:grid-rows-5 gap-3 p-3 sm:gap-4 sm:p-4 mx-auto font-sans dark:text-gray-100 sm:h-[calc(100vh-var(--header-height))] max-h-200vh"
+    class="grid grid-cols-1 lt-sm:my-2 lg:grid-cols-4 lg:grid-rows-5 gap-3 p-3 sm:gap-4 sm:p-4 mx-auto font-sans dark:text-gray-100 sm:max-h-[calc(100vh-var(--header-height))] lt-sm:max-h-200vh"
   >
     <!-- Calendar: lazy-loaded to defer reka-ui Calendar + @internationalized/date ~200 kB -->
     <LazyHomeCalendar
       :events="events ?? []"
       :default-date="date"
-      class="sm:text-lg card lg:col-start-1 lg:col-span-2 lg:row-start-1 lg:row-span-4"
+      class="sm:text-lg card lg:col-start-1 lg:col-span-2 lg:row-start-1 h-fit lg:row-span-4"
     >
       <template #fallback>
         <div
@@ -412,6 +412,76 @@ const dueDateMetaMap = computed(() => {
           </button>
         </section> -->
       </div>
+    </div>
+    <div
+      class="grid lg:grid-cols-3 lg:grid-rows-2 lg:col-start-3 lg:row-span-2 lg:col-span-3 gap-2 sm:gap-3 text-gray-800 dark:text-gray-100"
+    >
+      <!-- Four action btns -->
+      <StrengthForm>
+        <button
+          type="button"
+          aria-haspopup="dialog"
+          aria-expanded="false"
+          data-state="closed"
+          class="card flex items-center gap-2 justify-center w-full cursor-pointer group"
+        >
+          <div
+            class="i-solar:dumbbell-large-minimalistic-line-duotone dark:i-solar:dumbbell-large-minimalistic-bold-duotone text-3xl lg:text-5xl"
+          />
+          <p
+            class="text-2xl lg:text-3xl opacity-55 dark:opacity-15 transition-all duration-200 group-hover:opacity-100"
+          >
+            +
+          </p>
+        </button>
+      </StrengthForm>
+      <CardioForm>
+        <button
+          type="button"
+          aria-haspopup="dialog"
+          aria-expanded="false"
+          data-state="closed"
+          class="card flex items-center gap-2 justify-center w-full cursor-pointer group"
+        >
+          <div
+            class="i-solar:treadmill-round-line-duotone dark:i-solar:treadmill-round-bold-duotone text-3xl lg:text-5xl"
+          />
+          <p
+            class="text-2xl lg:text-3xl opacity-55 dark:opacity-15 transition-all duration-200 group-hover:opacity-100"
+          >
+            +
+          </p>
+        </button>
+      </CardioForm>
+      <BodyMetricForm>
+        <button
+          type="button"
+          aria-haspopup="dialog"
+          aria-expanded="false"
+          data-state="closed"
+          class="card flex items-center gap-2 justify-center w-full cursor-pointer group"
+        >
+          <div
+            class="i-solar:weigher-line-duotone dark:i-solar:weigher-bold-duotone text-3xl lg:text-5xl"
+          />
+          <p
+            class="text-2xl lg:text-3xl opacity-55 dark:opacity-15 transition-all duration-200 group-hover:opacity-100"
+          >
+            +
+          </p>
+        </button>
+      </BodyMetricForm>
+      <!-- <div
+        class="card  w-full flex flex-col gap-1 items-center justify-center"
+      >
+        <div class="text-3xl sm:text-4xl lg:text-5xl font-semibold flex items-center gap-1">
+          <div
+            class="i-solar:fire-line-duotone dark:i-solar:fire-bold-duotone text-3xl sm:text-3xl lg:text-5xl"
+          />
+          <span class="opacity-90 dark:opacity-100">{{ currentStreak }}</span>
+        </div>
+        <p class="text-base opacity-85">{{ currentStreak === 1 ? 'day' : 'days' }} active</p>
+      </div> -->
     </div>
 
     <NuxtLink
