@@ -227,13 +227,13 @@ const dueDateMetaMap = computed(() => {
     </LazyHomeCalendar>
 
     <!-- Holy days: 1 row x 2 cols, below calendar -->
-    <div class="card lg:col-start-1 lg:col-span-2 lg:row-start-5 lg:row-span-1">
+    <!-- <div class="card lg:col-start-1 lg:col-span-2 lg:row-start-5 lg:row-span-1">
       <h2 class="card-title">
         <div class="i-mdi:calendar-star" />
         This week's holy days
       </h2>
       <TibetanHolyDays class="" />
-    </div>
+    </div> -->
 
     <!-- Todo: Expanded to 2 cols x 4 rows, replacing Pomodoro & Music -->
     <div
@@ -318,7 +318,7 @@ const dueDateMetaMap = computed(() => {
         </section>
 
         <!-- EVENTS (pink, with due dates) -->
-        <section class="flex flex-col min-h-0" :style="{ flex: sectionFlex.event }">
+        <!-- <section class="flex flex-col min-h-0" :style="{ flex: sectionFlex.event }">
           <h3
             class="text-xs font-medium text-pink-600 dark:text-pink-400 uppercase tracking-wider mb-2 flex items-center gap-2 shrink-0"
           >
@@ -368,7 +368,7 @@ const dueDateMetaMap = computed(() => {
               <li v-if="!eventTodos.length" class="text-xs opacity-40 py-1">No events yet</li>
             </ul>
           </PurpleScrollArea>
-          <!-- Add event form -->
+
           <div
             v-if="showEventForm"
             class="mt-2 space-y-2 p-3 rounded-lg bg-pink-500/5 border border-pink-500/20 shrink-0"
@@ -410,13 +410,13 @@ const dueDateMetaMap = computed(() => {
           >
             + Add event
           </button>
-        </section>
+        </section> -->
       </div>
     </div>
 
     <NuxtLink
       to="/gallery"
-      class="card lg:col-start-3 lg:col-span-2 lg:row-start-4 relative overflow-hidden group flex items-center gap-3 p-4 hover:scale-[1.01] transition-transform duration-200"
+      class="card lg:col-start-1 lg:col-span-1 lg:row-start-5 relative overflow-hidden group flex items-center gap-3 p-4 hover:scale-[1.01] transition-transform duration-200"
     >
       <div
         class="absolute inset-0 bg-gradient-to-br from-pink-400/20 to-purple-400/10 opacity-0 group-hover:opacity-100 transition-opacity"
@@ -433,7 +433,7 @@ const dueDateMetaMap = computed(() => {
 
     <NuxtLink
       to="/musical"
-      class="card lg:col-start-3 lg:col-span-2 lg:row-start-5 relative overflow-hidden group flex items-center gap-3 p-4 hover:scale-[1.01] transition-transform duration-200"
+      class="card lg:col-start-2 lg:col-span-1 lg:row-start-5 relative overflow-hidden group flex items-center gap-3 p-4 hover:scale-[1.01] transition-transform duration-200"
     >
       <div
         class="absolute inset-0 bg-gradient-to-br from-purple-400/20 to-indigo-400/10 opacity-0 group-hover:opacity-100 transition-opacity"
