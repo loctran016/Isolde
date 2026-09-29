@@ -1,11 +1,31 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
+
+import { content } from './server/utils/content'
+import { fileURLToPath } from 'node:url'
+
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
   watch: ['~/uno.config.ts'],
-  modules: ['@unocss/nuxt', '@formkit/auto-animate', '@vueuse/nuxt', 'motion-v/nuxt', '@nuxtjs/supabase', 'nuxt-echarts', '@nuxt/eslint', '@vite-pwa/nuxt', '@regle/nuxt', '@nuxtjs/cloudinary', // 'nuxt-easy-lightbox',
-  '@vercel/speed-insights', '@nuxt/fonts'],
-
+  modules: [
+    '@unocss/nuxt',
+    '@formkit/auto-animate',
+    '@vueuse/nuxt',
+    'motion-v/nuxt',
+    '@nuxtjs/supabase',
+    'nuxt-echarts',
+    '@nuxt/eslint',
+    '@vite-pwa/nuxt',
+    '@regle/nuxt',
+    '@nuxtjs/cloudinary', // 'nuxt-easy-lightbox',
+    '@vercel/speed-insights',
+    '@nuxt/fonts',
+  ],
+  nitro: {
+    serverAssets: [
+      { baseName: 'comark', dir: fileURLToPath(new URL('./.content', import.meta.url)) },
+    ],
+  },
   vite: {
     optimizeDeps: {
       include: ['@vue/devtools-core', '@vue/devtools-kit', '@internationalized/date', 'reka-ui'],
@@ -88,6 +108,14 @@ export default defineNuxtConfig({
       pathPrefix: false,
     },
   ],
+  hooks: {
+    'prerender:routes': async (ctx) => {
+      const pages = await content.list()
+      for (const page of pages) {
+        ctx.routes.add(page.path)
+      }
+    },
+  },
   supabase: {
     useSsrCookies: true, // This should be true for SSR support
     redirect: false,
