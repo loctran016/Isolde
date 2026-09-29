@@ -13,13 +13,29 @@ if (!page.value) {
   throw createError({ statusCode: 404, message: 'Page not found' })
 }
 
+// Derive a human-readable title from the filename/route path
+// e.g. "/blog/my-first-post" -> "My First Post"
+const filename = path.split('/').filter(Boolean).pop() ?? 'index'
+const title = filename
+  .replace(/[-_]+/g, ' ')
+  .replace(/\b\w/g, (c) => c.toUpperCase())
+
+// Prepend the title as an H1 node directly on the parsed document
+if (page.value && Array.isArray(page.value.nodes)) {
+  const hasH1 = page.value.nodes.some(
+    (node) => Array.isArray(node) && node[0] === 'h1'
+  )
+  if (!hasH1) {
+    page.value.nodes.unshift(['h1', {}, title])
+  }
+}
+
 definePageMeta({
   pageTransition: {
     name: 'focus-mode',
     mode: 'out-in'
   }
 })
-
 </script>
 
 <template>
@@ -29,17 +45,13 @@ definePageMeta({
 </template>
 
 <style>
-/* The transition timing and easing */
 .focus-mode-enter-active,
 .focus-mode-leave-active {
   transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* The starting and ending states */
 .focus-mode-enter-from,
 .focus-mode-leave-to {
   opacity: 0;
-  filter: blur(8px);
-  background-color: #000000; 
 }
 </style>
