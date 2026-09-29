@@ -1,4 +1,4 @@
-import { defineConfig, presetWind4, presetIcons } from 'unocss'
+import { defineConfig, presetWind4, presetIcons, presetTypography } from 'unocss'
 import { presetScrollbar } from 'unocss-preset-scrollbar'
 
 export default defineConfig({
@@ -10,6 +10,7 @@ export default defineConfig({
     }),
     presetIcons(),
     presetScrollbar(),
+    presetTypography(),
   ],
   //   extendTheme(theme) {
   //     theme.font = {

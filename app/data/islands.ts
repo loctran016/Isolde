@@ -41,6 +41,14 @@ export const ISLANDS: Island[] = [
     description: 'Every photo, organized by folder and tag.',
   },
   {
+    key: 'notes',
+    path: '/notes',
+    navLabel: 'Notes Island',
+    pageTitle: 'Notes Island',
+    titleIcon: 'i-solar:notes-bold',
+    description: 'Medical notes.',
+  },
+  {
     key: 'habit',
     path: '/habit',
     navLabel: 'Habits',
@@ -64,6 +72,7 @@ export const ISLANDS: Island[] = [
     titleIcon: 'i-solar:health-bold',
     description: 'Medical record editor.',
   },
+
   //   definePageMeta({ title: 'Medic Island', titleIcon: '' })
 ]
 

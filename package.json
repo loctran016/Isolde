@@ -51,6 +51,7 @@
     "@nuxt/eslint": "^1.16.0",
     "@unocss/nuxt": "^66.7.2",
     "@unocss/preset-icons": "^66.7.2",
+    "@unocss/preset-typography": "^66.10.5",
     "@unocss/preset-wind4": "^66.7.2",
     "@vite-pwa/assets-generator": "^1.0.2",
     "prettier": "^3.9.4",
