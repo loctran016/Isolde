@@ -12,6 +12,7 @@
     "generate-pwa-assets": "pwa-assets-generator --preset minimal-2023 public/logo.svg"
   },
   "dependencies": {
+    "@comark/vue": "^0.7.0",
     "@fontsource-variable/inter": "^5.2.8",
     "@fontsource-variable/space-grotesk": "^5.2.10",
     "@formkit/auto-animate": "0.9.0",
@@ -27,6 +28,7 @@
     "@yeger/vue-masonry-wall": "^6.1.4",
     "abcjs": "^6.6.3",
     "cloudinary": "^2.10.0",
+    "comark-content": "^0.4.1",
     "dayjs": "^1.11.21",
     "echarts": "^6.0.0",
     "exceljs": "^4.4.0",
