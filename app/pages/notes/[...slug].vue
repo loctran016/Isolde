@@ -15,7 +15,7 @@ if (!page.value) {
 </script>
 
 <template>
-  <div class="card prose dark:prose-invert mt-6">
-    <MarkdownDocument :value="page" />
+  <div class="card mt-6">
+    <MarkdownDocument :value="page" class="prose dark:prose-invert mx-auto" />
   </div>
 </template>
