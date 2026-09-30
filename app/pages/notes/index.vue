@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { getIsland } from '~/data/islands'
 const island = getIsland('/notes')!
 
 useHead({
