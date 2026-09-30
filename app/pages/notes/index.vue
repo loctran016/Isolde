@@ -1,10 +1,18 @@
 <script setup lang="ts">
+const island = getIsland('/notes')!
+
+useHead({
+  title: island.pageTitle,
+  meta: [{ name: 'description', content: island.description }],
+})
+
+definePageMeta({ title: island.pageTitle, titleIcon: island.titleIcon })
+
+
 import type { NavigationItem } from 'comark-content'
 
 const { data: nav } = await useAsyncData('notes-nav', () => clientContent.navigation())
 
-console.log(JSON.stringify(nav.value, null, 2))
-console.log(nav.value) // expand in browser devtools object inspector, not JSON.stringify
 </script>
 
 <template>
