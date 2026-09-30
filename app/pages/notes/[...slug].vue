@@ -4,10 +4,14 @@ import { MarkdownDocument } from '@comark/vue'
 const route = useRoute()
 const path = route.path.replace(/\/+$/, '') || '/'
 const { data: page, error } = await useAsyncData(path, () => clientContent.get(path))
+const island = getIsland('/notes')!
 
-definePageMeta({
-  layout: 'note',
+useHead({
+  title: island.pageTitle,
+  meta: [{ name: 'description', content: island.description }],
 })
+
+definePageMeta({ layout: 'note',title: island.pageTitle, titleIcon: island.titleIcon })
 
 if (error.value) {
   console.error('Content fetch error:', error.value)
