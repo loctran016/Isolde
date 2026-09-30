@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { MarkdownDocument } from '@comark/vue'
+import { getIsland } from '~/data/islands'
 
 const route = useRoute()
 const path = route.path.replace(/\/+$/, '') || '/'
