@@ -5,6 +5,10 @@ const route = useRoute()
 const path = route.path.replace(/\/+$/, '') || '/'
 const { data: page, error } = await useAsyncData(path, () => clientContent.get(path))
 
+definePageMeta({
+  layout: 'note',
+})
+
 if (error.value) {
   console.error('Content fetch error:', error.value)
 }
