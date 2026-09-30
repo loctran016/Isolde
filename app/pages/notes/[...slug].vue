@@ -45,8 +45,8 @@ if (page.value && Array.isArray(page.value.nodes)) {
 </script>
 
 <template>
-  <div class="card mt-6">
-    <MarkdownDocument :value="page" class="prose lg:prose-xl dark:prose-invert prose-headings:font-head mx-auto" />
+  <div class="mt-4 lg:mt-6">
+    <MarkdownDocument :value="page" class="prose prose-slate lg:prose-xl dark:prose-invert prose-headings:font-head mx-auto" />
   </div>
 </template>
 
