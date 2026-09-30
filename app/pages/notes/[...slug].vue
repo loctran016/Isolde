@@ -11,7 +11,10 @@ useHead({
   meta: [{ name: 'description', content: island.description }],
 })
 
-definePageMeta({ layout: 'note',title: island.pageTitle, titleIcon: island.titleIcon })
+definePageMeta({ pageTransition: {
+    name: 'focus-mode',
+    mode: 'out-in'
+  },layout: 'note',title: island.pageTitle, titleIcon: island.titleIcon })
 
 if (error.value) {
   console.error('Content fetch error:', error.value)
@@ -38,12 +41,6 @@ if (page.value && Array.isArray(page.value.nodes)) {
   }
 }
 
-definePageMeta({
-  pageTransition: {
-    name: 'focus-mode',
-    mode: 'out-in'
-  }
-})
 </script>
 
 <template>
