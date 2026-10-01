@@ -17,6 +17,10 @@ definePageMeta({ pageTransition: {
     mode: 'out-in'
   },layout: 'note',title: island.pageTitle, titleIcon: island.titleIcon })
 
+defineRouteRules({
+  prerender: true,
+})
+
 if (error.value) {
   console.error('Content fetch error:', error.value)
 }
