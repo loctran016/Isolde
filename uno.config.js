@@ -28,8 +28,8 @@ export default defineConfig({
   //   },
   theme: {
     font: {
-      sans: ['Inter Variable', 'sans-serif'],
-      head: ['Space Grotesk Variable', 'sans-serif'],
+      sans: ['Inter', 'sans-serif'],
+      head: ['Space Grotesk', 'sans-serif'],
     },
   },
   shortcuts: {
