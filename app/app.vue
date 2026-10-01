@@ -52,4 +52,9 @@ onBeforeUnmount(() => cleanup?.())
   opacity: 0;
   filter: blur(1rem);
 }
+
+:root {
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-head: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+}
 </style>

@@ -12,6 +12,12 @@ export default defineConfig({
     presetScrollbar(),
     presetTypography(),
   ],
+  preflights: [
+    {
+      getCSS: () =>
+        `:root{--font-sans:"Inter",ui-sans-serif,system-ui,sans-serif;--font-head:"Space Grotesk",ui-sans-serif,system-ui,sans-serif}`,
+    },
+  ],
   //   extendTheme(theme) {
   //     theme.font = {
   //       ...theme.font,

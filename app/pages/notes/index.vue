@@ -25,7 +25,7 @@ function label(item: NavigationItem, depth?: number) {
   <div class="i-healthicons:medicines-24px hidden"></div>
   <main class="mt-6 lg:mt-8 space-y-3 lg:space-y-4">
     <div v-for="folder in nav?.[0]?.children" :key="folder.path" class="card">
-      <h2 class="card-title text-lg lg:text-xl">
+      <h2 class="card-title text-lg lg:text-xl tracking-wide">
         <div :class="noteSubject[folder.title]"></div>
         {{ label(folder, 0) }}
       </h2>
@@ -38,7 +38,7 @@ function label(item: NavigationItem, depth?: number) {
             class="duration-200 w-full border-rounded-md cursor-pointer p-4 group bg-purple-50/25 hover:bg-purple-50/35 border border-white/10 dark:bg-purple-950/25 dark:hover:bg-purple-950/35 dark:border-white/5 min-h-32 cursor-pointer hover:opacity-90 transition-opacity"
           >
             <NuxtLink :to="page.path" class="flex flex-col h-full">
-              <h3 class="text-base font-bold font-head max-w-4/5">{{ label(page) }}</h3>
+              <h3 class="text-base font-bold max-w-4/5">{{ label(page) }}</h3>
               <div
                 class="flex justify-between items-start mt-2 pt-2 border-t-1 border-stone-900/20 dark:border-white/15 border-dashed mt-auto"
               ></div>
