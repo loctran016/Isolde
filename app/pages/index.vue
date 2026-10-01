@@ -8,7 +8,6 @@ import {
   EditablePreview,
   EditableRoot,
 } from 'reka-ui'
-import { getIsland } from '~/data/islands'
 
 const TIME_ZONE = 'Asia/Ho_Chi_Minh'
 

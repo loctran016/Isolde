@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import { Separator } from 'reka-ui'
 import { useMediaQuery } from '@vueuse/core'
-import { ISLANDS } from '~/data/islands'
+// import { ISLANDS } from '~/utils/islands'
 
 const navItems = ISLANDS.filter((i) => i.key !== 'home' || true).map((i) => ({
   to: i.path,
@@ -41,7 +41,7 @@ const showLogin = computed(() => !user.value && isBelowLaptop.value)
 </script>
 <template>
   <ul
-    class="flex gap-1 sm:gap-1.5 items-center justify-center rounded-full border border-white/40 dark:border-white/10 bg-white/20 dark:bg-stone-500/20 backdrop-blur-md p-.75 sm:p-1 text-base lg:text-lg"
+    class="flex gap-1 sm:gap-1.5 items-center justify-center rounded-full border border-white/40 dark:border-white/10 bg-white/20 dark:bg-stone-500/20 backdrop-blur-md p-.75 sm:p-1 text-lg"
   >
     <li v-for="item in visibleNavItems" :key="item.to">
       <NuxtLink

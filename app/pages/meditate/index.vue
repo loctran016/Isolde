@@ -2,7 +2,6 @@
 import { today, parseDate } from '@internationalized/date'
 import { createColumnHelper, FlexRender, getCoreRowModel, useVueTable } from '@tanstack/vue-table'
 import { MEDITATION_PRACTICES } from '~/data/meditationPractices'
-import { getIsland } from '~/data/islands'
 
 const island = getIsland('/meditate')
 
@@ -23,9 +22,7 @@ const selectColumns = computed(() => ['id', 'date', ...PRACTICE_KEYS].join(', ')
 const { data: logs, refresh: refreshLogs } = await useAsyncData(
   'meditation-logs',
   async () => {
-    const { data, error } = await supabase
-      .from('meditation_logs')
-      .select(selectColumns.value)
+    const { data, error } = await supabase.from('meditation_logs').select(selectColumns.value)
     if (error) throw error
     return data ?? []
   },
@@ -77,9 +74,7 @@ async function tapPractice(practice) {
 
     const payload = { date: todayIso, [practice.key]: next }
 
-    const { error } = await supabase
-      .from('meditation_logs')
-      .upsert(payload, { onConflict: 'date' })
+    const { error } = await supabase.from('meditation_logs').upsert(payload, { onConflict: 'date' })
 
     if (error) throw error
     await refreshLogs()
@@ -118,14 +113,12 @@ async function duplicateYesterday() {
       payload[key] = Number(yesterdayLog[key] ?? 0)
     }
 
-    const { error } = await supabase
-      .from('meditation_logs')
-      .upsert(payload, { onConflict: 'date' })
+    const { error } = await supabase.from('meditation_logs').upsert(payload, { onConflict: 'date' })
 
     if (error) throw error
     await refreshLogs()
   } catch (e) {
-    console.error('Failed to duplicate yesterday\'s log', e)
+    console.error("Failed to duplicate yesterday's log", e)
   } finally {
     isDuplicatingYesterday.value = false
   }
@@ -162,9 +155,7 @@ async function saveEditLogs() {
       payload[practice.key] = Number.isFinite(parsed) ? Math.max(0, Math.trunc(parsed)) : 0
     }
 
-    const { error } = await supabase
-      .from('meditation_logs')
-      .upsert(payload, { onConflict: 'date' })
+    const { error } = await supabase.from('meditation_logs').upsert(payload, { onConflict: 'date' })
 
     if (error) throw error
 
@@ -178,8 +169,18 @@ async function saveEditLogs() {
 }
 
 const MONTH_NAMES = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December',
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
 ]
 
 const selectedMonth = useState('meditate-month', () => todayCalendarDate.month)
@@ -254,8 +255,12 @@ const tableColumns = computed(() => [
 ])
 
 const table = useVueTable({
-  get data() { return tableData.value },
-  get columns() { return tableColumns.value },
+  get data() {
+    return tableData.value
+  },
+  get columns() {
+    return tableColumns.value
+  },
   getCoreRowModel: getCoreRowModel(),
   initialState: {
     columnPinning: {
@@ -358,7 +363,9 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="my-2 grid grid-cols-2 lg:grid-cols-6 gap-3 sm:gap-4 py-4 mx-auto font-sans dark:text-gray-100">
+  <div
+    class="my-2 grid grid-cols-2 lg:grid-cols-6 gap-3 sm:gap-4 py-4 mx-auto font-sans dark:text-gray-100"
+  >
     <!-- Quick actions -->
     <div class="card col-span-full">
       <div class="flex items-center justify-between flex-wrap gap-3 mb-4">
@@ -479,7 +486,9 @@ onBeforeUnmount(() => {
             </button>
           </div>
           <template #fallback>
-            <div class="h-9 w-48 rounded-xl border border-white/40 dark:border-white/10 bg-white/30 dark:bg-stone-700/10 animate-pulse" />
+            <div
+              class="h-9 w-48 rounded-xl border border-white/40 dark:border-white/10 bg-white/30 dark:bg-stone-700/10 animate-pulse"
+            />
           </template>
         </ClientOnly>
       </div>
@@ -498,7 +507,9 @@ onBeforeUnmount(() => {
                   minWidth: `${header.column.getSize()}px`,
                   maxWidth: `${header.column.getSize()}px`,
                   position: header.column.getIsPinned() ? 'sticky' : undefined,
-                  left: header.column.getIsPinned() ? `${header.column.getStart('left')}px` : undefined,
+                  left: header.column.getIsPinned()
+                    ? `${header.column.getStart('left')}px`
+                    : undefined,
                   zIndex: header.column.getIsPinned() ? 1 : undefined,
                   opacity: columnOpacities[header.column.id] ?? undefined,
                 }"

@@ -2,7 +2,6 @@
 import type { CloudinaryPhoto } from '~~/server/api/gallery.get'
 
 import { MasonryWall } from '@yeger/vue-masonry-wall'
-import { getIsland } from '~/data/islands'
 
 const island = getIsland('/gallery')!
 

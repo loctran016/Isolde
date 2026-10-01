@@ -3,7 +3,6 @@ import { parseDateTime, today, parseDate } from '@internationalized/date'
 import { EXERCISE_TO_SPLIT, STRENGTH_EXERCISES } from '~/types/database.types'
 import { WEEK_SCHEDULE } from '~/data/fitness.js'
 import { usePreferredDark } from '@vueuse/core'
-import { getIsland } from '~/data/islands'
 
 const island = getIsland('/fitness')!
 

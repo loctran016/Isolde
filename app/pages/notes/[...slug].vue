@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { MarkdownDocument } from '@comark/vue'
-import { getIsland } from '~/data/islands'
 
 const route = useRoute()
 const path = route.path.replace(/\/+$/, '') || '/'
@@ -12,10 +11,15 @@ useHead({
   meta: [{ name: 'description', content: island.description }],
 })
 
-definePageMeta({ pageTransition: {
+definePageMeta({
+  pageTransition: {
     name: 'focus-mode',
-    mode: 'out-in'
-  },layout: 'note',title: island.pageTitle, titleIcon: island.titleIcon })
+    mode: 'out-in',
+  },
+  layout: 'note',
+  title: island.pageTitle,
+  titleIcon: island.titleIcon,
+})
 
 if (error.value) {
   console.error('Content fetch error:', error.value)
@@ -28,25 +32,23 @@ if (!page.value) {
 // Derive a human-readable title from the filename/route path
 // e.g. "/blog/my-first-post" -> "My First Post"
 const filename = path.split('/').filter(Boolean).pop() ?? 'index'
-const title = filename
-  .replace(/[-_]+/g, ' ')
-  .replace(/\b\w/g, (c) => c.toUpperCase())
+const title = filename.replace(/[-_]+/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
 
 // Prepend the title as an H1 node directly on the parsed document
 if (page.value && Array.isArray(page.value.nodes)) {
-  const hasH1 = page.value.nodes.some(
-    (node) => Array.isArray(node) && node[0] === 'h1'
-  )
+  const hasH1 = page.value.nodes.some((node) => Array.isArray(node) && node[0] === 'h1')
   if (!hasH1) {
     page.value.nodes.unshift(['h1', {}, title])
   }
 }
-
 </script>
 
 <template>
   <div class="max-w-9/10 mt-4 lg:mt-6">
-    <MarkdownDocument :value="page" class="prose prose-slate lg:prose-xl dark:prose-invert prose-headings:font-head mx-auto" />
+    <MarkdownDocument
+      :value="page"
+      class="prose prose-slate lg:prose-xl dark:prose-invert prose-headings:font-head mx-auto"
+    />
   </div>
 </template>
 

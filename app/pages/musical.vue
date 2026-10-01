@@ -4,8 +4,6 @@ type Tune = {
   title: string
 }
 
-import { getIsland } from '~/data/islands'
-
 const island = getIsland('/musical')!
 
 useHead({

@@ -2,8 +2,6 @@
 import { today, parseDate } from '@internationalized/date'
 import { usePreferredDark } from '@vueuse/core'
 
-import { getIsland } from '~/data/islands'
-
 const island = getIsland('/habit')!
 
 useHead({
