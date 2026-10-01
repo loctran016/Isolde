@@ -13,7 +13,7 @@ useHead({
 
 <template>
   <div
-    class="w-full bg-stone-50 text-stone-900 dark:bg-stone-900 dark:text-gray-100 font-sans h-screen flex flex-col overflow-hidden"
+    class="w-full bg-orange-50 text-stone-900 dark:bg-slate-900 dark:text-slate-200 font-sans h-screen flex flex-col overflow-hidden"
   >
 
     <ScrollAreaRoot
