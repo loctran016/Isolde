@@ -40,7 +40,7 @@ onBeforeUnmount(() => cleanup?.())
 .layout-leave-to {
   opacity: 0;
   filter: blur(8px);
-  background-color: #000000;
+  /* background-color: #000000; */
 }
 
 .page-enter-active,

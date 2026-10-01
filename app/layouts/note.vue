@@ -15,14 +15,13 @@ useHead({
   <div
     class="w-full bg-orange-50 text-stone-900 dark:bg-slate-900 dark:text-slate-200 font-sans h-screen flex flex-col overflow-hidden"
   >
-
     <ScrollAreaRoot
       style="--scrollbar-size: 18px"
       class="relative flex-1 min-h-0 [--header-height:3.5rem] lg:[--header-height:4.1875rem]"
     >
       <ScrollAreaViewport class="w-full h-full">
         <header
-          class="sticky top-0 z-20 h-[var(--header-height)] flex items-center border-b border-white/40 dark:border-white/10 bg-white/30 dark:bg-stone-700/30 backdrop-blur-xl backdrop-saturate-150"
+          class="sticky top-0 z-20 h-[var(--header-height)] flex items-center border-b border-stone/40 dark:border-white/10 bg-white/30 dark:bg-stone-700/30 backdrop-blur-xl backdrop-saturate-150"
         >
           <!-- TODO: pt-safe as iPhone has small pt-safe -->
           <div
@@ -34,13 +33,11 @@ useHead({
               <span class="leading-none">{{ pageTitle }}</span>
             </div>
 
-            <NavBar />
+            <NavBar type="notes" />
           </div>
         </header>
 
-        <main
-          class="mx-auto px-4 h-full w-full min-h-[calc(100vh-var(--header-height))]"
-        >
+        <main class="mx-auto px-4 h-full w-full min-h-[calc(100vh-var(--header-height))]">
           <slot />
         </main>
       </ScrollAreaViewport>
@@ -68,5 +65,4 @@ body,
   height: 100%;
   margin: 0;
 }
-
 </style>
