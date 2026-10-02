@@ -55,7 +55,9 @@ const rewriteImgs = (nodes: any[]) => {
       const raw = (props.src || props.alt || '').trim()
       if (raw && !/^(https?:)?\/\/|^data:|^\//.test(raw)) {
         const key = `${noteDir}/${decodeURIComponent(raw)}`
-        props.src = '/api/content/media/' + key.split('/').map(encodeURIComponent).join('/')
+        props.src = '/media/' + key.split('/').slice(1).map(encodeURIComponent).join('/')
+          // props.src = '/api/content/media/' + key.split('/').map(encodeURIComponent).join('/')
+        // This come from /api/content/media/, others related code is still there, including addServeHandler and media()
       }
     }
     rewriteImgs(n.slice(2))

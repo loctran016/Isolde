@@ -28,7 +28,9 @@ export default defineNuxtConfig({
   nitro: {
     serverAssets: [
       { baseName: 'comark', dir: fileURLToPath(new URL('./.content', import.meta.url)) },
-    ],
+      ],
+      publicAssets: [
+     { dir: fileURLToPath(new URL('./content', import.meta.url)), baseURL: '/media', maxAge: 60 * 60 * 24 },    ],
   },
   vite: {
     optimizeDeps: {
