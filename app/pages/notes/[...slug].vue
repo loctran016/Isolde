@@ -89,13 +89,12 @@ rewriteImgs(page.value.nodes)
 </template>
 
 <style>
-.focus-mode-enter-active,
-.focus-mode-leave-active {
-  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.focus-mode-enter-from,
-.focus-mode-leave-to {
-  opacity: 0;
+.prose table {
+  width: max-content;
+  min-width: 100%;
+  max-width: min(calc(100vw - 2rem), 110ch);
+  position: relative;
+  left: 50%;
+  transform: translateX(-50%);
 }
 </style>
