@@ -83,7 +83,7 @@ const showLogin = computed(() => !user.value && isBelowLaptop.value)
     <ClientOnly>
       <li>
         <button
-          class="cursor-pointer duration-200 rounded-full p-2 lg:p-2.5 flex items-center justify-center transition-all"
+          class="cursor-pointer duration-200 rounded-full p-2.5 flex items-center justify-center transition-all"
           :class="buttonClass"
           :aria-label="themeLabel"
           :title="themeLabel"
@@ -95,7 +95,7 @@ const showLogin = computed(() => !user.value && isBelowLaptop.value)
       <template #fallback>
         <li>
           <button
-            class="rounded-full p-2 lg:p-2.5 flex items-center justify-center cursor-progress"
+            class="rounded-full p-2.5 flex items-center justify-center cursor-progress"
             disabled
             aria-label="Loading theme"
           >
