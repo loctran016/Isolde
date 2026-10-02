@@ -55,6 +55,6 @@ onBeforeUnmount(() => cleanup?.())
 
 :root {
   --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
-  --font-head: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+  --font-head: 'Merriweather','Space Grotesk', ui-sans-serif, system-ui, sans-serif;
 }
 </style>
