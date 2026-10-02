@@ -43,7 +43,7 @@ const tocLinks = computed(() => page.value?.meta?.toc?.links ?? [])
   <div
     class="max-w-9/10 lg:max-w-3/5 mt-6 lg:mt-8 prose prose-slate lg:prose-lg dark:prose-invert prose-headings:font-head mx-auto !max-w-75ch prose-a:no-underline hover:prose-a:text-purple-800/95 dark:hover:prose-a:text-purple-300/90 prose-a:transition-all prose-a:duration-200"
   >
-    <NuxtLink class="prose-table:table-auto mb-4 cursor-pointer flex gap-2 opacity-90" to="/notes">
+    <NuxtLink class="prose-table:table-auto prose-table:overflow-scroll prose-table:scrollbar-none prose-td:w-[min(10ch,max-content)] mb-4 cursor-pointer flex gap-2 opacity-90" to="/notes">
       <div class="i-solar:home-2-bold lg:text-lg" />
       <span class="text-xs lg:text-sm">
         {{ pageTitles[0] }} /
