@@ -1,4 +1,5 @@
 import { comarkContent } from 'comark-content'
+import media from 'comark-content/plugins/media'
 import fs from 'comark-content/sources/fs'
 import { withSnapshot } from 'comark-content/sources/snapshot'
 
@@ -14,4 +15,5 @@ export const content = comarkContent({
         useStorage('assets:comark').get('default/manifest.json'),
       ),
   ),
+  plugins: [media()],
 })

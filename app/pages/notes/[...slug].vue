@@ -44,11 +44,26 @@ const tocLinks = computed(() => page.value?.meta?.toc?.links ?? [])
 
 // console.log(tocLinks.value)
 // console.log('Page value', page.value)
+
+const rewriteImgs = (nodes: any[]) => {
+  for (const n of nodes) {
+    if (!Array.isArray(n)) continue
+    if (n[0] === 'img') {
+      const props = (n[1] ??= {})
+      const raw = (props.src || props.alt || '').trim()
+      if (raw && !/^(https?:)?\/\/|^data:|^\//.test(raw)) {
+        props.src = '/api/media/' + encodeURIComponent(decodeURIComponent(raw).split('/').pop()!)
+      }
+    }
+    rewriteImgs(n.slice(2))
+  }
+}
+rewriteImgs(page.value.nodes)
 </script>
 
 <template>
   <div
-    class="max-w-9/10 lg:max-w-3/5 mt-6 lg:mt-8 prose lg:prose-lg dark:prose-invert prose-headings:font-head mx-auto !max-w-75ch prose-a:no-underline hover:prose-a:text-purple-800/95 dark:hover:prose-a:text-purple-300/90 prose-a:transition-all prose-a:duration-200 prose-headings:tracking-wide prose-table:table-auto prose-table:overflow-scroll prose-table:scrollbar-none prose-td:w-[min(10ch,max-content)]"
+    class="max-w-9/10 lg:max-w-3/5 mt-6 lg:mt-8 prose lg:prose-lg dark:prose-invert prose-headings:font-head mx-auto !max-w-75ch prose-a:no-underline hover:prose-a:text-purple-800/95 dark:hover:prose-a:text-purple-300/90 prose-a:transition-all prose-a:duration-200 prose-headings:tracking-wide prose-table:table-auto prose-table:overflow-scroll prose-table:scrollbar-none prose-td:w-[min(10ch,max-content)] prose-img:mx-auto prose-img:rounded-md"
   >
     <NuxtLink class="mb-4 cursor-pointer flex gap-2 opacity-90" to="/notes">
       <div class="i-solar:home-2-bold lg:text-lg" />

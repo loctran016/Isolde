@@ -18,6 +18,7 @@
     "@formkit/auto-animate": "0.9.0",
     "@internationalized/date": "^3.12.2",
     "@nuxt/fonts": "0.14.0",
+    "@nuxt/image": "2.1.0",
     "@nuxtjs/cloudinary": "^4.0.0",
     "@nuxtjs/supabase": "2.0.9",
     "@regle/nuxt": "1.28.3",

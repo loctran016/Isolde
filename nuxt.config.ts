@@ -16,11 +16,15 @@ export default defineNuxtConfig({
     'nuxt-echarts',
     '@nuxt/eslint',
     '@vite-pwa/nuxt',
-    '@regle/nuxt',
-    '@nuxtjs/cloudinary', // 'nuxt-easy-lightbox',
+    '@regle/nuxt', // 'nuxt-easy-lightbox',
+    '@nuxtjs/cloudinary',
     '@vercel/speed-insights',
     '@nuxt/fonts',
+    '@nuxt/image',
   ],
+  image: {
+    dir: '~~/content', // src paths are now relative to content/
+  },
   nitro: {
     serverAssets: [
       { baseName: 'comark', dir: fileURLToPath(new URL('./.content', import.meta.url)) },
