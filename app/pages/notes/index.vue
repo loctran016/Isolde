@@ -42,7 +42,7 @@ function label(item: NavigationItem, depth?: number) {
               <div
                 class="flex justify-between items-start mt-2 pt-2 border-t-1 border-stone-900/20 dark:border-white/15 border-dashed mt-auto"
               ></div>
-              <p class="text-purple-600 flex-grow dark:text-purple-300 font-bold">
+              <p class="text-purple-600 flex-grow dark:text-purple-300 font-bold font-head">
                 {{ label(subfolder, 1) }}
               </p></NuxtLink
             >
