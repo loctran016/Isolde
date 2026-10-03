@@ -24,7 +24,7 @@ useHead({
 
     <ScrollAreaRoot
       style="--scrollbar-size: 18px"
-      class="relative flex-1 min-h-0 [--header-height:3.5rem] lg:[--header-height:4.1875rem]"
+      class="relative flex-1 min-h-0 [--header-height:4.1875rem]"
     >
       <ScrollAreaViewport class="w-full h-full">
         <header
