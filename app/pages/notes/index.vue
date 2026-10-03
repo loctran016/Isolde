@@ -40,7 +40,7 @@ function label(item: NavigationItem, depth?: number) {
             <NuxtLink :to="page.path" class="flex flex-col h-full">
               <h3 class="text-sm md:text-base md:min-h-14 flex-grow font-bold max-w-4/5">{{ label(page) }}</h3>
               <div
-                class="flex justify-between items-start mt-2 pt-2 border-t-1 border-stone-900/20 dark:border-white/15 border-dashed mt-auto"
+                class="flex justify-between items-start mt-2 pt-2 border-t-1 border-stone-900/20 dark:border-white/15 border-dashed md:mt-auto"
               ></div>
               <p class="text-purple-600 flex-grow dark:text-purple-300 font-bold font-head">
                 {{ label(subfolder, 1) }}
