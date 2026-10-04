@@ -84,7 +84,7 @@ rewriteImgs(page.value.nodes)
       <p class="mb-2 font-semibold opacity-80">Mục lục</p>
       <TocLinks :links="tocLinks" />
     </aside>
-    <MarkdownDocument :plugins="plugins" :value="page" class=""></MarkdownDocument>
+    <MarkdownDocument :value="page" class=""></MarkdownDocument>
   </div>
 </template>
 
