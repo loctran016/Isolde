@@ -6,15 +6,6 @@ const props = defineProps<{
   height?: string | number
 }>()
 
-const raw = computed(() => props.src?.trim() || props.alt?.trim() || '')
-
-const resolved = computed(() => {
-  const raw = props.src?.trim() || props.alt?.trim() || ''
-  if (!raw || /^(https?:)?\/\/|^data:/.test(raw)) return raw
-  const name = decodeURIComponent(raw).split('/').pop()!
-  return '/api/media/' + encodeURIComponent(name)
-})
-
 console.log('ProseImg', { src: props.src, alt: props.alt, resolved: resolved.value })
 </script>
 
