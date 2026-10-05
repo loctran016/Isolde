@@ -23,7 +23,7 @@ function label(item: NavigationItem, depth?: number) {
 <template>
   <div class="i-healthicons:gastroenterology hidden"></div>
   <div class="i-healthicons:medicines-24px hidden"></div>
-  <main class="mt-4 lg:mt-6 space-y-3 lg:space-y-4">
+  <main class="my-4 lg:my-6 space-y-3 lg:space-y-4">
     <div v-for="folder in nav?.[0]?.children" :key="folder.path" class="card">
       <h2 class="card-title text-lg lg:text-xl tracking-wide">
         <div :class="noteSubject[folder.title]"></div>
