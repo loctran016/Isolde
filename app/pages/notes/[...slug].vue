@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { MarkdownDocument } from '@comark/vue'
-import { parseMarkdown } from 'comark'
+// import { parseMarkdown } from 'comark'
 import toc from 'comark/plugins/toc'
+import mermaid, { Mermaid } from '@comark/vue/plugins/mermaid'
 
-const plugins = [toc({ depth: 3, title: 'On This Page' })]
+const plugins = [toc({ depth: 3, title: 'On This Page' }),mermaid()]
 
 const route = useRoute()
 const path = route.path.replace(/\/+$/, '') || '/'
@@ -84,7 +85,7 @@ rewriteImgs(page.value.nodes)
       <p class="mb-2 font-semibold opacity-80">Mục lục</p>
       <TocLinks :links="tocLinks" />
     </aside>
-    <MarkdownDocument :value="page" class=""></MarkdownDocument>
+    <MarkdownDocument :value="page" class="" :components="{ mermaid: Mermaid }" :plugins=plugins></MarkdownDocument>
   </div>
 </template>
 

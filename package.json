@@ -28,6 +28,7 @@
     "@vueuse/nuxt": "14.3.0",
     "@yeger/vue-masonry-wall": "^6.1.4",
     "abcjs": "^6.6.3",
+    "beautiful-mermaid": "^1.1.3",
     "cloudinary": "^2.10.0",
     "comark-content": "^0.4.1",
     "dayjs": "^1.11.21",
