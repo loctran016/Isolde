@@ -81,7 +81,7 @@ rewriteImgs(page.value.nodes)
       </span>
     </NuxtLink>
     <h1>{{ pageTitles[2] }}</h1>
-    <aside v-if="tocLinks.length" class="w-56 max-h-[70vh] overflow-y-auto text-sm">
+    <aside v-if="tocLinks.length" class="">
       <p class="mb-2 font-semibold opacity-80">Mục lục</p>
       <TocLinks :links="tocLinks" />
     </aside>
