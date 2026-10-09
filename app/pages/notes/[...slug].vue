@@ -81,8 +81,8 @@ rewriteImgs(page.value.nodes)
       </span>
     </NuxtLink>
     <h1>{{ pageTitles[2] }}</h1>
-    <aside v-if="tocLinks.length" class="p-2 border-slate-100 dark:border-slate-800 bg-slate-500/30">
-      <h2 class="mb-2 font-semibold opacity-80">Mục lục</p>
+    <aside v-if="tocLinks.length" class="p-2 border-slate-100 dark:border-slate-800 bg-slate-500/30 [&_li]:list-none [&_li]:pl-0">
+      <h2 class="mb-2 font-semibold opacity-80 text-xl lg:text-2xl">Mục lục</p>
       <TocLinks :links="tocLinks" />
     </aside>
     <MarkdownDocument :value="page" class="" :components="{ mermaid: Mermaid }" :plugins=plugins></MarkdownDocument>
