@@ -1,9 +1,29 @@
 import { comarkContent } from 'comark-content'
+import { defineComarkPlugin } from 'comark/parse'
 import media from 'comark-content/plugins/media'
 import fs from 'comark-content/sources/fs'
 import mermaid from 'comark/plugins/mermaid'
 import toc from 'comark/plugins/toc'
 import { withSnapshot } from 'comark-content/sources/snapshot'
+import markdownItMultiMDTable from 'markdown-it-multimd-table'
+import markdownItSup from 'markdown-it-sup'
+
+const multiMDTable = defineComarkPlugin(() => ({
+  name: 'multiMDTable',
+  markdownItPlugins: [markdownItMultiMDTable],
+}))
+
+const subscript = defineComarkPlugin(() => ({
+  name: "subscript",
+  post(state) {
+    state.tree.nodes = state.tree.nodes.flatMap(parseSubscript)
+  },
+}))
+
+const superscript = defineComarkPlugin(() => ({
+  name: 'superscript',
+  markdownItPlugins: [markdownItSup],
+}))
 
 export const content = comarkContent({
   source: withSnapshot(
@@ -18,32 +38,31 @@ export const content = comarkContent({
       ),
     ),
      markdown: {
-    plugins: [mermaid(),toc()],
+    plugins: [mermaid(),toc(),multiMDTable(),subscript(),superscript()],
   },
   plugins: [media()],
 })
 
-// const nfc = (s: string) => s.normalize('NFC')
+import type { Node } from "comark"
 
-// content.addServeHandler('media', async (request) => {
-//   const pathname = new URL(request.url).pathname
-//   const key = decodeURIComponent(pathname.slice(pathname.indexOf('/media/') + '/media/'.length))
+function parseSubscript(node: Node): Node[] {
+  if (typeof node === "string") {
+    const nodes: Node[] = []
 
-//   await (content as any).init()
-//   // The key is built from the note's folder (disk spelling) plus the link text, so try both Unicode forms.
-//   const found = [key, key.normalize('NFC'), key.normalize('NFD')].find((k) =>
-//     (content as any).stat(k),
-//   )
-//   const item = found && (content as any).stat(found)
-//    if (!item || item.meta?.kind !== 'media') {
-//     const count = (await (content as any).media.list()).length
-//     return new Response(`Not in index (${count} media items) for key: ${key}`, { status: 404 })
-//   }
+    for (const [index, part] of Object.entries(node.split(/~([^~\n]+)~/u))) {
+      if (part) {
+        const isEvenIndex = Number(index) % 2 === 0
+        nodes.push(isEvenIndex ? part : ["sub", {}, part])
+      }
+    }
 
-//   const raw = await (content as any).media.get(found)
-//   if (raw == null) return new Response('Bytes unavailable', { status: 404 })
+    return nodes
+  }
 
-//   return new Response(raw as BodyInit, {
-//     headers: { 'content-type': item.meta.type, 'cache-control': 'public, max-age=86400' },
-//   })
-// })
+  const [tag, props, ...children] = node
+
+  // Comment node: [null, attrs, content] — don't split its body.
+  if (tag === null) return [node]
+
+  return [[tag, props ?? {}, ...children.flatMap(parseSubscript)]]
+}
