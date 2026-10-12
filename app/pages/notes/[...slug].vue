@@ -3,6 +3,7 @@ import { MarkdownDocument } from '@comark/vue'
 // import { parseMarkdown } from 'comark'
 import toc from 'comark/plugins/toc'
 import mermaid, { Mermaid } from '@comark/vue/plugins/mermaid'
+import NoteDetails from '~/components/NoteDetails.vue'
 
 const plugins = [toc({ depth: 3, title: 'On This Page' }),mermaid()]
 
@@ -85,7 +86,12 @@ rewriteImgs(page.value.nodes)
 	      <p class="mb-2 font-semibold opacity-90 text-xl font-head md:text-2xl flex gap-2 items-center"><div class="i-solar:book-bookmark-minimalistic-line-duotone" />Mục lục</p>
       <TocLinks :links="tocLinks" />
     </aside>
-    <MarkdownDocument :value="page" class="" :components="{ mermaid: Mermaid }" :plugins=plugins></MarkdownDocument>
+    <MarkdownDocument
+      :value="page"
+      class=""
+      :components="{ mermaid: Mermaid, details: NoteDetails }"
+      :plugins=plugins
+    ></MarkdownDocument>
   </div>
 </template>
 

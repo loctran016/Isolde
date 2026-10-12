@@ -21,7 +21,7 @@ useHead({
     >
       <ScrollAreaViewport class="w-full h-full">
         <header
-          class="sticky top-0 z-20 h-[var(--header-height)] flex items-center border-b border-stone/40 dark:border-white/10 bg-white/30 dark:bg-stone-700/30 backdrop-blur-xl pt-[env(safe-area-inset-top)] backdrop-saturate-150"
+          class="sticky top-0 z-20 h-[var(--header-height)] flex items-center border-b border-stone/40 dark:border-white/10 bg-white/30 dark:bg-stone-700/30 backdrop-blur-xl pt-[env(safe-area-inset-top)] backdrop-saturate-150 box-content"
         >
           <!-- TODO: pt-safe as iPhone has small pt-safe -->
           <div
