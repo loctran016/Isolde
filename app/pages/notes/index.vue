@@ -17,12 +17,23 @@ const { data: nav } = await useAsyncData('notes-nav', () => clientContent.naviga
 const itemsPerPage = 12
 const currentPage = ref(1)
 const selectedSubject = ref('all')
+const search = ref('')
 
 const [listRef] = useAutoAnimate({ duration: 200 })
 
 function label(item: NavigationItem, depth?: number) {
   const parts = item.stem?.split('/') ?? []
   return depth === undefined ? parts.at(-1) : parts[depth]
+}
+
+// Lowercase, strip Vietnamese diacritics (đ isn't decomposed by NFD, so map it by hand)
+function normalize(s: string) {
+  return s
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036F]/g, '')
+    .replace(/đ/g, 'd')
+    .trim()
 }
 
 const allPages = computed(() =>
@@ -35,6 +46,7 @@ const allPages = computed(() =>
         subject: label(folder, 0) ?? '',
         topic: label(subfolder, 1) ?? '',
         icon: noteSubject[folder.title] ?? 'i-healthicons:medicines-24px',
+        searchKey: normalize(label(page) ?? ''),
       })),
     ),
   ),
@@ -47,18 +59,20 @@ const subjects = computed(() => {
   return [...counts].map(([name, count]) => ({ name, count }))
 })
 
-const filteredPages = computed(() =>
-  selectedSubject.value === 'all'
-    ? allPages.value
-    : allPages.value.filter(p => p.subject === selectedSubject.value),
-)
+const filteredPages = computed(() => {
+  const q = normalize(search.value)
+  return allPages.value.filter(p =>
+    (selectedSubject.value === 'all' || p.subject === selectedSubject.value)
+    && (!q || p.searchKey.includes(q)),
+  )
+})
 
 const pagedPages = computed(() => {
   const start = (currentPage.value - 1) * itemsPerPage
   return filteredPages.value.slice(start, start + itemsPerPage)
 })
 
-watch(selectedSubject, () => {
+watch([selectedSubject, search], () => {
   currentPage.value = 1
 })
 </script>
@@ -68,6 +82,28 @@ watch(selectedSubject, () => {
   <div class="i-healthicons:medicines-24px hidden"></div>
   <main class="mx-auto w-full max-w-6xl px-3 md:px-6">
     <div class="my-4 lg:my-6 space-y-4 card">
+      <!-- Search -->
+      <div class="relative">
+        <input
+          v-model="search"
+          type="search"
+          inputmode="search"
+          autocomplete="off"
+          placeholder="Tìm ghi chú…"
+          aria-label="Tìm ghi chú"
+          class="w-full rounded-lg border border-purple-300/30 bg-purple-50/25 dark:bg-purple-950/40 px-4 py-2 pr-10 text-sm outline-none transition-colors placeholder:opacity-60 focus:border-purple-400 [&::-webkit-search-cancel-button]:hidden"
+        >
+        <button
+          v-if="search"
+          type="button"
+          aria-label="Xoá tìm kiếm"
+          class="absolute right-2 top-1/2 -translate-y-1/2 px-2 py-1 text-sm opacity-60 hover:opacity-100"
+          @click="search = ''"
+        >
+          ✕
+        </button>
+      </div>
+
       <!-- Filters -->
       <div class="flex flex-wrap items-center gap-2">
         <button
@@ -122,7 +158,9 @@ watch(selectedSubject, () => {
         </li>
       </ul>
 
-      <p v-if="!filteredPages.length" class="text-center opacity-60 py-8">Chưa có ghi chú nào.</p>
+      <p v-if="!filteredPages.length" class="text-center opacity-60 py-8">
+        {{ search ? `Không tìm thấy ghi chú nào cho “${search}”.` : 'Chưa có ghi chú nào.' }}
+      </p>
 
       <!-- Pagination -->
       <PaginationRoot
