@@ -28,7 +28,7 @@ const breakpoints = useBreakpoints(breakpointsTailwind)
 const isLg = breakpoints.greaterOrEqual('lg')
 
 // 12 below lg (divides the 2- and 3-column grids), 24 from lg up (divides 3 and 4 columns)
-const itemsPerPage = computed(() => (isLg.value ? 24 : 12))
+const itemsPerPage = computed(() => (isLg.value ? 16 : 12))
 const currentPage = ref(1)
 const selectedSubject = ref('all')
 const onlyTodo = ref(false)
