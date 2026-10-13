@@ -2,6 +2,7 @@
 import type { NavigationItem } from 'comark-content'
 import { useAutoAnimate } from '@formkit/auto-animate/vue'
 import { PaginationEllipsis, PaginationFirst, PaginationLast, PaginationList, PaginationListItem, PaginationNext, PaginationPrev, PaginationRoot } from 'reka-ui'
+import noteSubject from '~/data/noteSubject.js'
 const island = getIsland('/notes')!
 
 useHead({
@@ -19,18 +20,6 @@ const selectedSubject = ref('all')
 const search = ref('')
 
 const [listRef] = useAutoAnimate({ duration: 200 })
-
-// Keep these as full static strings so UnoCSS can generate them.
-// Keyed by topic (the subfolder name shown after the "·").
-const fallbackIcon = 'i-solar:stethoscope-bold-duotone'
-const topicIcons: Record<string, string> = {
-  'Tim mạch': 'i-solar:heart-pulse-bold-duotone',
-  'Hô hấp': 'i-solar:lungs-bold-duotone',
-  'Thận niệu': 'i-solar:waterdrop-bold-duotone',
-  'Thuốc KS': 'i-solar:pills-bold-duotone',
-  'Dân số': 'i-solar:users-group-rounded-bold-duotone',
-  // 'Tiêu hoá': 'i-solar:...',  // pick one on icones.js.org, falls back until then
-}
 
 function label(item: NavigationItem, depth?: number) {
   const parts = item.stem?.split('/') ?? []
@@ -50,18 +39,15 @@ function normalize(s: string) {
 const allPages = computed(() =>
   (nav.value?.[0]?.children ?? []).flatMap(folder =>
     (folder.children ?? []).flatMap(subfolder =>
-      (subfolder.children ?? []).map((page) => {
-        const topic = label(subfolder, 1) ?? ''
-        return {
-          folder,
-          subfolder,
-          page,
-          subject: label(folder, 0) ?? '',
-          topic,
-          icon: topicIcons[topic] ?? fallbackIcon,
-          searchKey: normalize(label(page) ?? ''),
-        }
-      }),
+      (subfolder.children ?? []).map(page => ({
+        folder,
+        subfolder,
+        page,
+        subject: label(folder, 0) ?? '',
+        topic: label(subfolder, 1) ?? '',
+        icon: noteSubject[folder.title] ?? 'i-healthicons:medicines-24px',
+        searchKey: normalize(label(page) ?? ''),
+      })),
     ),
   ),
 )
@@ -92,6 +78,8 @@ watch([selectedSubject, search], () => {
 </script>
 
 <template>
+  <div class="i-healthicons:gastroenterology hidden"></div>
+  <div class="i-healthicons:medicines-24px hidden"></div>
   <main class="mx-auto w-full max-w-6xl px-3 md:px-6">
     <div class="my-4 lg:my-6 space-y-4 card">
       <!-- Search -->
@@ -154,65 +142,4 @@ watch([selectedSubject, search], () => {
         >
           <NuxtLink :to="page.path" class="flex flex-col gap-3 h-full p-4">
             <!-- Eyebrow: subject · topic -->
-            <div class="flex items-center gap-2 text-xs text-purple-600 dark:text-purple-300 font-head">
-              <span :class="icon" class="text-lg shrink-0"></span>
-              <span class="truncate">
-                {{ subject }}
-                <span class="opacity-50 mx-0.5">·</span>
-                <span class="font-bold">{{ topic }}</span>
-              </span>
-            </div>
-
-            <!-- Title -->
-            <h3 class="text-sm md:text-base font-bold leading-snug group-hover:underline underline-offset-4 decoration-purple-400/60">
-              {{ label(page) }}
-            </h3>
-
-            <!-- Description (only if the note has one) -->
-            <p v-if="page.description" class="text-xs opacity-70 line-clamp-2">
-              {{ page.description }}
-            </p>
-
-            <!-- Footer arrow -->
-            <span
-              class="i-solar:arrow-right-linear mt-auto ml-auto text-purple-600 dark:text-purple-300 opacity-50 transition-all duration-200 group-hover:opacity-100 group-hover:translate-x-1"
-            />
-          </NuxtLink>
-        </li>
-      </ul>
-
-      <p v-if="!filteredPages.length" class="text-center opacity-60 py-8">
-        {{ search ? `Không tìm thấy ghi chú nào cho “${search}”.` : 'Chưa có ghi chú nào.' }}
-      </p>
-
-      <!-- Pagination -->
-      <PaginationRoot
-        v-if="filteredPages.length > itemsPerPage"
-        v-model:page="currentPage"
-        :total="filteredPages.length"
-        :items-per-page="itemsPerPage"
-        :sibling-count="1"
-        show-edges
-        class="mt-4"
-      >
-        <PaginationList v-slot="{ items }" class="flex items-center justify-center gap-1">
-          <PaginationFirst class="px-2 py-1 rounded disabled:opacity-40">«</PaginationFirst>
-          <PaginationPrev class="px-2 py-1 rounded disabled:opacity-40">‹</PaginationPrev>
-          <template v-for="(p, index) in items">
-            <PaginationListItem
-              v-if="p.type === 'page'"
-              :key="index"
-              :value="p.value"
-              class="px-3 py-1 rounded data-[selected]:bg-purple-600 data-[selected]:text-white"
-            >
-              {{ p.value }}
-            </PaginationListItem>
-            <PaginationEllipsis v-else :key="p.type + index" :index="index">&#8230;</PaginationEllipsis>
-          </template>
-          <PaginationNext class="px-2 py-1 rounded disabled:opacity-40">›</PaginationNext>
-          <PaginationLast class="px-2 py-1 rounded disabled:opacity-40">»</PaginationLast>
-        </PaginationList>
-      </PaginationRoot>
-    </div>
-  </main>
-</template>
+            
