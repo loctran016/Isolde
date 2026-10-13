@@ -178,8 +178,10 @@ watch([selectedSubject, search, onlyTodo], () => {
               : 'border-purple-300/50 hover:bg-purple-500/20'
           "
           @click="
-            selectedSubject = 'all'
-            onlyTodo = false
+            () => {
+              selectedSubject = 'all'
+              onlyTodo = false
+            }
           "
         >
           Tất cả
