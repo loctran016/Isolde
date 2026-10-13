@@ -30,11 +30,11 @@ export const content = comarkContent({
     fs('./content', { prefix: '/notes' }),
     () =>
       import('nitropack/runtime').then(({ useStorage }) =>
-        useStorage('assets:comark').get('default/snapshot.json'),
+        useStorage('assets:comark').getItem('default/snapshot.json'),
       ),
     () =>
       import('nitropack/runtime').then(({ useStorage }) =>
-        useStorage('assets:comark').get('default/manifest.json'),
+        useStorage('assets:comark').getItem('default/manifest.json'),
       ),
     ),
      markdown: {
