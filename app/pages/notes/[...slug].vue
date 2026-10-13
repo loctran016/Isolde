@@ -109,7 +109,7 @@ rewriteImgs(page.value.nodes)
   </div>
 </template>
 
-<style scoped>
+<style>
 .prose table {
   width: max-content;
   min-width: 100%;
