@@ -2,7 +2,6 @@
 import type { NavigationItem } from 'comark-content'
 import { useAutoAnimate } from '@formkit/auto-animate/vue'
 import { PaginationEllipsis, PaginationFirst, PaginationLast, PaginationList, PaginationListItem, PaginationNext, PaginationPrev, PaginationRoot } from 'reka-ui'
-import noteSubject from '~/data/noteSubject.js'
 const island = getIsland('/notes')!
 
 useHead({
@@ -20,6 +19,18 @@ const selectedSubject = ref('all')
 const search = ref('')
 
 const [listRef] = useAutoAnimate({ duration: 200 })
+
+// Keep these as full static strings so UnoCSS can generate them.
+// Keyed by topic (the subfolder name shown after the "·").
+const fallbackIcon = 'i-solar:stethoscope-bold-duotone'
+const topicIcons: Record<string, string> = {
+  'Tim mạch': 'i-solar:heart-pulse-bold-duotone',
+  'Hô hấp': 'i-solar:lungs-bold-duotone',
+  'Thận niệu': 'i-solar:waterdrop-bold-duotone',
+  'Thuốc KS': 'i-solar:pills-bold-duotone',
+  'Dân số': 'i-solar:users-group-rounded-bold-duotone',
+  // 'Tiêu hoá': 'i-solar:...',  // pick one on icones.js.org, falls back until then
+}
 
 function label(item: NavigationItem, depth?: number) {
   const parts = item.stem?.split('/') ?? []
@@ -39,15 +50,18 @@ function normalize(s: string) {
 const allPages = computed(() =>
   (nav.value?.[0]?.children ?? []).flatMap(folder =>
     (folder.children ?? []).flatMap(subfolder =>
-      (subfolder.children ?? []).map(page => ({
-        folder,
-        subfolder,
-        page,
-        subject: label(folder, 0) ?? '',
-        topic: label(subfolder, 1) ?? '',
-        icon: noteSubject[folder.title] ?? 'i-healthicons:medicines-24px',
-        searchKey: normalize(label(page) ?? ''),
-      })),
+      (subfolder.children ?? []).map((page) => {
+        const topic = label(subfolder, 1) ?? ''
+        return {
+          folder,
+          subfolder,
+          page,
+          subject: label(folder, 0) ?? '',
+          topic,
+          icon: topicIcons[topic] ?? fallbackIcon,
+          searchKey: normalize(label(page) ?? ''),
+        }
+      }),
     ),
   ),
 )
@@ -78,12 +92,11 @@ watch([selectedSubject, search], () => {
 </script>
 
 <template>
-  <div class="i-healthicons:gastroenterology hidden"></div>
-  <div class="i-healthicons:medicines-24px hidden"></div>
   <main class="mx-auto w-full max-w-6xl px-3 md:px-6">
     <div class="my-4 lg:my-6 space-y-4 card">
       <!-- Search -->
       <div class="relative">
+        <span class="i-solar:magnifer-linear absolute left-3 top-1/2 -translate-y-1/2 opacity-60 pointer-events-none" />
         <input
           v-model="search"
           type="search"
@@ -91,16 +104,16 @@ watch([selectedSubject, search], () => {
           autocomplete="off"
           placeholder="Tìm ghi chú…"
           aria-label="Tìm ghi chú"
-          class="w-full rounded-lg border border-purple-300/30 bg-purple-50/25 dark:bg-purple-950/40 px-4 py-2 pr-10 text-sm outline-none transition-colors placeholder:opacity-60 focus:border-purple-400 [&::-webkit-search-cancel-button]:hidden"
+          class="w-full rounded-lg border border-purple-300/30 bg-purple-50/25 dark:bg-purple-950/40 pl-9 pr-10 py-2 text-sm outline-none transition-colors placeholder:opacity-60 focus:border-purple-400 [&::-webkit-search-cancel-button]:hidden"
         >
         <button
           v-if="search"
           type="button"
           aria-label="Xoá tìm kiếm"
-          class="absolute right-2 top-1/2 -translate-y-1/2 px-2 py-1 text-sm opacity-60 hover:opacity-100"
+          class="absolute right-2 top-1/2 -translate-y-1/2 px-2 py-1 opacity-60 hover:opacity-100"
           @click="search = ''"
         >
-          ✕
+          <span class="i-solar:close-circle-bold block" />
         </button>
       </div>
 
@@ -139,7 +152,7 @@ watch([selectedSubject, search], () => {
           :key="page.path"
           class="group rounded-lg border border-purple-300/20 bg-purple-50/25 dark:bg-purple-950/40 hover:border-purple-300/50 hover:bg-purple-50/40 dark:hover:bg-purple-900/40 transition-colors duration-200"
         >
-          <NuxtLink :to="page.path" class="flex flex-col gap-3 h-full p-4 md:min-h-32">
+          <NuxtLink :to="page.path" class="flex flex-col gap-3 h-full p-4">
             <!-- Eyebrow: subject · topic -->
             <div class="flex items-center gap-2 text-xs text-purple-600 dark:text-purple-300 font-head">
               <span :class="icon" class="text-lg shrink-0"></span>
@@ -154,6 +167,16 @@ watch([selectedSubject, search], () => {
             <h3 class="text-sm md:text-base font-bold leading-snug group-hover:underline underline-offset-4 decoration-purple-400/60">
               {{ label(page) }}
             </h3>
+
+            <!-- Description (only if the note has one) -->
+            <p v-if="page.description" class="text-xs opacity-70 line-clamp-2">
+              {{ page.description }}
+            </p>
+
+            <!-- Footer arrow -->
+            <span
+              class="i-solar:arrow-right-linear mt-auto ml-auto text-purple-600 dark:text-purple-300 opacity-50 transition-all duration-200 group-hover:opacity-100 group-hover:translate-x-1"
+            />
           </NuxtLink>
         </li>
       </ul>
