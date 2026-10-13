@@ -17,12 +17,18 @@ const { data: nav } = await useAsyncData('notes-nav', () => clientContent.naviga
 const itemsPerPage = 12
 const currentPage = ref(1)
 const selectedSubject = ref('all')
+const onlyTodo = ref(false)
 const search = ref('')
 
 const [listRef] = useAutoAnimate({ duration: 200 })
 
+// "1.Tim mạch" -> "Tim mạch" (leaves "1.5 mg" and "1.2.x" alone)
+function stripPrefix(s: string) {
+  return s.replace(/^\d+\.(?=\D)\s*/, '')
+}
+
 function label(item: NavigationItem, depth?: number) {
-  const parts = item.stem?.split('/') ?? []
+  const parts = (item.stem?.split('/') ?? []).map(stripPrefix)
   return depth === undefined ? parts.at(-1) : parts[depth]
 }
 
@@ -34,6 +40,38 @@ function normalize(s: string) {
     .replace(/[\u0300-\u036F]/g, '')
     .replace(/đ/g, 'd')
     .trim()
+}
+
+// ---- Todo pins (ordered by the time you pinned them, saved in the browser) ----
+const PIN_KEY = 'notes-pinned'
+const pinned = ref<string[]>([])
+const pinsLoaded = ref(false)
+
+onMounted(() => {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(PIN_KEY) ?? '[]')
+    if (Array.isArray(parsed))
+      pinned.value = parsed.filter(x => typeof x === 'string')
+  }
+  catch {}
+  pinsLoaded.value = true
+})
+
+watch(pinned, (value) => {
+  if (!pinsLoaded.value)
+    return
+  try {
+    localStorage.setItem(PIN_KEY, JSON.stringify(value))
+  }
+  catch {}
+})
+
+const pinOrder = computed(() => new Map(pinned.value.map((path, i) => [path, i])))
+
+function togglePin(path: string) {
+  pinned.value = pinOrder.value.has(path)
+    ? pinned.value.filter(p => p !== path)
+    : [...pinned.value, path]
 }
 
 const allPages = computed(() =>
@@ -59,12 +97,25 @@ const subjects = computed(() => {
   return [...counts].map(([name, count]) => ({ name, count }))
 })
 
+// Count only pins that still exist (a renamed or deleted note won't inflate it)
+const todoCount = computed(() =>
+  allPages.value.filter(p => pinOrder.value.has(p.page.path)).length,
+)
+
 const filteredPages = computed(() => {
   const q = normalize(search.value)
-  return allPages.value.filter(p =>
+  const matches = allPages.value.filter(p =>
     (selectedSubject.value === 'all' || p.subject === selectedSubject.value)
     && (!q || p.searchKey.includes(q)),
   )
+  const order = pinOrder.value
+  const pinnedFirst = matches
+    .filter(p => order.has(p.page.path))
+    .sort((a, b) => (order.get(a.page.path) ?? 0) - (order.get(b.page.path) ?? 0))
+
+  if (onlyTodo.value)
+    return pinnedFirst
+  return [...pinnedFirst, ...matches.filter(p => !order.has(p.page.path))]
 })
 
 const pagedPages = computed(() => {
@@ -72,7 +123,7 @@ const pagedPages = computed(() => {
   return filteredPages.value.slice(start, start + itemsPerPage)
 })
 
-watch([selectedSubject, search], () => {
+watch([selectedSubject, search, onlyTodo], () => {
   currentPage.value = 1
 })
 </script>
@@ -110,13 +161,25 @@ watch([selectedSubject, search], () => {
         <button
           type="button"
           class="px-3 py-1 rounded-full text-sm border transition-colors"
-          :class="selectedSubject === 'all'
+          :class="selectedSubject === 'all' && !onlyTodo
             ? 'bg-purple-600 border-purple-600 text-white'
             : 'border-purple-300/30 hover:bg-purple-500/20'"
-          @click="selectedSubject = 'all'"
+          @click="selectedSubject = 'all'; onlyTodo = false"
         >
           Tất cả
           <span class="opacity-70 ml-1">{{ allPages.length }}</span>
+        </button>
+        <button
+          type="button"
+          class="flex items-center gap-1 px-3 py-1 rounded-full text-sm border transition-colors"
+          :class="onlyTodo
+            ? 'bg-purple-600 border-purple-600 text-white'
+            : 'border-purple-300/30 hover:bg-purple-500/20'"
+          @click="onlyTodo = !onlyTodo"
+        >
+          <span class="i-solar:pin-bold" />
+          Chưa ôn
+          <span class="opacity-70 ml-0.5">{{ todoCount }}</span>
         </button>
         <button
           v-for="s in subjects"
@@ -138,11 +201,14 @@ watch([selectedSubject, search], () => {
         <li
           v-for="{ page, subject, topic, icon } in pagedPages"
           :key="page.path"
-          class="group rounded-lg border border-purple-300/20 bg-purple-50/25 dark:bg-purple-950/40 hover:border-purple-300/50 hover:bg-purple-50/40 dark:hover:bg-purple-900/40 transition-colors duration-200"
+          class="group relative rounded-lg border bg-purple-50/25 dark:bg-purple-950/40 hover:bg-purple-50/40 dark:hover:bg-purple-900/40 transition-colors duration-200"
+          :class="pinOrder.has(page.path)
+            ? 'border-purple-400/60'
+            : 'border-purple-300/20 hover:border-purple-300/50'"
         >
           <NuxtLink :to="page.path" class="flex flex-col gap-3 h-full p-4">
             <!-- Eyebrow: subject · topic -->
-            <div class="flex items-center gap-2 text-xs text-purple-600 dark:text-purple-300 font-head">
+            <div class="flex items-center gap-2 pr-12 text-xs text-purple-600 dark:text-purple-300 font-head">
               <span :class="icon" class="text-lg shrink-0"></span>
               <span class="truncate">
                 {{ subject }}
@@ -166,11 +232,36 @@ watch([selectedSubject, search], () => {
               class="i-solar:arrow-right-linear mt-auto ml-auto text-purple-600 dark:text-purple-300 opacity-50 transition-all duration-200 group-hover:opacity-100 group-hover:translate-x-1"
             />
           </NuxtLink>
+
+          <!-- Pin (a sibling of the link, so it never triggers navigation) -->
+          <button
+            type="button"
+            class="absolute top-2 right-2 z-10 flex items-center gap-1 rounded-full px-2 py-1 text-xs transition-opacity"
+            :class="pinOrder.has(page.path)
+              ? 'text-purple-600 dark:text-purple-300'
+              : 'opacity-50 hover:opacity-100'"
+            :aria-pressed="pinOrder.has(page.path)"
+            :aria-label="pinOrder.has(page.path) ? 'Bỏ ghim' : 'Ghim để ôn'"
+            @click="togglePin(page.path)"
+          >
+            <span v-if="pinOrder.has(page.path)" class="font-bold tabular-nums">
+              {{ (pinOrder.get(page.path) ?? 0) + 1 }}
+            </span>
+            <span :class="pinOrder.has(page.path) ? 'i-solar:pin-bold' : 'i-solar:pin-linear'" />
+          </button>
         </li>
       </ul>
 
       <p v-if="!filteredPages.length" class="text-center opacity-60 py-8">
-        {{ search ? `Không tìm thấy ghi chú nào cho “${search}”.` : 'Chưa có ghi chú nào.' }}
+        <template v-if="search">
+          Không tìm thấy ghi chú nào cho “{{ search }}”.
+        </template>
+        <template v-else-if="onlyTodo">
+          Chưa ghim ghi chú nào. Bấm biểu tượng ghim trên thẻ để thêm vào danh sách ôn.
+        </template>
+        <template v-else>
+          Chưa có ghi chú nào.
+        </template>
       </p>
 
       <!-- Pagination -->
