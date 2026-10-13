@@ -88,14 +88,14 @@ rewriteImgs(page.value.nodes)
     </aside>
     <MarkdownDocument
       :value="page"
-      class=""
+      class="markdown-body"
       :components="{ mermaid: Mermaid, details: NoteDetails }"
       :plugins=plugins
     ></MarkdownDocument>
   </div>
 </template>
 
-<style>
+<style scoped>
 .prose table {
   width: max-content;
   min-width: 100%;
@@ -108,4 +108,56 @@ rewriteImgs(page.value.nodes)
 [id] {
   scroll-margin-top: 5rem;
 }
+
+/* 1. Reset counters on the wrapper container */
+.markdown-body {
+  counter-reset: h2-counter h3-counter h4-counter;
+}
+
+/* --------------------------------------------------
+   H2 Section
+   -------------------------------------------------- */
+.markdown-body h2 {
+  /* Reset child counters when entering a new H2 */
+  counter-reset: h3-counter h4-counter;
+  /* Increment the H2 counter */
+  counter-increment: h2-counter;
+}
+
+.markdown-body h2::before {
+  /* Display "1. " */
+  content: counter(h2-counter) ". ";
+  font-weight: bold;
+}
+
+/* --------------------------------------------------
+   H3 Section
+   -------------------------------------------------- */
+.markdown-body h3 {
+  /* Reset child counter when entering a new H3 */
+  counter-reset: h4-counter;
+  /* Increment the H3 counter */
+  counter-increment: h3-counter;
+}
+
+.markdown-body h3::before {
+  /* Display "1.1. " */
+  content: counter(h2-counter) "." counter(h3-counter) ". ";
+  font-weight: bold;
+}
+
+/* --------------------------------------------------
+   H4 Section
+   -------------------------------------------------- */
+.markdown-body h4 {
+  /* Increment the H4 counter */
+  counter-increment: h4-counter;
+}
+
+.markdown-body h4::before {
+  /* Display "1.1.1. " */
+  content: counter(h2-counter) "." counter(h3-counter) "." counter(h4-counter) ". ";
+  font-weight: bold;
+}
+
 </style>
