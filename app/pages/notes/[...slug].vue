@@ -31,7 +31,8 @@ if (!page.value) {
   throw createError({ statusCode: 404, message: 'Page not found' })
 }
 
-const pageTitles = page.value.meta.stem.split('/') || ['Y Đa Khoa']
+// Strip "1." / "2." ordering prefixes (leaves "1.5 mg" and "1.2.x" alone)
+const pageTitles = page.value.meta.stem.split('/').map(s => s.replace(/^\d+\.(?=\D)\s*/, ''))
 
 // Prepend the title as an H1 node directly on the parsed document
 /* if (page.value && Array.isArray(page.value.nodes)) {
@@ -82,10 +83,23 @@ rewriteImgs(page.value.nodes)
       </span>
     </NuxtLink>
     <h1>{{ pageTitles[2] }}</h1>
-    <aside v-if="tocLinks.length" class="px-5 py-4 rounded-lg mb-4 border-slate-100 dark:border-slate-800 bg-slate-500/10 [&_li]:list-none [&_li]:pl-0 not-prose">
-	      <p class="mb-2 font-semibold opacity-90 text-xl font-head md:text-2xl flex gap-2 items-center"><div class="i-solar:book-bookmark-minimalistic-line-duotone" />Mục lục</p>
-      <TocLinks :links="tocLinks" />
-    </aside>
+
+    <details
+      v-if="tocLinks.length"
+      class="not-prose mb-6 rounded-lg bg-slate-500/10 px-5 py-3 [&_li]:list-none [&_li]:pl-0 [&[open]>summary_.chev]:rotate-180"
+    >
+      <summary
+        class="flex cursor-pointer select-none list-none items-center gap-2 font-head text-xl font-semibold opacity-90 md:text-2xl [&::-webkit-details-marker]:hidden"
+      >
+        <span class="i-solar:book-bookmark-minimalistic-line-duotone" />
+        Mục lục
+        <span class="chev i-solar:alt-arrow-down-linear ml-auto transition-transform duration-200" />
+      </summary>
+      <div class="pt-3">
+        <TocLinks :links="tocLinks" />
+      </div>
+    </details>
+
     <MarkdownDocument
       :value="page"
       class="markdown-body"
