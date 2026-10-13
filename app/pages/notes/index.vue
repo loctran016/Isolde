@@ -13,6 +13,7 @@ import {
 } from 'reka-ui'
 import noteSubject from '~/data/noteSubject.js'
 const island = getIsland('/notes')!
+import { breakpointsTailwind, useBreakpoints } from '@vueuse/core'
 
 useHead({
   title: island.pageTitle,
@@ -23,7 +24,11 @@ definePageMeta({ title: island.pageTitle, titleIcon: island.titleIcon })
 
 const { data: nav } = await useAsyncData('notes-nav', () => clientContent.navigation())
 
-const itemsPerPage = 12
+const breakpoints = useBreakpoints(breakpointsTailwind)
+const isLg = breakpoints.greaterOrEqual('lg')
+
+// 12 below lg (divides the 2- and 3-column grids), 24 from lg up (divides 3 and 4 columns)
+const itemsPerPage = computed(() => (isLg.value ? 24 : 12))
 const currentPage = ref(1)
 const selectedSubject = ref('all')
 const onlyTodo = ref(false)
@@ -123,8 +128,8 @@ const filteredPages = computed(() => {
 })
 
 const pagedPages = computed(() => {
-  const start = (currentPage.value - 1) * itemsPerPage
-  return filteredPages.value.slice(start, start + itemsPerPage)
+  const start = (currentPage.value - 1) * itemsPerPage.value
+  return filteredPages.value.slice(start, start + itemsPerPage.value)
 })
 
 watch([selectedSubject, search, onlyTodo], () => {
