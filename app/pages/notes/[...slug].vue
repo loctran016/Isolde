@@ -67,6 +67,21 @@ const rewriteImgs = (nodes: any[]) => {
   }
 }
 rewriteImgs(page.value.nodes)
+
+const topHeading = computed(() => {
+  let min = 7
+  const walk = (nodes: any[]) => {
+    for (const n of nodes) {
+      if (!Array.isArray(n)) continue
+      const m = /^h([1-6])$/.exec(String(n[0]))
+      if (m) min = Math.min(min, Number(m[1]))
+      walk(n.slice(2))
+    }
+  }
+  walk(page.value?.nodes ?? [])
+  return min === 7 ? 2 : min
+})
+
 </script>
 
 <template>
@@ -100,12 +115,13 @@ rewriteImgs(page.value.nodes)
       </div>
     </details>
 
-    <MarkdownDocument
-      :value="page"
-      class="markdown-body"
-      :components="{ mermaid: Mermaid, details: NoteDetails }"
-      :plugins=plugins
-    ></MarkdownDocument>
+   <MarkdownDocument
+  :value="page"
+  :class="['markdown-body', `top-h${topHeading}`]"
+  :components="{ mermaid: Mermaid, details: NoteDetails }"
+  :plugins=plugins
+></MarkdownDocument>
+
   </div>
 </template>
 
@@ -123,55 +139,39 @@ rewriteImgs(page.value.nodes)
   scroll-margin-top: 5rem;
 }
 
-/* 1. Reset counters on the wrapper container */
+/* Numbering is relative to the note's top heading level (set via .top-h1 / .top-h2 / .top-h3) */
 .markdown-body {
-  counter-reset: h2-counter h3-counter h4-counter;
+  counter-reset: n1 n2 n3;
 }
 
-/* --------------------------------------------------
-   H2 Section
-   -------------------------------------------------- */
-.markdown-body h2 {
-  /* Reset child counters when entering a new H2 */
-  counter-reset: h3-counter h4-counter;
-  /* Increment the H2 counter */
-  counter-increment: h2-counter;
+/* Level 1 -> "1." */
+:is(.markdown-body.top-h1 h1, .markdown-body.top-h2 h2, .markdown-body.top-h3 h3) {
+  counter-reset: n2 n3;
+  counter-increment: n1;
 }
-
-.markdown-body h2::before {
-  /* Display "1. " */
-  content: counter(h2-counter) ". ";
+:is(.markdown-body.top-h1 h1, .markdown-body.top-h2 h2, .markdown-body.top-h3 h3)::before {
+  content: counter(n1) ". ";
   font-weight: bold;
 }
 
-/* --------------------------------------------------
-   H3 Section
-   -------------------------------------------------- */
-.markdown-body h3 {
-  /* Reset child counter when entering a new H3 */
-  counter-reset: h4-counter;
-  /* Increment the H3 counter */
-  counter-increment: h3-counter;
+/* Level 2 -> "1.1." */
+:is(.markdown-body.top-h1 h2, .markdown-body.top-h2 h3, .markdown-body.top-h3 h4) {
+  counter-reset: n3;
+  counter-increment: n2;
 }
-
-.markdown-body h3::before {
-  /* Display "1.1. " */
-  content: counter(h2-counter) "." counter(h3-counter) ". ";
+:is(.markdown-body.top-h1 h2, .markdown-body.top-h2 h3, .markdown-body.top-h3 h4)::before {
+  content: counter(n1) "." counter(n2) ". ";
   font-weight: bold;
 }
 
-/* --------------------------------------------------
-   H4 Section
-   -------------------------------------------------- */
-.markdown-body h4 {
-  /* Increment the H4 counter */
-  counter-increment: h4-counter;
+/* Level 3 -> "1.1.1." */
+:is(.markdown-body.top-h1 h3, .markdown-body.top-h2 h4, .markdown-body.top-h3 h5) {
+  counter-increment: n3;
 }
-
-.markdown-body h4::before {
-  /* Display "1.1.1. " */
-  content: counter(h2-counter) "." counter(h3-counter) "." counter(h4-counter) ". ";
+:is(.markdown-body.top-h1 h3, .markdown-body.top-h2 h4, .markdown-body.top-h3 h5)::before {
+  content: counter(n1) "." counter(n2) "." counter(n3) ". ";
   font-weight: bold;
 }
+
 
 </style>
