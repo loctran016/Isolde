@@ -13,7 +13,6 @@ import {
 } from 'reka-ui'
 import noteSubject from '~/data/noteSubject.js'
 const island = getIsland('/notes')!
-import { breakpointsTailwind, useBreakpoints } from '@vueuse/core'
 
 useHead({
   title: island.pageTitle,
@@ -177,10 +176,7 @@ watch([selectedSubject, search, onlyTodo], () => {
               ? 'bg-purple-600 border-purple-600 text-white'
               : 'border-purple-300/50 hover:bg-purple-500/20'
           "
-          @click="
-            selectedSubject = 'all'
-            onlyTodo = false
-          "
+          @click="selectedSubject = 'all'; onlyTodo = false"
         >
           Tất cả
           <span class="opacity-70 ml-1">{{ allPages.length }}</span>
