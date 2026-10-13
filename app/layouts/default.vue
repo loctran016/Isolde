@@ -27,22 +27,28 @@ useHead({
       class="relative flex-1 min-h-0 [--header-height:4.1875rem]"
     >
       <ScrollAreaViewport class="w-full h-full">
-        <header
-          class="sticky top-0 z-20 h-[var(--header-height)] flex items-center border-b border-white/40 dark:border-white/10 bg-white/30 dark:bg-stone-700/30 backdrop-blur-xl pt-[env(safe-area-inset-top)] backdrop-saturate-150 box-content"
-        >
-          <!-- TODO: pt-safe as iPhone has small pt-safe -->
-          <div
-            class="w-full md:max-w-95% lg:max-w-6xl mx-auto flex items-center justify-between gap-4 px-4"
-          >
-            <div
-              class="text-lg lg:text-xl tracking-wide truncate flex gap-2 items-center justify-center h-full"
-            >
-              <span class="leading-none">{{ pageTitle }}</span>
-            </div>
+        <header class="sticky top-0 z-20 border-b border-white/40 dark:border-white/10">
+  <!-- Status-bar strip: tinted, but no backdrop-filter -->
+  <div class="h-[env(safe-area-inset-top)] bg-pink-100/30 dark:bg-pink-700/30" />
 
-            <NavBar />
-          </div>
-        </header>
+  <!-- Header bar: the blur lives here, below the strip -->
+  <div
+    class="h-[var(--header-height)] flex items-center bg-white/30 dark:bg-stone-700/30 backdrop-blur-xl backdrop-saturate-150"
+  >
+    <div
+      class="w-full md:max-w-95% lg:max-w-6xl mx-auto flex items-center justify-between gap-4 px-4"
+    >
+      <div
+        class="text-lg lg:text-xl tracking-wide truncate flex gap-2 items-center justify-center h-full"
+      >
+        <span class="leading-none">{{ pageTitle }}</span>
+      </div>
+
+      <NavBar />
+    </div>
+  </div>
+</header>
+
 
         <main
           class="mx-auto px-4 sm:max-w-9/10 xl:max-w-5/6 h-full w-full min-h-[calc(100vh-var(--header-height))]"
