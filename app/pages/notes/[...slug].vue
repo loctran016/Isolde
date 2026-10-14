@@ -68,6 +68,31 @@ const rewriteImgs = (nodes: any[]) => {
 }
 rewriteImgs(page.value.nodes)
 
+// Text shortcuts: "=>" becomes "⇒", "<=" becomes "≤" and so on.
+// Code, code blocks and mermaid diagrams are left untouched.
+const symbols: Record<string, string> = {
+  '<=>': '⇔', '<->': '↔', '=>': '⇒', '->': '→', '<-': '←',
+  '<=': '≤', '>=': '≥', '!=': '≠', '+/-': '±', '~=': '≈',
+  '<==>': '⟺', '<-->': '⟷', '==>': '⟹', '-->': '⟶', '—>': '⟶', '<==': '⟸', '<--': '⟵',
+}
+// longest patterns first so "<==>" is not split into "<=" + "=>"
+const symbolRe = /<==>|<-->|<=>|<->|==>|-->|—>|<==|<--|\+\/-|<=|>=|!=|~=|=>|->|<-/g
+const skipTags = new Set(['code', 'pre', 'mermaid', 'math', 'script', 'style'])
+
+const replaceSymbols = (nodes: any[]) => {
+  for (const n of nodes) {
+    if (!Array.isArray(n) || skipTags.has(n[0])) continue
+    for (let i = 2; i < n.length; i++) {
+      if (typeof n[i] === 'string') {
+        n[i] = n[i].replace(symbolRe, (m: string) => symbols[m])
+      } else {
+        replaceSymbols([n[i]])
+      }
+    }
+  }
+}
+replaceSymbols(page.value.nodes)
+
 const topHeading = computed(() => {
   let min = 7
   const walk = (nodes: any[]) => {
