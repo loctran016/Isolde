@@ -161,7 +161,7 @@ const topHeading = computed(() => {
 }
 
 [id] {
-  scroll-margin-top: 5rem;
+  scroll-margin-top: calc(5rem + env(safe-area-inset-top, 0px));
 }
 
 /* Numbering is relative to the note's top heading level (set via .top-h1 / .top-h2 / .top-h3) */
