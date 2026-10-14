@@ -173,5 +173,10 @@ const topHeading = computed(() => {
   font-weight: bold;
 }
 
+.prose summary + h4,
+.prose summary + h2,
+.prose summary + h3 {
+margin-top: 0;
+}
 
 </style>
