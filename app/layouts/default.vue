@@ -23,41 +23,40 @@ useHead({
     />
 
     <ScrollAreaRoot
-      style="--scrollbar-size: 18px"
+      style="--scrollbar-size: 18px; --header-total: calc(var(--header-height) + env(safe-area-inset-top, 0px))"
       class="relative flex-1 min-h-0 [--header-height:4.1875rem]"
     >
       <ScrollAreaViewport class="w-full h-full">
         <header class="sticky top-0 z-20 border-b border-white/40 dark:border-white/10">
-  <!-- Status-bar strip: tinted, but no backdrop-filter -->
-  <div class="h-[env(safe-area-inset-top)] bg-pink-100/30 dark:bg-pink-700/30" />
+          <!-- Status-bar strip: tinted, but no backdrop-filter -->
+          <div class="h-[env(safe-area-inset-top)] bg-pink-100/30 dark:bg-pink-700/30" />
 
-  <!-- Header bar: the blur lives here, below the strip -->
-  <div
-    class="h-[var(--header-height)] flex items-center bg-white/30 dark:bg-stone-700/30 backdrop-blur-xl backdrop-saturate-150"
-  >
-    <div
-      class="w-full md:max-w-95% lg:max-w-6xl mx-auto flex items-center justify-between gap-4 px-4"
-    >
-      <div
-        class="text-lg lg:text-xl tracking-wide truncate flex gap-2 items-center justify-center h-full"
-      >
-        <span class="leading-none">{{ pageTitle }}</span>
-      </div>
+          <!-- Header bar: the blur lives here, below the strip -->
+          <div
+            class="h-[var(--header-height)] flex items-center bg-white/30 dark:bg-stone-700/30 backdrop-blur-xl backdrop-saturate-150"
+          >
+            <div
+              class="w-full md:max-w-95% lg:max-w-6xl mx-auto flex items-center justify-between gap-4 px-4"
+            >
+              <div
+                class="text-lg lg:text-xl tracking-wide truncate flex gap-2 items-center justify-center h-full"
+              >
+                <span class="leading-none">{{ pageTitle }}</span>
+              </div>
 
-      <NavBar />
-    </div>
-  </div>
-</header>
-
+              <NavBar />
+            </div>
+          </div>
+        </header>
 
         <main
-          class="mx-auto px-4 sm:max-w-9/10 xl:max-w-5/6 h-full w-full min-h-[calc(100vh-var(--header-height))]"
+          class="mx-auto px-4 sm:max-w-9/10 xl:max-w-5/6 h-full w-full min-h-[calc(100vh-var(--header-total))]"
         >
           <slot />
         </main>
       </ScrollAreaViewport>
       <ScrollAreaScrollbar
-        style="top: var(--header-height)"
+        style="top: var(--header-total)"
         class="absolute right-0 bottom-0 flex select-none touch-none p-0.5 z-20 transition-colors duration-[160ms] ease-out data-[orientation=vertical]:w-2 data-[orientation=horizontal]:flex-col data-[orientation=horizontal]:h-2"
         orientation="vertical"
       >
