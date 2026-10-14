@@ -13,7 +13,7 @@ useHead({
 
 <template>
   <div
-    class="w-full bg-stone-50 text-stone-900 dark:bg-stone-900 dark:text-gray-100 font-sans h-screen flex flex-col overflow-hidden"
+    class="w-full bg-stone-50 text-stone-900 dark:bg-stone-900 dark:text-gray-100 font-sans h-dvh flex flex-col overflow-hidden"
   >
     <img
       src="/blob-bg.svg"
@@ -23,7 +23,10 @@ useHead({
     />
 
     <ScrollAreaRoot
-      style="--scrollbar-size: 18px; --header-total: calc(var(--header-height) + env(safe-area-inset-top, 0px))"
+      style="
+        --scrollbar-size: 18px;
+        --header-total: calc(var(--header-height) + env(safe-area-inset-top, 0px));
+      "
       class="relative flex-1 min-h-0 [--header-height:4.1875rem]"
     >
       <ScrollAreaViewport class="w-full h-full">
@@ -50,7 +53,7 @@ useHead({
         </header>
 
         <main
-          class="mx-auto px-4 sm:max-w-9/10 xl:max-w-5/6 h-full w-full min-h-[calc(100vh-var(--header-total))]"
+          class="mx-auto px-4 sm:max-w-9/10 xl:max-w-5/6 h-full w-full min-h-[calc(100dvh-var(--header-total))]"
         >
           <slot />
         </main>
@@ -78,5 +81,7 @@ body,
   width: 100%;
   height: 100%;
   margin: 0;
+  overflow: hidden;
+  overscroll-behavior: none;
 }
 </style>
