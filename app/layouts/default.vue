@@ -81,6 +81,7 @@ body,
   width: 100%;
   height: 100%;
   margin: 0;
+overscroll-behavior: none;
 }
 
 @media (display-mode: browser) { 
@@ -88,7 +89,7 @@ html,
 body,
 #__nuxt {
   overflow: hidden;
-  overscroll-behavior: none;
+  
 }
 
 /* Browser tab: follow the visible area as toolbars show and hide */
