@@ -66,36 +66,5 @@ useHead({
 </template>
 
 <style>
-html,
-body,
-#__nuxt {
-  width: 100%;
-  height: 100%;
-  margin: 0;
-  overflow: hidden;
-  overscroll-behavior: none;
-}
-
-@media (display-mode: browser) { /* Browser tab: follow the visible area as toolbars show and hide */
-.app-shell {
-  position: fixed;
-  inset: 0;
-} }
-
-/* Installed app: 100vh is the full screen, including the home-indicator area */
-@media (display-mode: standalone) {
-  .app-shell {
-    bottom: auto;
-    height: 100vh;
-  }
-}
-
-/* Safety net: if any gap ever shows, it matches the page instead of being white */
-html {
-  background-color: #fafaf9; /* stone-50; use #fff7ed (orange-50) in the note layout */
-}
-html.dark {
-  background-color: #1c1917; /* stone-900; use #0f172a (slate-900) in the note layout */
-}
 
 </style>
