@@ -1,11 +1,12 @@
 <script setup lang="ts">
+import type { NavigationItem } from 'comark-content'
 import { MarkdownDocument } from '@comark/vue'
 // import { parseMarkdown } from 'comark'
 import toc from 'comark/plugins/toc'
 import mermaid, { Mermaid } from '@comark/vue/plugins/mermaid'
 import NoteDetails from '~/components/NoteDetails.vue'
 
-const plugins = [toc({ depth: 3, title: 'On This Page' }),mermaid()]
+const plugins = [toc({ depth: 3, title: 'On This Page' }), mermaid()]
 
 const route = useRoute()
 const path = route.path.replace(/\/+$/, '') || '/'
@@ -32,7 +33,7 @@ if (!page.value) {
 }
 
 // Strip "1." / "2." ordering prefixes (leaves "1.5 mg" and "1.2.x" alone)
-const pageTitles = page.value.meta.stem.split('/').map(s => s.replace(/^\d+\.(?=\D)\s*/, ''))
+const pageTitles = page.value.meta.stem.split('/').map((s) => s.replace(/^\d+\.(?=\D)\s*/, ''))
 
 // Prepend the title as an H1 node directly on the parsed document
 /* if (page.value && Array.isArray(page.value.nodes)) {
@@ -48,7 +49,104 @@ const noteDir = page.value.meta.key.split('/').slice(0, -1).join('/')
 const tocLinks = computed(() => page.value?.meta?.toc?.links ?? [])
 
 // console.log(tocLinks.value)
-// console.log('Page value', page.value)
+console.log('Page value', page.value)
+
+// ---- Wikilinks: [[../../Dược lý/Thuốc KS/Cơ chế phân tử.md#|Cơ chế phân tử]] ----
+const { data: nav } = await useAsyncData('notes-nav', () => clientContent.navigation())
+
+const norm = (s: string) => s.normalize('NFC').toLowerCase().trim()
+const stripPrefix = (s: string) => s.replace(/^\d+\.(?=\D)\s*/, '')
+const safeDecode = (s: string) => {
+  try {
+    return decodeURIComponent(s)
+  } catch {
+    return s
+  }
+}
+
+// "a/b" + "../c" -> "a/c"
+function joinPath(base: string, rel: string) {
+  const out = base ? base.split('/') : []
+  for (const part of rel.split('/')) {
+    if (part === '..') out.pop()
+    else if (part && part !== '.') out.push(part)
+  }
+  return out.join('/')
+}
+
+const wikiIndex = (() => {
+  const byStem = new Map<string, string>()
+  const byName = new Map<string, { stem: string; path: string }[]>()
+  const walk = (items: NavigationItem[] = []) => {
+    for (const i of items) {
+      if (i.stem && i.page !== false) {
+        const parts = i.stem.split('/')
+        byStem.set(norm(i.stem), i.path)
+        byStem.set(norm(parts.map(stripPrefix).join('/')), i.path)
+        for (const key of new Set([norm(parts.at(-1)!), norm(stripPrefix(parts.at(-1)!))]))
+          byName.set(key, [...(byName.get(key) ?? []), { stem: i.stem, path: i.path }])
+      }
+      walk(i.children)
+    }
+  }
+  walk(nav.value)
+  return { byStem, byName }
+})()
+
+function resolveWikiTarget(target: string): string | null {
+  const raw = safeDecode(target).replace(/\.md$/i, '').trim()
+  const stem = page.value!.meta.stem as string
+
+  if (raw.includes('/')) {
+    const dir = stem.split('/').slice(0, -1).join('/')
+    for (const c of [joinPath(dir, raw), joinPath('', raw)]) {
+      const hit = wikiIndex.byStem.get(norm(c))
+      if (hit) return hit
+    }
+  }
+
+  const cands = wikiIndex.byName.get(norm(raw.split('/').at(-1)!)) ?? []
+  const top = stem.split('/')[0]
+  return (cands.find((c) => c.stem.split('/')[0] === top) ?? cands[0])?.path ?? null
+}
+
+const WIKI = /\[\[([^\]|#]+?)(?:#[^\]|]*)?(?:\|([^\]]*))?\]\]/g
+
+function splitWiki(text: string): any[] {
+  const out: any[] = []
+  let last = 0
+  for (const m of text.matchAll(WIKI)) {
+    const at = m.index!
+    if (at > last) out.push(text.slice(last, at))
+    const label =
+      m[2]?.trim() || stripPrefix(safeDecode(m[1]).replace(/\.md$/i, '').split('/').at(-1)!)
+    const href = resolveWikiTarget(m[1])
+    out.push(
+      href
+        ? ['a', { href, class: 'wikilink' }, label]
+        : ['span', { class: 'opacity-60', title: 'Không tìm thấy ghi chú' }, label],
+    )
+    last = at + m[0].length
+  }
+  if (last < text.length) out.push(text.slice(last))
+  return out.length ? out : [text]
+}
+
+const rewriteWikilinks = (nodes: any[]) => {
+  for (const n of nodes) {
+    if (!Array.isArray(n) || ['code', 'pre', 'a'].includes(n[0])) continue
+    // Join adjacent text pieces first, in case the parser split "[[" from the rest
+    const merged: any[] = []
+    for (const k of n.slice(2)) {
+      if (typeof k === 'string' && typeof merged.at(-1) === 'string') merged[merged.length - 1] += k
+      else merged.push(k)
+    }
+    const kids = merged.flatMap((k) => (typeof k === 'string' ? splitWiki(k) : [k]))
+    n.splice(2, n.length - 2, ...kids)
+    rewriteWikilinks(kids)
+  }
+}
+rewriteWikilinks(page.value.nodes)
 
 const rewriteImgs = (nodes: any[]) => {
   for (const n of nodes) {
@@ -59,7 +157,7 @@ const rewriteImgs = (nodes: any[]) => {
       if (raw && !/^(https?:)?\/\/|^data:|^\//.test(raw)) {
         const key = `${noteDir}/${decodeURIComponent(raw)}`
         props.src = '/media/' + key.split('/').slice(1).map(encodeURIComponent).join('/')
-          // props.src = '/api/content/media/' + key.split('/').map(encodeURIComponent).join('/')
+        // props.src = '/api/content/media/' + key.split('/').map(encodeURIComponent).join('/')
         // This come from /api/content/media/, others related code is still there, including addServeHandler and media()
       }
     }
@@ -71,9 +169,23 @@ rewriteImgs(page.value.nodes)
 // Text shortcuts: "=>" becomes "⇒", "<=" becomes "≤" and so on.
 // Code, code blocks and mermaid diagrams are left untouched.
 const symbols: Record<string, string> = {
-  '<=>': '⇔', '<->': '↔', '=>': '⇒', '->': '→', '<-': '←',
-  '<=': '≤', '>=': '≥', '!=': '≠', '+/-': '±', '~=': '≈',
-  '<==>': '⟺', '<-->': '⟷', '==>': '⟹', '-->': '⟶', '—>': '⟶', '<==': '⟸', '<--': '⟵',
+  '<=>': '⇔',
+  '<->': '↔',
+  '=>': '⇒',
+  '->': '→',
+  '<-': '←',
+  '<=': '≤',
+  '>=': '≥',
+  '!=': '≠',
+  '+/-': '±',
+  '~=': '≈',
+  '<==>': '⟺',
+  '<-->': '⟷',
+  '==>': '⟹',
+  '-->': '⟶',
+  '—>': '⟶',
+  '<==': '⟸',
+  '<--': '⟵',
 }
 // longest patterns first so "<==>" is not split into "<=" + "=>"
 const symbolRe = /<==>|<-->|<=>|<->|==>|-->|—>|<==|<--|\+\/-|<=|>=|!=|~=|=>|->|<-/g
@@ -106,7 +218,6 @@ const topHeading = computed(() => {
   walk(page.value?.nodes ?? [])
   return min === 7 ? 2 : min
 })
-
 </script>
 
 <template>
@@ -133,20 +244,21 @@ const topHeading = computed(() => {
       >
         <span class="i-solar:book-bookmark-minimalistic-line-duotone" />
         Mục lục
-        <span class="chev i-solar:alt-arrow-down-linear ml-auto transition-transform duration-200" />
+        <span
+          class="chev i-solar:alt-arrow-down-linear ml-auto transition-transform duration-200"
+        />
       </summary>
       <div class="pt-3">
         <TocLinks :links="tocLinks" />
       </div>
     </details>
 
-   <MarkdownDocument
-  :value="page"
-  :class="['markdown-body', `top-h${topHeading}`]"
-  :components="{ mermaid: Mermaid, details: NoteDetails }"
-  :plugins=plugins
-></MarkdownDocument>
-
+    <MarkdownDocument
+      :value="page"
+      :class="['markdown-body', `top-h${topHeading}`]"
+      :components="{ mermaid: Mermaid, details: NoteDetails }"
+      :plugins="plugins"
+    ></MarkdownDocument>
   </div>
 </template>
 
@@ -175,7 +287,7 @@ const topHeading = computed(() => {
   counter-increment: n1;
 }
 :is(.markdown-body.top-h1 h1, .markdown-body.top-h2 h2, .markdown-body.top-h3 h3)::before {
-  content: counter(n1) ". ";
+  content: counter(n1) '. ';
   font-weight: bold;
 }
 
@@ -185,7 +297,7 @@ const topHeading = computed(() => {
   counter-increment: n2;
 }
 :is(.markdown-body.top-h1 h2, .markdown-body.top-h2 h3, .markdown-body.top-h3 h4)::before {
-  content: counter(n1) "." counter(n2) ". ";
+  content: counter(n1) '.' counter(n2) '. ';
   font-weight: bold;
 }
 
@@ -194,14 +306,13 @@ const topHeading = computed(() => {
   counter-increment: n3;
 }
 :is(.markdown-body.top-h1 h3, .markdown-body.top-h2 h4, .markdown-body.top-h3 h5)::before {
-  content: counter(n1) "." counter(n2) "." counter(n3) ". ";
+  content: counter(n1) '.' counter(n2) '.' counter(n3) '. ';
   font-weight: bold;
 }
 
 .prose summary + h4,
 .prose summary + h2,
 .prose summary + h3 {
-margin-top: 0;
+  margin-top: 0;
 }
-
 </style>

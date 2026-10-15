@@ -1,5 +1,5 @@
 import { readdirSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs'
-import { join, relative, sep, basename, dirname } from 'node:path'
+import { join, relative, sep, basename, dirname, posix } from 'node:path'
 
 const CONTENT_DIR = 'content' // the folder that directly holds "Nội khoa/", "Tiêu hoá/", ...
 const OUT = 'public/graph.json'
@@ -39,18 +39,30 @@ for (const f of files) {
     byName.set(k, [...(byName.get(k) ?? []), f])
 }
 
+const byStem = new Map(
+  files.flatMap((f) => [
+    [norm(f.stem), f],
+    [norm(f.stripped), f],
+  ]),
+)
+
 function resolve(target, from) {
-  const t = norm(
-    decodeSafe(target)
-      .replace(/\.md$/, '')
-      .replace(/^\.?\//, ''),
-  )
-  const cands = (byName.get(t.split('/').at(-1)) ?? []).filter(
-    (f) => !t.includes('/') || [norm(f.stem), norm(f.stripped)].some((s) => s.endsWith(t)),
-  )
+  const raw = decodeSafe(target).replace(/\.md$/i, '').trim()
+
+  // Path-style links: relative ("../x/y") or from the vault root ("x/y")
+  if (raw.includes('/')) {
+    const dir = posix.dirname(from.stem)
+    for (const c of [posix.join(dir, raw), posix.normalize(raw)]) {
+      const hit = byStem.get(norm(posix.normalize(c)))
+      if (hit) return hit
+    }
+  }
+
+  // Bare names: look the file up anywhere, preferring the same subject folder
+  const cands = byName.get(norm(raw.split('/').at(-1))) ?? []
   if (!cands.length) return null
   const top = from.stem.split('/')[0]
-  return cands.find((f) => f.stem.split('/')[0] === top) ?? cands[0] // prefer same subject
+  return cands.find((f) => f.stem.split('/')[0] === top) ?? cands[0]
 }
 
 const WIKI = /(?<!!)\[\[([^\]|#]+?)(?:#[^\]|]*)?(?:\|[^\]]*)?\]\]/g
