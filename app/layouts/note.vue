@@ -76,11 +76,11 @@ body,
   overscroll-behavior: none;
 }
 
-/* Browser tab: follow the visible area as toolbars show and hide */
+@media (display-mode: browser) { /* Browser tab: follow the visible area as toolbars show and hide */
 .app-shell {
   position: fixed;
   inset: 0;
-}
+} }
 
 /* Installed app: 100vh is the full screen, including the home-indicator area */
 @media (display-mode: standalone) {
