@@ -81,24 +81,22 @@ body,
   width: 100%;
   height: 100%;
   margin: 0;
-overscroll-behavior: none;
+  overscroll-behavior: none;
 }
 
-@media (display-mode: browser) { 
-html,
-body,
-#__nuxt {
-  overflow: hidden;
-  
+@media (display-mode: browser) {
+  html,
+  body,
+  #__nuxt {
+    overflow: hidden;
+  }
+
+  /* Browser tab: follow the visible area as toolbars show and hide */
+  .app-shell {
+    position: fixed;
+    inset: 0;
+  }
 }
-
-/* Browser tab: follow the visible area as toolbars show and hide */
-.app-shell {
-  position: fixed;
-  inset: 0;
-} }
-
-
 
 /* Installed app: 100vh is the full screen, including the home-indicator area */
 @media (display-mode: standalone) {
