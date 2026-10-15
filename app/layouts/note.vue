@@ -13,7 +13,7 @@ useHead({
 
 <template>
   <div
-    class="w-full bg-orange-50 text-stone-900 dark:bg-slate-900 dark:text-slate-200 font-sans h-dvh flex flex-col overflow-hidden"
+    class="w-full bg-orange-50 text-stone-900 dark:bg-slate-900 dark:text-slate-200 font-sans app-shell flex flex-col overflow-hidden"
   >
     <ScrollAreaRoot
       style="
@@ -75,4 +75,27 @@ body,
   overflow: hidden;
   overscroll-behavior: none;
 }
+
+/* Browser tab: follow the visible area as toolbars show and hide */
+.app-shell {
+  position: fixed;
+  inset: 0;
+}
+
+/* Installed app: 100vh is the full screen, including the home-indicator area */
+@media (display-mode: standalone) {
+  .app-shell {
+    bottom: auto;
+    height: 100vh;
+  }
+}
+
+/* Safety net: if any gap ever shows, it matches the page instead of being white */
+html {
+  background-color: #fafaf9; /* stone-50; use #fff7ed (orange-50) in the note layout */
+}
+html.dark {
+  background-color: #1c1917; /* stone-900; use #0f172a (slate-900) in the note layout */
+}
+
 </style>
