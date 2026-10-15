@@ -25,3 +25,5 @@ logs
 
 stats.json
 .content/
+
+public/graph.json

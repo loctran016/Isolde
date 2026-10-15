@@ -132,16 +132,47 @@ function splitWiki(text: string): any[] {
   return out.length ? out : [text]
 }
 
+// Plain text of a node (strings plus the text inside links/spans)
+const textOf = (n: any): string =>
+  typeof n === 'string' ? n : Array.isArray(n) ? n.slice(2).map(textOf).join('') : ''
+
+// Comark turns "[[x]]" into span > span > x, so look for that shape
+const isWikiSpan = (n: any) =>
+  Array.isArray(n) &&
+  n[0] === 'span' &&
+  Object.keys(n[1] ?? {}).length === 0 &&
+  n.length === 3 &&
+  Array.isArray(n[2]) &&
+  n[2][0] === 'span' &&
+  Object.keys(n[2][1] ?? {}).length === 0
+
+function wikiNode(raw: string): any {
+  const [targetPart, ...rest] = raw.split('|')
+  const target = targetPart.split('#')[0].trim()
+  const alias = rest.join('|').trim()
+  const label = alias || stripPrefix(safeDecode(target).replace(/\.md$/i, '').split('/').at(-1)!)
+  const href = target ? resolveWikiTarget(target) : null
+  return href
+    ? ['a', { href, class: 'wikilink' }, label]
+    : ['span', { class: 'opacity-60', title: 'Không tìm thấy ghi chú' }, label]
+}
+
 const rewriteWikilinks = (nodes: any[]) => {
   for (const n of nodes) {
     if (!Array.isArray(n) || ['code', 'pre', 'a'].includes(n[0])) continue
-    // Join adjacent text pieces first, in case the parser split "[[" from the rest
+
+    // Join adjacent text pieces first, in case a plain "[[...]]" is ever split up
     const merged: any[] = []
     for (const k of n.slice(2)) {
       if (typeof k === 'string' && typeof merged.at(-1) === 'string') merged[merged.length - 1] += k
       else merged.push(k)
     }
-    const kids = merged.flatMap((k) => (typeof k === 'string' ? splitWiki(k) : [k]))
+
+    const kids = merged.flatMap((k) => {
+      if (typeof k === 'string') return splitWiki(k) // literal [[...]] text, if any survives
+      if (isWikiSpan(k)) return [wikiNode(textOf(k))] // the span > span shape
+      return [k]
+    })
     n.splice(2, n.length - 2, ...kids)
     rewriteWikilinks(kids)
   }
