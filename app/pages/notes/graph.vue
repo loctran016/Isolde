@@ -119,12 +119,26 @@ onMounted(async () => {
     graph.refresh()
   }
 
+  // First tap on a node focuses it, the second tap on the same node opens the note
+  function activate(n: GNode | null) {
+    if (!n) return select(null)
+    if (selected.value === n.id) {
+      const to = pathByStem.value.get(n.id)
+      if (to) navigateTo(to)
+      return
+    }
+    select(n)
+  }
+
+  // Touch and pen use the library's own tap handling; a mouse uses ours (below).
+  let lastType = 'mouse'
+
   graph = new ForceGraph(el)
     .graphData(data)
     .width(el.clientWidth)
     .height(el.clientHeight)
     .backgroundColor('rgba(0,0,0,0)')
-    .enablePointerInteraction(false) // hover/click are handled below, with our own hit-testing
+    .autoPauseRedraw(false)
     .warmupTicks(150) // lay out first, so nodes don't drift under the cursor
     .cooldownTime(1500)
     .onEngineStop(() => fit())
@@ -149,11 +163,26 @@ onMounted(async () => {
       }
       ctx.globalAlpha = 1
     })
+    // Tap area of at least ~14px on screen, whatever the zoom
+    .nodePointerAreaPaint((n: any, c: string, ctx: CanvasRenderingContext2D, scale: number) => {
+      ctx.fillStyle = c
+      ctx.beginPath()
+      ctx.arc(n.x, n.y, Math.max(radius(n) + 4, 14 / scale), 0, 2 * Math.PI)
+      ctx.fill()
+    })
     .linkColor((l: any) =>
       !selected.value || idOf(l.source) === selected.value || idOf(l.target) === selected.value
         ? edge
         : faint,
     )
+    .onNodeClick((n: any) => {
+      if (lastType === 'mouse') return // mouse clicks are handled below
+      activate(n)
+    })
+    .onBackgroundClick(() => {
+      if (lastType === 'mouse') return
+      activate(null)
+    })
 
   // Keep the canvas size in sync with its box (no re-fit here, so your zoom stays put)
   ro = new ResizeObserver(() => {
@@ -165,7 +194,7 @@ onMounted(async () => {
   // so fit a few times while the layout settles
   for (const t of [200, 800, 1800]) setTimeout(() => fit(0), t)
 
-  // ---- Own hit-testing: the nearest node within ~14px of the pointer ----
+  // ---- Mouse only: our own hit-testing, the nearest node within ~14px of the pointer ----
   function nodeAt(clientX: number, clientY: number): any | null {
     const canvas = el.querySelector('canvas') as HTMLCanvasElement | null
     if (!canvas) return null
@@ -189,37 +218,27 @@ onMounted(async () => {
     return best
   }
 
-  const active = new Set<number>()
   let tap: { x: number; y: number; id: number } | null = null
 
   const onDown = (e: PointerEvent) => {
-    active.add(e.pointerId)
+    lastType = e.pointerType
     userMoved = true // the user is interacting, so stop auto-fitting
-    // only a single finger/mouse button can become a tap (a second pointer means pinch)
-    tap = active.size === 1 ? { x: e.clientX, y: e.clientY, id: e.pointerId } : null
+    if (e.pointerType !== 'mouse') return
+    tap = { x: e.clientX, y: e.clientY, id: e.pointerId }
   }
 
   const onUp = (e: PointerEvent) => {
-    active.delete(e.pointerId)
+    if (e.pointerType !== 'mouse') return
     const t = tap
-    if (!t || e.pointerId !== t.id) return
     tap = null
-    // only a real tap/click counts, not the end of a pan
+    if (!t || e.pointerId !== t.id) return
+    // only a real click counts, not the end of a pan
     if (Math.hypot(e.clientX - t.x, e.clientY - t.y) > 6) return
     if (!el.contains(e.target as Node)) return
-
-    const n = nodeAt(e.clientX, e.clientY)
-    if (!n) return select(null)
-    if (selected.value === n.id) {
-      const to = pathByStem.value.get(n.id)
-      if (to) navigateTo(to)
-      return
-    }
-    select(n)
+    activate(nodeAt(e.clientX, e.clientY))
   }
 
-  const onCancel = (e: PointerEvent) => {
-    active.delete(e.pointerId)
+  const onCancel = () => {
     tap = null
   }
 
@@ -238,7 +257,7 @@ onMounted(async () => {
   el.addEventListener('pointerdown', onDown, { passive: true })
   el.addEventListener('pointermove', onMove, { passive: true })
   el.addEventListener('wheel', onWheel, { passive: true })
-  // up/cancel on window, so releasing outside the box can't leave a pointer "stuck"
+  // up/cancel on window, so releasing outside the box can't leave a click "stuck"
   window.addEventListener('pointerup', onUp, { passive: true })
   window.addEventListener('pointercancel', onCancel, { passive: true })
 
