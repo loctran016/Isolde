@@ -39,6 +39,18 @@ const selected = ref<string | null>(null)
 const selectedName = ref('')
 let graph: any
 let ro: ResizeObserver | undefined
+let cleanup: (() => void) | undefined
+
+// Auto-fit only until the user starts panning/zooming (so a tap never resets the view)
+let userMoved = false
+function fit(ms = 400) {
+  if (!graph || userMoved) return
+  graph.zoomToFit(ms, 40)
+}
+function refit() {
+  userMoved = false
+  fit(300)
+}
 
 // ---- Full screen (the overlay is the default; the real Fullscreen API is a bonus) ----
 const full = ref(true)
@@ -63,10 +75,11 @@ onKeyStroke('Escape', () => {
   if (full.value) setFull(false)
 })
 
-// Re-fit the view only when switching between card and full screen
+// Re-fit the view when switching between card and full screen
 watch(full, async () => {
   await nextTick()
-  setTimeout(() => graph?.zoomToFit(300, 30), 150)
+  userMoved = false
+  setTimeout(() => fit(300), 150)
 })
 
 onMounted(async () => {
@@ -98,7 +111,6 @@ onMounted(async () => {
   const idOf = (x: any) => (typeof x === 'object' ? x.id : x)
   const radius = (n: any) => 3 + Math.sqrt(n.deg ?? 0) * 1.8
   let focus: Set<string> | null = null
-  let fitted = false
 
   function select(n: GNode | null) {
     selected.value = n?.id ?? null
@@ -112,14 +124,10 @@ onMounted(async () => {
     .width(el.clientWidth)
     .height(el.clientHeight)
     .backgroundColor('rgba(0,0,0,0)')
-    .autoPauseRedraw(false) // keep hover/click detection running after the layout settles
+    .enablePointerInteraction(false) // hover/click are handled below, with our own hit-testing
     .warmupTicks(150) // lay out first, so nodes don't drift under the cursor
     .cooldownTime(1500)
-    .onEngineStop(() => {
-      if (fitted) return // fit once, so dragging a node doesn't re-zoom the view
-      fitted = true
-      graph.zoomToFit(400, 40)
-    })
+    .onEngineStop(() => fit())
     .nodeCanvasObject((n: any, ctx: CanvasRenderingContext2D, scale: number) => {
       const dim = focus && !focus.has(n.id)
       ctx.globalAlpha = dim ? 0.15 : 1
@@ -141,41 +149,113 @@ onMounted(async () => {
       }
       ctx.globalAlpha = 1
     })
-    // Tap/hover area of at least ~14px on screen, whatever the zoom
-    .nodePointerAreaPaint((n: any, c: string, ctx: CanvasRenderingContext2D, scale: number) => {
-      ctx.fillStyle = c
-      ctx.beginPath()
-      ctx.arc(n.x, n.y, Math.max(radius(n) + 4, 14 / scale), 0, 2 * Math.PI)
-      ctx.fill()
-    })
-    .onNodeHover((n: any) => {
-      el.style.cursor = n ? 'pointer' : 'default'
-    })
     .linkColor((l: any) =>
       !selected.value || idOf(l.source) === selected.value || idOf(l.target) === selected.value
         ? edge
         : faint,
     )
-    .onNodeClick((n: any) => {
-      if (selected.value === n.id) {
-        const to = pathByStem.value.get(n.id)
-        if (to) navigateTo(to)
-        return
-      }
-      select(n)
-    })
-    .onBackgroundClick(() => select(null))
 
   // Keep the canvas size in sync with its box (no re-fit here, so your zoom stays put)
   ro = new ResizeObserver(() => {
     graph.width(el.clientWidth).height(el.clientHeight)
   })
   ro.observe(el)
+
+  // The legend and safe-area padding change the box size just after mount,
+  // so fit a few times while the layout settles
+  for (const t of [200, 800, 1800]) setTimeout(() => fit(0), t)
+
+  // ---- Own hit-testing: the nearest node within ~14px of the pointer ----
+  function nodeAt(clientX: number, clientY: number): any | null {
+    const canvas = el.querySelector('canvas') as HTMLCanvasElement | null
+    if (!canvas) return null
+    const rect = canvas.getBoundingClientRect()
+    // also correct for a scaled ancestor, if there ever is one
+    const x = (clientX - rect.left) * (rect.width ? canvas.clientWidth / rect.width : 1)
+    const y = (clientY - rect.top) * (rect.height ? canvas.clientHeight / rect.height : 1)
+    const p = graph.screen2GraphCoords(x, y)
+    const slop = 14 / graph.zoom()
+
+    let best: any = null
+    let bestDist = Infinity
+    for (const n of graph.graphData().nodes as any[]) {
+      if (n.x == null) continue
+      const d = Math.hypot(n.x - p.x, n.y - p.y)
+      if (d <= Math.max(radius(n) + 4, slop) && d < bestDist) {
+        best = n
+        bestDist = d
+      }
+    }
+    return best
+  }
+
+  const active = new Set<number>()
+  let tap: { x: number; y: number; id: number } | null = null
+
+  const onDown = (e: PointerEvent) => {
+    active.add(e.pointerId)
+    userMoved = true // the user is interacting, so stop auto-fitting
+    // only a single finger/mouse button can become a tap (a second pointer means pinch)
+    tap = active.size === 1 ? { x: e.clientX, y: e.clientY, id: e.pointerId } : null
+  }
+
+  const onUp = (e: PointerEvent) => {
+    active.delete(e.pointerId)
+    const t = tap
+    if (!t || e.pointerId !== t.id) return
+    tap = null
+    // only a real tap/click counts, not the end of a pan
+    if (Math.hypot(e.clientX - t.x, e.clientY - t.y) > 6) return
+    if (!el.contains(e.target as Node)) return
+
+    const n = nodeAt(e.clientX, e.clientY)
+    if (!n) return select(null)
+    if (selected.value === n.id) {
+      const to = pathByStem.value.get(n.id)
+      if (to) navigateTo(to)
+      return
+    }
+    select(n)
+  }
+
+  const onCancel = (e: PointerEvent) => {
+    active.delete(e.pointerId)
+    tap = null
+  }
+
+  // Mouse hover: pointer cursor + a native tooltip with the note name
+  const onMove = (e: PointerEvent) => {
+    if (e.pointerType !== 'mouse' || e.buttons) return
+    const n = nodeAt(e.clientX, e.clientY)
+    el.style.cursor = n ? 'pointer' : 'default'
+    el.title = n ? n.name : ''
+  }
+
+  const onWheel = () => {
+    userMoved = true
+  }
+
+  el.addEventListener('pointerdown', onDown, { passive: true })
+  el.addEventListener('pointermove', onMove, { passive: true })
+  el.addEventListener('wheel', onWheel, { passive: true })
+  // up/cancel on window, so releasing outside the box can't leave a pointer "stuck"
+  window.addEventListener('pointerup', onUp, { passive: true })
+  window.addEventListener('pointercancel', onCancel, { passive: true })
+
+  cleanup = () => {
+    el.removeEventListener('pointerdown', onDown)
+    el.removeEventListener('pointermove', onMove)
+    el.removeEventListener('wheel', onWheel)
+    window.removeEventListener('pointerup', onUp)
+    window.removeEventListener('pointercancel', onCancel)
+  }
 })
 
 onBeforeUnmount(() => {
+  cleanup?.()
   ro?.disconnect()
   graph?._destructor?.()
+  graph = null
 })
 </script>
 
@@ -199,7 +279,7 @@ onBeforeUnmount(() => {
         class="pointer-events-none absolute inset-0 -z-10 h-full w-full object-cover object-top-left opacity-60"
       />
 
-      <!-- Legend + toggle -->
+      <!-- Legend + buttons -->
       <div class="flex items-start gap-2">
         <div class="flex flex-1 flex-wrap gap-2">
           <span
@@ -211,6 +291,15 @@ onBeforeUnmount(() => {
             {{ g.name }}
           </span>
         </div>
+
+        <button
+          type="button"
+          class="shrink-0 cursor-pointer rounded-full border border-purple-300/30 p-2 text-lg transition-colors hover:bg-purple-500/20"
+          aria-label="Căn giữa đồ thị"
+          @click="refit"
+        >
+          <span class="i-solar:target-linear block" />
+        </button>
 
         <button
           type="button"
