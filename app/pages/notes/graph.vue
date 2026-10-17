@@ -63,6 +63,12 @@ onKeyStroke('Escape', () => {
   if (full.value) setFull(false)
 })
 
+// Re-fit the view only when switching between card and full screen
+watch(full, async () => {
+  await nextTick()
+  setTimeout(() => graph?.zoomToFit(300, 30), 150)
+})
+
 onMounted(async () => {
   const [{ default: ForceGraph }, data] = await Promise.all([
     import('force-graph'),
@@ -92,6 +98,7 @@ onMounted(async () => {
   const idOf = (x: any) => (typeof x === 'object' ? x.id : x)
   const radius = (n: any) => 3 + Math.sqrt(n.deg ?? 0) * 1.8
   let focus: Set<string> | null = null
+  let fitted = false
 
   function select(n: GNode | null) {
     selected.value = n?.id ?? null
@@ -105,7 +112,14 @@ onMounted(async () => {
     .width(el.clientWidth)
     .height(el.clientHeight)
     .backgroundColor('rgba(0,0,0,0)')
-    .cooldownTime(4000)
+    .autoPauseRedraw(false) // keep hover/click detection running after the layout settles
+    .warmupTicks(150) // lay out first, so nodes don't drift under the cursor
+    .cooldownTime(1500)
+    .onEngineStop(() => {
+      if (fitted) return // fit once, so dragging a node doesn't re-zoom the view
+      fitted = true
+      graph.zoomToFit(400, 40)
+    })
     .nodeCanvasObject((n: any, ctx: CanvasRenderingContext2D, scale: number) => {
       const dim = focus && !focus.has(n.id)
       ctx.globalAlpha = dim ? 0.15 : 1
@@ -127,12 +141,15 @@ onMounted(async () => {
       }
       ctx.globalAlpha = 1
     })
-    // Bigger hit area so nodes are easy to tap on a phone
-    .nodePointerAreaPaint((n: any, c: string, ctx: CanvasRenderingContext2D) => {
+    // Tap/hover area of at least ~14px on screen, whatever the zoom
+    .nodePointerAreaPaint((n: any, c: string, ctx: CanvasRenderingContext2D, scale: number) => {
       ctx.fillStyle = c
       ctx.beginPath()
-      ctx.arc(n.x, n.y, radius(n) + 5, 0, 2 * Math.PI)
+      ctx.arc(n.x, n.y, Math.max(radius(n) + 4, 14 / scale), 0, 2 * Math.PI)
       ctx.fill()
+    })
+    .onNodeHover((n: any) => {
+      el.style.cursor = n ? 'pointer' : 'default'
     })
     .linkColor((l: any) =>
       !selected.value || idOf(l.source) === selected.value || idOf(l.target) === selected.value
@@ -149,15 +166,9 @@ onMounted(async () => {
     })
     .onBackgroundClick(() => select(null))
 
-  // Resize with the container (card <-> full screen) and re-fit the graph after a change
-  let first = true
+  // Keep the canvas size in sync with its box (no re-fit here, so your zoom stays put)
   ro = new ResizeObserver(() => {
     graph.width(el.clientWidth).height(el.clientHeight)
-    if (first) {
-      first = false
-      return
-    }
-    graph.zoomToFit(300, 30)
   })
   ro.observe(el)
 })
@@ -221,8 +232,8 @@ onBeforeUnmount(() => {
         class="w-full overflow-hidden rounded-lg border border-purple-300/20 bg-purple-950/20"
       />
 
-      <!-- Selected node -->
-      <p class="min-h-5 text-sm opacity-70">
+      <!-- Selected node (fixed height, so selecting never resizes the graph) -->
+      <p class="h-10 overflow-hidden text-sm opacity-70 line-clamp-2">
         {{
           selectedName
             ? `${selectedName} · chạm lần nữa để mở`
