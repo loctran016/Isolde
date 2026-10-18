@@ -351,6 +351,6 @@ const topHeading = computed(() => {
 .prose summary + h4,
 .prose summary + h2,
 .prose summary + h3 {
-  margin-top: 0;
+  margin-top: 0 !important;
 }
 </style>
