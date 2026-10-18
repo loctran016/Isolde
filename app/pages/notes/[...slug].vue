@@ -8,9 +8,17 @@ import NoteDetails from '~/components/NoteDetails.vue'
 import { defineComarkPlugin } from 'comark/parse'
 import markdownItMultimdTable from 'markdown-it-multimd-table'
 
+const multimdTablePlugin: MarkdownItPlugin = (md) => {
+  md.use(markdownItMultimdTable, {
+    multiline: true,
+    rowspan: true,
+    headerless: true,
+  })
+}
+
 const multimdTable = defineComarkPlugin(() => ({
   name: 'multimd-table',
-  markdownItPlugins: [markdownItMultimdTable],
+  markdownItPlugins: [multimdTablePlugin],
 }))
 
 const plugins = [toc({ depth: 3, title: 'On This Page' }),multimdTable(), mermaid()]
