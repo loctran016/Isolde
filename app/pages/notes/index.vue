@@ -25,7 +25,7 @@ definePageMeta({ title: island.pageTitle, titleIcon: island.titleIcon })
 const { data: nav } = await useAsyncData('notes-nav', () => clientContent.navigation())
 
 const breakpoints = useBreakpoints(breakpointsTailwind)
-const isLg = breakpoints.greaterOrEqual('lg')
+const isLg = breakpoints.greaterOrEqual('xl')
 
 // 12 below lg (divides the 2- and 3-column grids), 24 from lg up (divides 3 and 4 columns)
 const itemsPerPage = computed(() => (isLg.value ? 16 : 12))
