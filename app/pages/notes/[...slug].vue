@@ -312,10 +312,10 @@ const topHeading = computed(() => {
 .prose table {
   width: max-content;
   min-width: 100%;
-  max-width: min(calc(100vw - 2rem), 110ch);
+  /* max-width: min(calc(100vw - 2rem), 110ch);
   position: relative;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translateX(-50%);*/
 }
 
 [id] {
