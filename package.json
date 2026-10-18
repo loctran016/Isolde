@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "graph": "node scripts/build-graph.mjs",
-    "build": "node scripts/build-graph.mjs && comark-content snapshot && nuxt build",
+    "build": "node scripts/format-md.mjs && node scripts/build-graph.mjs && comark-content snapshot && nuxt build",
+    "format:md": "node scripts/format-md.mjs",
     "dev": "node scripts/build-graph.mjs && nuxt dev",
     "generate": "node scripts/build-graph.mjs && nuxt generate",
     "preview": "nuxt preview",
