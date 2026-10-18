@@ -5,8 +5,15 @@ import { MarkdownDocument } from '@comark/vue'
 import toc from 'comark/plugins/toc'
 import mermaid, { Mermaid } from '@comark/vue/plugins/mermaid'
 import NoteDetails from '~/components/NoteDetails.vue'
+import { defineComarkPlugin } from 'comark/parse'
+import markdownItMultimdTable from 'markdown-it-multimd-table'
 
-const plugins = [toc({ depth: 3, title: 'On This Page' }), mermaid()]
+const multimdTable = defineComarkPlugin(() => ({
+  name: 'multimd-table',
+  markdownItPlugins: [markdownItMultimdTable],
+}))
+
+const plugins = [toc({ depth: 3, title: 'On This Page' }),multimdTable(), mermaid()]
 
 const route = useRoute()
 const path = route.path.replace(/\/+$/, '') || '/'
