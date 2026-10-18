@@ -312,6 +312,7 @@ const topHeading = computed(() => {
 .prose table {
   width: max-content;
   min-width: 100%;
+	overflow: scroll;
   /* max-width: min(calc(100vw - 2rem), 110ch);
   position: relative;
   left: 50%;
