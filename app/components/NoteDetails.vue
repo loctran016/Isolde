@@ -8,7 +8,7 @@ defineProps<{
 <template>
   <details
     :open="open"
-    class="not-prose-summary my-4 rounded-lg border border-purple-300/20 bg-purple-500/5 dark:bg-purple-950/30 px-4 py-2 [&[open]>summary_.chev]:rotate-90"
+    class="not-prose-summary my-4 rounded-lg border border-slate-300/20 bg-slate-500/5 dark:bg-slate-950/30 px-4 py-2 [&[open]>summary_.chev]:rotate-90"
   >
     <summary
       class="flex cursor-pointer select-none list-none items-center gap-2 py-1 font-head font-bold [&::-webkit-details-marker]:hidden"
