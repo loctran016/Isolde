@@ -1,6 +1,3 @@
-I added a dev-only parse test to the file. It parses a sample table with `comark`'s parser three ways (no plugins, multimd only, and your page's own plugin list) and `console.log`s what each one produces. I couldn't confirm which parse function your installed `comark` version exports, since the name changed between releases, so the test tries `parse` and falls back to `parseMarkdown`.
-
-```vue
 <script setup lang="ts">
 import type { NavigationItem } from 'comark-content'
 import { MarkdownDocument } from '@comark/vue'
@@ -520,18 +517,4 @@ const topHeading = computed(() => {
 .prose summary + h3 {
   margin-top: 0 !important;
 }
-</style>
-```
-
-How to use it:
-- **Auto-run:** open any note with `?parseTest` at the end of the URL, in dev. Open the browser console and expand the three groups.
-- **Your own markdown:** type `__comarkTest('| a | b |\n|---|---|\n| 1 | 2 |')` in the console to test any snippet.
-- **Nothing runs in production** (`import.meta.dev`), and nothing runs without `?parseTest` or a console call, so normal page loads stay quiet.
-
-What the logs tell you:
-- **Compare the three groups.** If "no plugins" and "multimd-table only" show the same tag counts, the plugin isn't applying at all.
-- **"multimd syntax left unparsed"** lists `^^` or `||` if they survived into the output, so a rowspan or colspan didn't work. This check is crude: any `||` in your own text would also trigger it.
-- **"cells with rowspan/colspan"** shows what the AST really contains. I don't know how Comark's token-to-AST step treats multimd's extra tokens (caption, colgroup, rowspan and colspan attributes). If the first group shows the leftovers and the second doesn't, the plugin works. If both are clean but no spans are listed, Comark is likely dropping those attributes, and then plain markdown-it plugins can't do it alone.
-- **A "caption" row in the tag table** tells you whether `[Prototype table]` was kept. If it's missing, it was lost or turned into text.
-
-If the console says it can't find a parse export, it prints the export names it found, and you can paste them to me.
+</style> 
