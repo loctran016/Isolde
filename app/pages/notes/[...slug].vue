@@ -1,3 +1,6 @@
+I added a dev-only parse test to the file. It parses a sample table with `comark`'s parser three ways (no plugins, multimd only, and your page's own plugin list) and `console.log`s what each one produces. I couldn't confirm which parse function your installed `comark` version exports, since the name changed between releases, so the test tries `parse` and falls back to `parseMarkdown`.
+
+```vue
 <script setup lang="ts">
 import type { NavigationItem } from 'comark-content'
 import { MarkdownDocument } from '@comark/vue'
@@ -269,6 +272,84 @@ const wrapTables = (children: any[], start = 0) => {
 }
 wrapTables(page.value.nodes)
 
+// ---- Parse test (dev only): what AST does each plugin set produce for a given markdown? ----
+// Auto-runs when the URL has ?parseTest. You can also call it from the browser console:
+//   __comarkTest()                                        -> the built-in multimd sample
+//   __comarkTest('| a | b |\n|---|---|\n| 1 | 2 |')        -> your own markdown
+const PARSE_SAMPLE = String.raw`|             | Grouping            ||
+| First       | Second   | Third    |
+| ----------- | :------: | -------: |
+| Colspan     | Long cell spanning  ||
+| Rowspan     | **Cell** | Cell     |
+| ^^          | Cell     | Cell     |
+| Multiline   | Line one | C1       | \
+|             | Line two | C2       |
+[Prototype table]
+
+|-------------|----------|
+| Headerless  | table    |
+`
+
+const walkNodes = (nodes: any[], fn: (n: any[]) => void) => {
+  for (const n of nodes) {
+    if (!Array.isArray(n)) continue
+    fn(n)
+    walkNodes(n.slice(2), fn)
+  }
+}
+
+async function runParseTest(markdown: string = PARSE_SAMPLE) {
+  const mod: any = await import('comark')
+  const parseFn = mod.parse ?? mod.parseMarkdown // the export was renamed between versions
+  if (typeof parseFn !== 'function') {
+    console.warn('[parse test] no parse()/parseMarkdown() export in "comark". Exports:', Object.keys(mod))
+    return
+  }
+
+  const cases: { name: string; plugins: any[] }[] = [
+    { name: 'no plugins', plugins: [] },
+    { name: 'multimd-table only', plugins: [multimdTable()] },
+    { name: 'page plugins (toc + multimd + mermaid)', plugins },
+  ]
+
+  for (const c of cases) {
+    const t0 = performance.now()
+    try {
+      const result = await parseFn(markdown, { plugins: c.plugins })
+
+      const tags: Record<string, number> = {}
+      const spans: string[] = []
+      walkNodes(result.nodes, (n) => {
+        tags[n[0]] = (tags[n[0]] ?? 0) + 1
+        const a = n[1] ?? {}
+        const rowspan = a.rowspan ?? a.rowSpan
+        const colspan = a.colspan ?? a.colSpan
+        if ((n[0] === 'td' || n[0] === 'th') && (rowspan || colspan))
+          spans.push(`${n[0]} rowspan=${rowspan ?? 1} colspan=${colspan ?? 1}: ${textOf(n).trim().slice(0, 30)}`)
+      })
+
+      // Multimd syntax that survived into the output means the plugin did not apply
+      const json = JSON.stringify(result.nodes)
+      const leftover = ['^^', '||'].filter((s) => json.includes(s))
+
+      console.groupCollapsed(`[parse test] ${c.name} (${(performance.now() - t0).toFixed(1)} ms)`)
+      console.log('nodes:', result.nodes)
+      console.table(tags)
+      console.log('cells with rowspan/colspan:', spans.length ? spans : 'none found')
+      console.log('multimd syntax left unparsed:', leftover.length ? leftover : 'none')
+      console.groupEnd()
+    } catch (err) {
+      console.error(`[parse test] "${c.name}" threw:`, err)
+    }
+  }
+}
+
+onMounted(() => {
+  if (!import.meta.dev) return
+  ;(window as any).__comarkTest = runParseTest
+  if ('parseTest' in route.query) runParseTest()
+})
+
 const topHeading = computed(() => {
   let min = 7
   const walk = (nodes: any[]) => {
@@ -440,3 +521,17 @@ const topHeading = computed(() => {
   margin-top: 0 !important;
 }
 </style>
+```
+
+How to use it:
+- **Auto-run:** open any note with `?parseTest` at the end of the URL, in dev. Open the browser console and expand the three groups.
+- **Your own markdown:** type `__comarkTest('| a | b |\n|---|---|\n| 1 | 2 |')` in the console to test any snippet.
+- **Nothing runs in production** (`import.meta.dev`), and nothing runs without `?parseTest` or a console call, so normal page loads stay quiet.
+
+What the logs tell you:
+- **Compare the three groups.** If "no plugins" and "multimd-table only" show the same tag counts, the plugin isn't applying at all.
+- **"multimd syntax left unparsed"** lists `^^` or `||` if they survived into the output, so a rowspan or colspan didn't work. This check is crude: any `||` in your own text would also trigger it.
+- **"cells with rowspan/colspan"** shows what the AST really contains. I don't know how Comark's token-to-AST step treats multimd's extra tokens (caption, colgroup, rowspan and colspan attributes). If the first group shows the leftovers and the second doesn't, the plugin works. If both are clean but no spans are listed, Comark is likely dropping those attributes, and then plain markdown-it plugins can't do it alone.
+- **A "caption" row in the tag table** tells you whether `[Prototype table]` was kept. If it's missing, it was lost or turned into text.
+
+If the console says it can't find a parse export, it prints the export names it found, and you can paste them to me.
