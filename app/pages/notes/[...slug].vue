@@ -66,6 +66,10 @@ const tocLinks = computed(() => page.value?.meta?.toc?.links ?? [])
 // console.log(tocLinks.value)
 console.log('Page value', page.value)
 
+// Share: copy the current link (legacy = fallback for browsers without the Clipboard API)
+const { copy, copied } = useClipboard({ copiedDuring: 1800, legacy: true })
+const shareLink = () => copy(window.location.href)
+
 // ---- Wikilinks: [[../../Dược lý/Thuốc KS/Cơ chế phân tử.md#|Cơ chế phân tử]] ----
 const { data: nav } = await useAsyncData('notes-nav', () => clientContent.navigation())
 
@@ -284,15 +288,46 @@ const topHeading = computed(() => {
   <div
     class="max-w-9/10 lg:max-w-3/5 mt-6 lg:mt-8 prose lg:prose-lg dark:prose-invert prose-headings:font-head mx-auto !max-w-75ch prose-a:no-underline hover:prose-a:text-purple-800/95 dark:hover:prose-a:text-purple-300/90 prose-a:transition-all prose-a:duration-200 prose-headings:tracking-wide prose-table:table-auto prose-td:min-w-10 prose-td:min-w-[calc-size(max-content,min(size,10ch))] prose-img:mx-auto prose-img:rounded-md mb-10"
   >
-    <NuxtLink class="mb-4 cursor-pointer flex gap-2 opacity-90" to="/notes">
-      <div class="i-solar:home-2-bold lg:text-lg" />
-      <span class="text-xs lg:text-sm">
-        {{ pageTitles[0] }} /
-        <span class="opacity-90">
-          {{ pageTitles[1] }}
+    <!-- Breadcrumb + actions -->
+    <div class="not-prose mb-4 flex items-center justify-between gap-3">
+      <NuxtLink class="flex min-w-0 cursor-pointer gap-2 opacity-90" to="/notes">
+        <div class="i-solar:home-2-bold lg:text-lg" />
+        <span class="truncate text-xs lg:text-sm">
+          {{ pageTitles[0] }} /
+          <span class="opacity-90">
+            {{ pageTitles[1] }}
+          </span>
         </span>
-      </span>
-    </NuxtLink>
+      </NuxtLink>
+
+      <div class="flex shrink-0 items-center gap-2">
+        <NuxtLink
+          to="/notes/graph"
+          class="flex items-center gap-1.5 rounded-full border border-purple-300/30 px-3 py-1.5 text-xs transition-colors hover:bg-purple-500/20 lg:text-sm"
+          aria-label="Xem đồ thị ghi chú"
+        >
+          <span class="i-solar:graph-linear text-base" />
+          <span class="hidden sm:inline">Đồ thị</span>
+        </NuxtLink>
+
+        <button
+          type="button"
+          class="flex cursor-pointer items-center gap-1.5 rounded-full border border-purple-300/30 px-3 py-1.5 text-xs transition-colors hover:bg-purple-500/20 lg:text-sm"
+          aria-label="Sao chép liên kết"
+          aria-live="polite"
+          @click="shareLink"
+        >
+          <span
+            :class="copied ? 'i-solar:check-circle-linear' : 'i-solar:share-linear'"
+            class="text-base"
+          />
+          <span :class="copied ? '' : 'hidden sm:inline'">
+            {{ copied ? 'Đã chép liên kết' : 'Chia sẻ' }}
+          </span>
+        </button>
+      </div>
+    </div>
+
     <h1>{{ pageTitles[2] }}</h1>
 
     <details
@@ -334,6 +369,31 @@ const topHeading = computed(() => {
   width: max-content;
   min-width: 100%;
   margin: 0;
+}
+
+/* Cell width caps: phones, then md (iPad), then xl (laptop). Long text wraps inside the cap. */
+.table-wrap :is(td, th) {
+  max-width: 14rem;
+}
+@media (min-width: 768px) {
+  .table-wrap :is(td, th) {
+    max-width: 20rem;
+  }
+}
+@media (min-width: 1280px) {
+  .table-wrap :is(td, th) {
+    max-width: 28rem;
+  }
+}
+
+/* Laptop only: hide the scrollbar (trackpad and shift + wheel still scroll) */
+@media (min-width: 1280px) {
+  .table-wrap {
+    scrollbar-width: none;
+  }
+  .table-wrap::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 [id] {
