@@ -251,6 +251,20 @@ const replaceSymbols = (nodes: any[]) => {
 }
 replaceSymbols(page.value.nodes)
 
+// Wrap every table in a scroll container ("overflow" does nothing on a <table> itself).
+// The wrapper is skipped when it already exists, because this runs on the server and again
+// on the client, and a second pass must not wrap the table twice.
+const wrapTables = (children: any[], start = 0) => {
+  for (let i = start; i < children.length; i++) {
+    const n = children[i]
+    if (!Array.isArray(n) || skipTags.has(n[0])) continue
+    if (n[0] === 'div' && n[1]?.class === 'table-wrap') continue
+    if (n[0] === 'table') children[i] = ['div', { class: 'table-wrap' }, n]
+    else wrapTables(n, 2)
+  }
+}
+wrapTables(page.value.nodes)
+
 const topHeading = computed(() => {
   let min = 7
   const walk = (nodes: any[]) => {
@@ -268,7 +282,7 @@ const topHeading = computed(() => {
 
 <template>
   <div
-    class="max-w-9/10 lg:max-w-3/5 mt-6 lg:mt-8 prose lg:prose-lg dark:prose-invert prose-headings:font-head mx-auto !max-w-75ch prose-a:no-underline hover:prose-a:text-purple-800/95 dark:hover:prose-a:text-purple-300/90 prose-a:transition-all prose-a:duration-200 prose-headings:tracking-wide prose-table:table-auto prose-table:overflow-scroll prose-table:scrollbar-none prose-table:w-full prose-td:min-w-10 prose-td:min-w-[calc-size(max-content,min(size,10ch))] prose-img:mx-auto prose-img:rounded-md mb-10"
+    class="max-w-9/10 lg:max-w-3/5 mt-6 lg:mt-8 prose lg:prose-lg dark:prose-invert prose-headings:font-head mx-auto !max-w-75ch prose-a:no-underline hover:prose-a:text-purple-800/95 dark:hover:prose-a:text-purple-300/90 prose-a:transition-all prose-a:duration-200 prose-headings:tracking-wide prose-table:table-auto prose-td:min-w-10 prose-td:min-w-[calc-size(max-content,min(size,10ch))] prose-img:mx-auto prose-img:rounded-md mb-10"
   >
     <NuxtLink class="mb-4 cursor-pointer flex gap-2 opacity-90" to="/notes">
       <div class="i-solar:home-2-bold lg:text-lg" />
@@ -309,14 +323,17 @@ const topHeading = computed(() => {
 </template>
 
 <style>
-.prose table {
+/* The wrapper scrolls sideways; the table keeps normal table layout inside it */
+.table-wrap {
+  overflow-x: auto;
+  max-width: 100%;
+  margin: 1.5em 0;
+  -webkit-overflow-scrolling: touch;
+}
+.prose .table-wrap table {
   width: max-content;
   min-width: 100%;
-	overflow: scroll;
-  /* max-width: min(calc(100vw - 2rem), 110ch);
-  position: relative;
-  left: 50%;
-  transform: translateX(-50%);*/
+  margin: 0;
 }
 
 [id] {
