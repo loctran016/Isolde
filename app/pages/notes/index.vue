@@ -140,7 +140,7 @@ watch([selectedSubject, search, onlyTodo], () => {
 <template>
   <div class="i-healthicons:gastroenterology hidden"></div>
   <div class="i-healthicons:medicines-24px hidden"></div>
-  <main class="mx-auto w-full max-w-6xl px-3 md:px-6">
+  <main class="mx-auto pb-4 w-full max-w-6xl px-3 md:px-6">
     <div class="my-4 lg:my-6 space-y-4 card">
       <!-- Search -->
       <div class="relative">
