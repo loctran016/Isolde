@@ -8,13 +8,16 @@ import { withSnapshot } from 'comark-content/sources/snapshot'
 import markdownItMultiMDTable from 'markdown-it-multimd-table'
 import markdownItSup from 'markdown-it-sup'
 
+import sqliteWasm from 'comark-content/database/sqlite-wasm'
+import sqliteFullTextSearch from 'comark-content/plugins/sqlite-full-text-search'
+
 const multiMDTable = defineComarkPlugin(() => ({
   name: 'multiMDTable',
   markdownItPlugins: [markdownItMultiMDTable],
 }))
 
 const subscript = defineComarkPlugin(() => ({
-  name: "subscript",
+  name: 'subscript',
   post(state) {
     state.tree.nodes = state.tree.nodes.flatMap(parseSubscript)
   },
@@ -36,23 +39,23 @@ export const content = comarkContent({
       import('nitropack/runtime').then(({ useStorage }) =>
         useStorage('assets:comark').getItem('default/manifest.json'),
       ),
-    ),
-     markdown: {
-    plugins: [mermaid(),toc(),multiMDTable(),subscript(),superscript()],
+  ),
+  markdown: {
+    plugins: [mermaid(), toc(), multiMDTable(), subscript(), superscript()],
   },
-  plugins: [media()],
+  plugins: [media(), sqliteFullTextSearch({ database: sqliteWasm() })],
 })
 
-import type { Node } from "comark"
+import type { Node } from 'comark'
 
 function parseSubscript(node: Node): Node[] {
-  if (typeof node === "string") {
+  if (typeof node === 'string') {
     const nodes: Node[] = []
 
     for (const [index, part] of Object.entries(node.split(/~([^~\n]+)~/u))) {
       if (part) {
         const isEvenIndex = Number(index) % 2 === 0
-        nodes.push(isEvenIndex ? part : ["sub", {}, part])
+        nodes.push(isEvenIndex ? part : ['sub', {}, part])
       }
     }
 

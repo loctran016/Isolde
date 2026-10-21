@@ -24,6 +24,7 @@
     "@nuxtjs/cloudinary": "^4.0.0",
     "@nuxtjs/supabase": "2.0.9",
     "@regle/nuxt": "1.28.3",
+    "@sqlite.org/sqlite-wasm": "^3.54.1-build1",
     "@tanstack/vue-table": "^8.21.3",
     "@vercel/speed-insights": "^2.0.0",
     "@vite-pwa/nuxt": "1.1.1",

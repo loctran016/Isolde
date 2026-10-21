@@ -4,7 +4,7 @@ import { MarkdownDocument } from '@comark/vue'
 // import { parseMarkdown } from 'comark'
 import toc from 'comark/plugins/toc'
 import mermaid, { Mermaid } from '@comark/vue/plugins/mermaid'
-import NoteDetails from '~/components/NoteDetails.vue'
+import NoteDetails from '~/components/notes/NoteDetails.vue'
 import { defineComarkPlugin } from 'comark/parse'
 import markdownItMultimdTable from 'markdown-it-multimd-table'
 
@@ -21,7 +21,7 @@ const multimdTable = defineComarkPlugin(() => ({
   markdownItPlugins: [multimdTablePlugin],
 }))
 
-const plugins = [toc({ depth: 3, title: 'On This Page' }),multimdTable(), mermaid()]
+const plugins = [toc({ depth: 3, title: 'On This Page' }), multimdTable(), mermaid()]
 
 const route = useRoute()
 const path = route.path.replace(/\/+$/, '') || '/'
@@ -299,7 +299,10 @@ async function runParseTest(markdown: string = PARSE_SAMPLE) {
   const mod: any = await import('comark')
   const parseFn = mod.parse ?? mod.parseMarkdown // the export was renamed between versions
   if (typeof parseFn !== 'function') {
-    console.warn('[parse test] no parse()/parseMarkdown() export in "comark". Exports:', Object.keys(mod))
+    console.warn(
+      '[parse test] no parse()/parseMarkdown() export in "comark". Exports:',
+      Object.keys(mod),
+    )
     return
   }
 
@@ -322,7 +325,9 @@ async function runParseTest(markdown: string = PARSE_SAMPLE) {
         const rowspan = a.rowspan ?? a.rowSpan
         const colspan = a.colspan ?? a.colSpan
         if ((n[0] === 'td' || n[0] === 'th') && (rowspan || colspan))
-          spans.push(`${n[0]} rowspan=${rowspan ?? 1} colspan=${colspan ?? 1}: ${textOf(n).trim().slice(0, 30)}`)
+          spans.push(
+            `${n[0]} rowspan=${rowspan ?? 1} colspan=${colspan ?? 1}: ${textOf(n).trim().slice(0, 30)}`,
+          )
       })
 
       // Multimd syntax that survived into the output means the plugin did not apply
@@ -387,7 +392,7 @@ const topHeading = computed(() => {
           <span class="i-solar:graph-linear text-base" />
           <span class="hidden sm:inline">Đồ thị</span>
         </NuxtLink>
-
+        <NoteSpeech />
         <button
           type="button"
           class="flex cursor-pointer items-center gap-1.5 rounded-full border border-purple-300/30 px-3 py-1.5 text-xs transition-colors hover:bg-purple-500/20 lg:text-sm"
@@ -432,6 +437,7 @@ const topHeading = computed(() => {
       :components="{ mermaid: Mermaid, details: NoteDetails }"
       :plugins="plugins"
     ></MarkdownDocument>
+    <NoteSearch />
   </div>
 </template>
 
@@ -517,4 +523,4 @@ const topHeading = computed(() => {
 .prose summary + h3 {
   margin-top: 0 !important;
 }
-</style> 
+</style>
