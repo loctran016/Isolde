@@ -14,6 +14,7 @@ const active = ref(0)
 const loading = ref(false)
 const failed = ref('')
 const inputEl = ref<HTMLInputElement>()
+const landing = useSearchLanding()
 
 // ---- Page labels for each hit ("Nội khoa / Hô hấp / Hen PQ") ----
 const { data: nav } = useAsyncData('notes-nav', () => clientContent.navigation())
@@ -59,13 +60,15 @@ async function run() {
       snippet: { columns: ['content'], around: 12, tag: 'mark' },
     })
     if (mine !== seq) return // a newer search has started
-    hits.value = res
+    hits.value = Array.isArray(res) ? res : []
     active.value = 0
     failed.value = ''
-  } catch (e) {
+  } catch (e: any) {
     if (mine !== seq) return
     console.error('[search]', e)
-    failed.value = 'Không tìm kiếm được. Kiểm tra plugin tìm kiếm đã được bật chưa.'
+    failed.value = import.meta.dev
+      ? `Lỗi: ${e?.data?.message ?? e?.message ?? e}`
+      : 'Không tìm kiếm được. Thử lại sau.'
     hits.value = []
   } finally {
     if (mine === seq) loading.value = false
@@ -88,6 +91,8 @@ function hide() {
   open.value = false
 }
 function go(hit: Hit) {
+  // the note page reads this to scroll to the heading and highlight what was searched
+  landing.value = { q: query.value.trim(), id: hit.id, tick: Date.now() }
   hide()
   navigateTo(hit.id)
 }
@@ -128,10 +133,10 @@ function enter() {
     </button>
 
     <Teleport to="body">
+      <!-- Phones: near the top (the keyboard covers the bottom). md and up: centered on screen. -->
       <div
         v-if="open"
-        class="fixed inset-0 z-[60] flex items-start justify-center bg-black/50 px-3 backdrop-blur-sm"
-        style="padding-top: calc(0.75rem + env(safe-area-inset-top, 0px))"
+        class="fixed inset-0 z-[60] flex items-start justify-center bg-black/50 px-3 pt-[calc(0.75rem+env(safe-area-inset-top,0px))] backdrop-blur-sm md:items-center md:pt-0"
         @click.self="hide"
         @keydown.esc="hide"
         @keydown.down.prevent="move(1)"
@@ -139,7 +144,7 @@ function enter() {
         @keydown.enter.prevent="enter"
       >
         <div
-          class="flex max-h-[75dvh] w-full max-w-2xl flex-col overflow-hidden rounded-xl border border-purple-300/30 bg-stone-50/95 text-stone-900 shadow-2xl dark:bg-stone-900/95 dark:text-gray-100"
+          class="flex max-h-[75dvh] w-full max-w-2xl flex-col overflow-hidden rounded-xl border border-purple-300/30 bg-stone-50/95 text-stone-900 shadow-2xl md:h-[min(70dvh,36rem)] dark:bg-stone-900/95 dark:text-gray-100"
         >
           <!-- Input -->
           <div class="relative border-b border-purple-300/20">
@@ -168,7 +173,11 @@ function enter() {
 
           <!-- Results -->
           <ul class="min-h-0 flex-1 overflow-y-auto overscroll-contain">
-            <li v-for="(hit, i) in hits" :key="hit.id" :data-search-active="i === active">
+            <li
+              v-for="(hit, i) in hits"
+              :key="hit.id"
+              :data-search-active="i === active"
+            >
               <NuxtLink
                 :to="hit.id"
                 class="block border-b border-purple-300/10 px-4 py-3 transition-colors"
