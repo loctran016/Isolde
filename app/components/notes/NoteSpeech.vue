@@ -15,6 +15,8 @@ const blockTotal = ref(0)
 const hint = ref('')
 const settings = useLocalStorage('note-tts', { rate: 1, voice: '' })
 const voices = ref<SpeechSynthesisVoice[]>([])
+// Add ?ttsDebug to the URL to see how many voices the browser returned
+const debug = computed(() => 'ttsDebug' in route.query)
 
 // How abbreviations and symbols should be spoken. Extend these lists as you like.
 // (HC is left out on purpose: it can mean "hội chứng" or "hồng cầu".)
@@ -100,9 +102,26 @@ function collect(): Chunk[] {
 }
 
 // ---- Voices ----
-const viVoices = computed(() =>
-  voices.value.filter((v) => v.lang.replace('_', '-').toLowerCase().startsWith('vi')),
-)
+// iOS often returns an empty list the first time, and "voiceschanged" does not always fire,
+// so the list is loaded again on a timer, on that event, and when you tap Nghe.
+let pollTimer: ReturnType<typeof setTimeout> | undefined
+let onVoicesChanged: (() => void) | null = null
+
+function loadVoices() {
+  const list = window.speechSynthesis.getVoices()
+  if (list.length) voices.value = list // never replace a good list with a transient empty one
+  return list.length
+}
+
+function pollVoices(tries = 20) {
+  if (loadVoices() || tries <= 0) return
+  pollTimer = setTimeout(() => pollVoices(tries - 1), 250)
+}
+
+const isVi = (v: SpeechSynthesisVoice) =>
+  v.lang.replace('_', '-').toLowerCase().startsWith('vi') || /\b(linh|hoaimy|nam ?minh)\b/i.test(v.name)
+
+const viVoices = computed(() => voices.value.filter(isVi))
 const voice = computed(
   () => viVoices.value.find((v) => v.name === settings.value.voice) ?? viVoices.value[0] ?? null,
 )
@@ -136,7 +155,7 @@ function speakAt(i: number, chained = false) {
   highlight(chunk.el)
 
   const u = new SpeechSynthesisUtterance(chunk.text)
-  u.lang = voice.value?.lang ?? props.lang
+  u.lang = voice.value?.lang ?? props.lang // even with no voice object, lang makes iOS pick its Vietnamese voice
   if (voice.value) u.voice = voice.value
   u.rate = settings.value.rate
   u.onstart = () => {
@@ -176,6 +195,7 @@ function speakAt(i: number, chained = false) {
 }
 
 function start() {
+  loadVoices() // refresh the list right inside the tap
   queue = collect()
   if (!queue.length) return
   hint.value = ''
@@ -233,13 +253,18 @@ onMounted(() => {
     /iP(hone|ad|od)/.test(navigator.userAgent) ||
     (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
   if (!supported.value) return
-  const load = () => (voices.value = window.speechSynthesis.getVoices())
-  load()
-  window.speechSynthesis.addEventListener('voiceschanged', load) // voices often arrive late
+  onVoicesChanged = () => loadVoices()
+  window.speechSynthesis.addEventListener('voiceschanged', onVoicesChanged)
+  pollVoices()
 })
 
 watch(() => route.path, stop)
-onBeforeUnmount(stop)
+onBeforeUnmount(() => {
+  stop()
+  clearTimeout(pollTimer)
+  if (supported.value && onVoicesChanged)
+    window.speechSynthesis.removeEventListener('voiceschanged', onVoicesChanged)
+})
 </script>
 
 <template>
@@ -294,8 +319,14 @@ onBeforeUnmount(stop)
         >
           <option v-for="v in viVoices" :key="v.name" :value="v.name">{{ v.name }}</option>
         </select>
-        <span v-if="!viVoices.length" class="px-1 text-xs text-amber-500">Chưa có giọng tiếng Việt</span>
+        <!-- Only warn once the browser has returned voices and none of them is Vietnamese -->
+        <span v-if="voices.length && !viVoices.length" class="px-1 text-xs text-amber-500">
+          Chưa có giọng tiếng Việt
+        </span>
         <span v-if="hint" class="basis-full px-2 text-xs text-amber-500">{{ hint }}</span>
+        <span v-if="debug" class="basis-full px-2 text-xs opacity-70">
+          giọng: {{ voices.length }} · vi: {{ viVoices.length }}{{ voice ? ` · ${voice.name}` : '' }}
+        </span>
       </div>
     </Teleport>
   </ClientOnly>
