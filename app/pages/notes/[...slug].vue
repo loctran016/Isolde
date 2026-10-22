@@ -365,6 +365,8 @@ const topHeading = computed(() => {
   walk(page.value?.nodes ?? [])
   return min === 7 ? 2 : min
 })
+
+useNoteLanding()
 </script>
 
 <template>
