@@ -12,6 +12,7 @@ const supported = ref(false)
 const state = ref<'idle' | 'playing' | 'paused'>('idle')
 const blockNow = ref(0)
 const blockTotal = ref(0)
+const hint = ref('')
 const settings = useLocalStorage('note-tts', { rate: 1, voice: '' })
 const voices = ref<SpeechSynthesisVoice[]>([])
 
@@ -56,10 +57,7 @@ function speakable(raw: string) {
   for (const [re, to] of REPLACEMENTS) s = s.replace(re, to)
   for (const [abbr, spoken] of Object.entries(ABBREVIATIONS))
     s = s.replace(new RegExp(`(?<![\\p{L}\\p{N}])${abbr}(?![\\p{L}\\p{N}])`, 'gu'), spoken)
-  return s
-    .replace(/[*_`#|\\]/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim()
+  return s.replace(/[*_`#|\\]/g, ' ').replace(/\s+/g, ' ').trim()
 }
 
 // Engines drop or cut off long utterances, so split long blocks into sentence-sized pieces
@@ -92,9 +90,7 @@ function collect(): Chunk[] {
     if (el.closest(SKIP)) return
     // read only this element's own text: nested lists and paragraphs are separate blocks
     const clone = el.cloneNode(true) as HTMLElement
-    clone
-      .querySelectorAll('ul, ol, p, table, pre, svg, .mermaid, [data-no-tts]')
-      .forEach((n) => n.remove())
+    clone.querySelectorAll('ul, ol, p, table, pre, svg, .mermaid, [data-no-tts]').forEach((n) => n.remove())
     const text = speakable(clone.textContent ?? '')
     if (!text) return
     for (const part of split(text)) out.push({ el, text: part, block })
@@ -115,6 +111,9 @@ let queue: Chunk[] = []
 let session = 0 // every (re)start bumps this, so a late "end" event from an old utterance is ignored
 let current: SpeechSynthesisUtterance | null = null // keep a reference: Chrome can garbage-collect it mid-speech
 let lit: HTMLElement | null = null
+let isIOS = false
+let started = false
+let watchdog: ReturnType<typeof setTimeout> | undefined
 
 function highlight(el: HTMLElement | null) {
   if (el === lit) return
@@ -129,7 +128,6 @@ function highlight(el: HTMLElement | null) {
 function speakAt(i: number, chained = false) {
   const synth = window.speechSynthesis
   const mine = ++session
-  if (!chained) synth.cancel()
   if (i >= queue.length) return stop()
 
   const chunk = queue[i]
@@ -141,6 +139,11 @@ function speakAt(i: number, chained = false) {
   u.lang = voice.value?.lang ?? props.lang
   if (voice.value) u.voice = voice.value
   u.rate = settings.value.rate
+  u.onstart = () => {
+    if (mine !== session) return
+    started = true
+    hint.value = ''
+  }
   u.onend = () => {
     if (mine === session) speakAt(i + 1, true)
   }
@@ -149,29 +152,40 @@ function speakAt(i: number, chained = false) {
     speakAt(i + 1, true)
   }
   current = u
-  // a short delay after cancel() avoids engines that silently drop an immediate speak()
-  setTimeout(
-    () => {
-      if (mine === session) synth.speak(u)
-    },
-    chained ? 0 : 60,
-  )
+
+  const speakNow = () => {
+    if (mine === session) synth.speak(u)
+  }
+  const busy = synth.speaking || synth.pending
+  if (!chained && busy) synth.cancel()
+
+  // iOS only plays audio for speak() calls made synchronously inside the tap, so never delay it there.
+  // Other engines can drop a speak() that comes right after cancel(), so give them a short gap.
+  if (!chained && busy && !isIOS) setTimeout(speakNow, 60)
+  else speakNow()
+
+  // Nothing started within a few seconds of a tap: tell the user instead of failing silently
+  if (!chained) {
+    started = false
+    clearTimeout(watchdog)
+    watchdog = setTimeout(() => {
+      if (mine === session && !started)
+        hint.value = 'Không có tiếng? Tắt chế độ im lặng (công tắc chuông bên hông máy) rồi chạm ▶ lần nữa.'
+    }, 2500)
+  }
 }
 
 function start() {
   queue = collect()
   if (!queue.length) return
+  hint.value = ''
   blockTotal.value = queue.at(-1)!.block + 1
   // begin at the first block that is on screen (the very top when the note isn't scrolled)
   const first = queue.findIndex((c) => c.el.getBoundingClientRect().bottom > 120)
   speakAt(Math.max(first, 0))
 }
 
-const index = () =>
-  Math.max(
-    queue.findIndex((c) => c.block === blockNow.value - 1),
-    0,
-  )
+const index = () => Math.max(queue.findIndex((c) => c.block === blockNow.value - 1), 0)
 
 function pause() {
   session++
@@ -181,6 +195,8 @@ function pause() {
 
 function stop() {
   session++
+  clearTimeout(watchdog)
+  hint.value = ''
   if (supported.value) window.speechSynthesis.cancel()
   state.value = 'idle'
   highlight(null)
@@ -213,6 +229,9 @@ function pickVoice(e: Event) {
 
 onMounted(() => {
   supported.value = 'speechSynthesis' in window
+  isIOS =
+    /iP(hone|ad|od)/.test(navigator.userAgent) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
   if (!supported.value) return
   const load = () => (voices.value = window.speechSynthesis.getVoices())
   load()
@@ -235,9 +254,7 @@ onBeforeUnmount(stop)
       @click="toggle"
     >
       <span
-        :class="
-          state === 'playing' ? 'i-solar:pause-bold' : 'i-solar:headphones-round-sound-linear'
-        "
+        :class="state === 'playing' ? 'i-solar:pause-bold' : 'i-solar:headphones-round-sound-linear'"
         class="text-base"
       />
       <span class="hidden sm:inline">
@@ -252,43 +269,20 @@ onBeforeUnmount(stop)
         class="fixed left-4 z-40 flex max-w-[calc(100vw-6rem)] flex-wrap items-center gap-1 rounded-full border border-purple-300/40 bg-stone-50/95 px-2 py-1.5 text-stone-900 shadow-lg backdrop-blur dark:bg-stone-900/95 dark:text-gray-100"
         style="bottom: calc(1rem + env(safe-area-inset-bottom, 0px))"
       >
-        <button
-          class="cursor-pointer rounded-full p-2 hover:bg-purple-500/20"
-          aria-label="Đoạn trước"
-          @click="jump(-1)"
-        >
+        <button class="cursor-pointer rounded-full p-2 hover:bg-purple-500/20" aria-label="Đoạn trước" @click="jump(-1)">
           <span class="i-solar:skip-previous-bold block" />
         </button>
-        <button
-          class="cursor-pointer rounded-full bg-purple-600 p-2 text-white"
-          :aria-label="state === 'playing' ? 'Tạm dừng' : 'Tiếp tục'"
-          @click="toggle"
-        >
-          <span
-            :class="state === 'playing' ? 'i-solar:pause-bold' : 'i-solar:play-bold'"
-            class="block"
-          />
+        <button class="cursor-pointer rounded-full bg-purple-600 p-2 text-white" :aria-label="state === 'playing' ? 'Tạm dừng' : 'Tiếp tục'" @click="toggle">
+          <span :class="state === 'playing' ? 'i-solar:pause-bold' : 'i-solar:play-bold'" class="block" />
         </button>
-        <button
-          class="cursor-pointer rounded-full p-2 hover:bg-purple-500/20"
-          aria-label="Đoạn sau"
-          @click="jump(1)"
-        >
+        <button class="cursor-pointer rounded-full p-2 hover:bg-purple-500/20" aria-label="Đoạn sau" @click="jump(1)">
           <span class="i-solar:skip-next-bold block" />
         </button>
-        <button
-          class="cursor-pointer rounded-full p-2 hover:bg-purple-500/20"
-          aria-label="Dừng"
-          @click="stop"
-        >
+        <button class="cursor-pointer rounded-full p-2 hover:bg-purple-500/20" aria-label="Dừng" @click="stop">
           <span class="i-solar:stop-bold block" />
         </button>
         <span class="px-1 text-xs tabular-nums opacity-70">{{ blockNow }}/{{ blockTotal }}</span>
-        <button
-          class="cursor-pointer rounded-full px-2 py-1 text-xs tabular-nums hover:bg-purple-500/20"
-          aria-label="Tốc độ đọc"
-          @click="cycleRate"
-        >
+        <button class="cursor-pointer rounded-full px-2 py-1 text-xs tabular-nums hover:bg-purple-500/20" aria-label="Tốc độ đọc" @click="cycleRate">
           {{ settings.rate }}×
         </button>
         <select
@@ -300,9 +294,8 @@ onBeforeUnmount(stop)
         >
           <option v-for="v in viVoices" :key="v.name" :value="v.name">{{ v.name }}</option>
         </select>
-        <span v-if="!viVoices.length" class="px-1 text-xs text-amber-500"
-          >Chưa có giọng tiếng Việt</span
-        >
+        <span v-if="!viVoices.length" class="px-1 text-xs text-amber-500">Chưa có giọng tiếng Việt</span>
+        <span v-if="hint" class="basis-full px-2 text-xs text-amber-500">{{ hint }}</span>
       </div>
     </Teleport>
   </ClientOnly>
