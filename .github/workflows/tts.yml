@@ -1,0 +1,74 @@
+name: Note audio (VieNeu TTS)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'content/**'
+      - 'scripts/tts-text.mjs'
+      - 'scripts/extract-tts.mjs'
+      - 'scripts/generate_tts.py'
+      - '.github/workflows/tts.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: note-audio
+  cancel-in-progress: false
+
+jobs:
+  tts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 345
+    steps:
+      - uses: actions/checkout@v4
+
+      # Audio published by earlier runs (this fails harmlessly on the very first run)
+      - uses: actions/checkout@v4
+        continue-on-error: true
+        with:
+          ref: gh-pages
+          path: audio-store
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # Prerenders every note into .output/public
+      - run: npm run build
+        env:
+          NITRO_PRESET: node-server
+
+      - name: Collect the text each note will read aloud
+        run: node scripts/extract-tts.mjs
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - run: sudo apt-get update && sudo apt-get install -y ffmpeg
+
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/huggingface
+          key: hf-vieneu-v3-turbo-v1
+
+      - run: pip install vieneu
+
+      - name: Generate the missing audio
+        run: python scripts/generate_tts.py
+        env:
+          TTS_MAX_NEW: '800'
+
+      - name: Publish to gh-pages
+        if: ${{ hashFiles('tts-out/**') != '' }}
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./tts-out
+          keep_files: true
