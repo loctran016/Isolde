@@ -32,20 +32,19 @@ jobs:
           ref: gh-pages
           path: audio-store
 
-      - uses: actions/setup-node@v4
+      - uses: oven-sh/setup-bun@v2
         with:
-          node-version: 22
-          cache: npm
+          bun-version: latest
 
-      - run: npm ci
+      - run: bun install --frozen-lockfile
 
       # Prerenders every note into .output/public
-      - run: npm run build
+      - run: bun run build
         env:
           NITRO_PRESET: node-server
 
       - name: Collect the text each note will read aloud
-        run: node scripts/extract-tts.mjs
+        run: bun scripts/extract-tts.mjs
 
       - uses: actions/setup-python@v5
         with:
