@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
     paths:
-      - 'content/**'
+      - 'content' # a submodule update shows up as a change to this one path
       - 'scripts/tts-text.mjs'
       - 'scripts/extract-tts.mjs'
       - 'scripts/generate_tts.py'
@@ -24,10 +24,22 @@ jobs:
     timeout-minutes: 345
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive # content/ is the "y" repo
+          # token: ${{ secrets.SUBMODULE_TOKEN }} # needed only if the "y" repo is private
 
-      # Audio published by earlier runs (this fails harmlessly on the very first run)
+      # Audio published by earlier runs. Skipped on the very first run, when the branch doesn't exist yet.
+      - name: Does the audio branch exist?
+        id: store
+        run: |
+          if git ls-remote --exit-code --heads origin gh-pages >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - uses: actions/checkout@v4
-        continue-on-error: true
+        if: steps.store.outputs.exists == 'true'
         with:
           ref: gh-pages
           path: audio-store
@@ -42,13 +54,7 @@ jobs:
       - run: bun run build
         env:
           NITRO_PRESET: node-server
-      - name: Build result
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./
-          publish_branch: build
-          keep_files: true
+
       - name: Collect the text each note will read aloud
         run: bun scripts/extract-tts.mjs
 
