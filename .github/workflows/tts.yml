@@ -42,7 +42,13 @@ jobs:
       - run: bun run build
         env:
           NITRO_PRESET: node-server
-
+      - name: Build result
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./
+					publish_branch: build
+          keep_files: true
       - name: Collect the text each note will read aloud
         run: bun scripts/extract-tts.mjs
 
