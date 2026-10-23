@@ -25,6 +25,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 345
 
+    env:
+      HF_HOME: ${{ runner.temp }}/hf-cache
+
     steps:
       - uses: actions/checkout@v4
         with:
@@ -44,7 +47,14 @@ jobs:
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git add content
             git commit -m "chore: update notes"
-            git pull --rebase origin "${GITHUB_REF_NAME}"
+
+            # Safe branch-aware rebase + push
+            git fetch origin "${GITHUB_REF_NAME}"
+            git rebase "origin/${GITHUB_REF_NAME}" || {
+              echo "Rebase failed; resetting to remote branch state."
+              git reset --hard "origin/${GITHUB_REF_NAME}"
+            }
+
             git push origin HEAD:${GITHUB_REF_NAME}
           fi
 
@@ -94,10 +104,31 @@ jobs:
 
       - run: sudo apt-get update && sudo apt-get install -y ffmpeg
 
+      # Cache is optional; a cache miss is not a failure.
+      # The important part is we keep the HF cache isolated and we clear it if it looks broken.
       - uses: actions/cache@v4
+        id: hf-cache
         with:
-          path: ~/.cache/huggingface
-          key: hf-vieneu-v3-turbo-v1
+          path: ${{ runner.temp }}/hf-cache
+          key: hf-vieneu-v3-turbo-${{ runner.os }}-${{ hashFiles('scripts/generate_tts.py') }}
+          restore-keys: |
+            hf-vieneu-v3-turbo-${{ runner.os }}-
+            hf-vieneu-v3-turbo-
+
+      - name: Sanity-check Hugging Face cache
+        shell: bash
+        run: |
+          mkdir -p "${HF_HOME}"
+
+          # If a prior failed run left a partial/broken cache, clear it.
+          # This is safe because a cache miss just means the model redownloads.
+          if [ -d "${HF_HOME}/hub" ]; then
+            if ! find "${HF_HOME}/hub" -maxdepth 3 -type f -name "*.data" 2>/dev/null | head -n 1 | grep -q .; then
+              echo "HF cache appears empty or incomplete; clearing it."
+              rm -rf "${HF_HOME}"
+              mkdir -p "${HF_HOME}"
+            fi
+          fi
 
       - run: pip install vieneu
 
@@ -105,6 +136,7 @@ jobs:
         run: python scripts/generate_tts.py
         env:
           TTS_MAX_NEW: "800"
+          TTS_PRECISION: "fp32"
 
       - name: Publish to gh-pages
         if: ${{ hashFiles('tts-out/**') != '' }}
