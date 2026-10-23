@@ -95,7 +95,7 @@ jobs:
 #      - run: sudo apt-get update && sudo apt-get install -y ffmpeg
       - uses: FedericoCarboni/setup-ffmpeg@v3
         with:
-        version: release
+          version: release
 #      - uses: actions/cache@v4
 #        with:
 #          path: ~/.cache/huggingface
