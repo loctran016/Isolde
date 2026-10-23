@@ -19,6 +19,7 @@ export const ABBREVIATIONS = {
   BC: 'bạch cầu',
   ĐTĐ: 'đái tháo đường',
   XQ: 'X quang',
+  HC: 'hội chứng',
 }
 
 export const REPLACEMENTS = [
