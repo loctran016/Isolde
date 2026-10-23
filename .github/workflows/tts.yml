@@ -73,11 +73,14 @@ jobs:
       - run: bun install --frozen-lockfile
 
       # Prerenders every note, built the same way Vercel builds it
+       # Prerenders every note, built the same way Vercel builds it
       - run: bun run build
         env:
           NITRO_PRESET: vercel
-          # add the variables your server needs here, for example:
-          # SOME_VAR: ${{ secrets.SOME_VAR }}
+          DEBUG: 'true' # temporary: makes the log show the real error behind "[500] Server Error"
+          NUXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+          NUXT_PUBLIC_SUPABASE_KEY: placeholder-key
+          CLOUDINARY_CLOUD_NAME: placeholder
 
       - name: Collect the text each note will read aloud
         run: bun scripts/extract-tts.mjs
