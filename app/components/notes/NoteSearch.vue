@@ -17,7 +17,7 @@ const inputEl = ref<HTMLInputElement>()
 const landing = useSearchLanding()
 
 // ---- Page labels for each hit ("Nội khoa / Hô hấp / Hen PQ") ----
-const { data: nav } = useAsyncData('notes-nav', () => clientContent.navigation())
+const { data: nav } = useNotesNav()
 const strip = (s: string) => s.replace(/^\d+\.(?=\D)\s*/, '')
 
 const labelByPath = computed(() => {

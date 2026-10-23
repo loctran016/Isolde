@@ -7,21 +7,47 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
   watch: ['~/uno.config.ts'],
-  modules: ['@unocss/nuxt', '@formkit/auto-animate', '@vueuse/nuxt', 'motion-v/nuxt', '@nuxtjs/supabase', 'nuxt-echarts', '@nuxt/eslint', '@vite-pwa/nuxt', // 'nuxt-easy-lightbox',
-  '@regle/nuxt', '@nuxtjs/cloudinary', '@vercel/speed-insights', '@nuxt/fonts', '@nuxt/image', '@comark/nuxt'],
+  modules: [
+    '@unocss/nuxt',
+    '@formkit/auto-animate',
+    '@vueuse/nuxt',
+    'motion-v/nuxt',
+    '@nuxtjs/supabase',
+    'nuxt-echarts',
+    '@nuxt/eslint',
+    '@vite-pwa/nuxt', // 'nuxt-easy-lightbox',
+    '@regle/nuxt',
+    '@nuxtjs/cloudinary',
+    '@vercel/speed-insights',
+    '@nuxt/fonts',
+    '@nuxt/image',
+    '@comark/nuxt',
+  ],
   image: {
     dir: '~~/content', // src paths are now relative to content/
   },
   nitro: {
     serverAssets: [
       { baseName: 'comark', dir: fileURLToPath(new URL('./.content', import.meta.url)) },
-      ],
-      publicAssets: [
-     { dir: fileURLToPath(new URL('./content', import.meta.url)), baseURL: '/media', maxAge: 60 * 60 * 24 },    ],
+    ],
+    publicAssets: [
+      {
+        dir: fileURLToPath(new URL('./content', import.meta.url)),
+        baseURL: '/media',
+        maxAge: 60 * 60 * 24,
+      },
+    ],
   },
   vite: {
     optimizeDeps: {
-      include: ['@vue/devtools-core', '@vue/devtools-kit', '@internationalized/date', 'reka-ui'],
+      include: [
+        '@vue/devtools-core',
+        '@vue/devtools-kit',
+        '@internationalized/date',
+        'reka-ui',
+        'elkjs',
+'elkjs/lib/elk.bundled.js'
+      ],
     },
 
     build: {
@@ -82,12 +108,12 @@ export default defineNuxtConfig({
     pageTransition: { name: 'page', mode: 'out-in' },
     layoutTransition: { name: 'layout', mode: 'out-in' },
     head: {
-        meta: [
-      { name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' },
-      { name: 'apple-mobile-web-app-capable', content: 'yes' },
-      { name: 'apple-mobile-web-app-status-bar-style', content: 'black-translucent' },
-      { name: 'theme-color', content: '#9d2f63' },
-    ],
+      meta: [
+        { name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' },
+        { name: 'apple-mobile-web-app-capable', content: 'yes' },
+        { name: 'apple-mobile-web-app-status-bar-style', content: 'black-translucent' },
+        { name: 'theme-color', content: '#9d2f63' },
+      ],
       script: [
         {
           innerHTML: `(function(){var c=document.cookie.match(/theme-preference=([^;]+)/);var p=c?c[1]:'system';var d=p==='dark'||(p==='system'&&window.matchMedia('(prefers-color-scheme:dark)').matches);document.documentElement.classList.toggle('dark',d)})()`,

@@ -8,7 +8,7 @@ definePageMeta({ title: island.pageTitle, titleIcon: island.titleIcon })
 type GNode = { id: string; name: string; group: string; deg?: number }
 type GLink = { source: string; target: string }
 
-const { data: nav } = await useAsyncData('notes-nav', () => clientContent.navigation())
+const { data: nav } = await useNotesNav()
 
 const pathByStem = computed(() => {
   const m = new Map<string, string>()

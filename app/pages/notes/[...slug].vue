@@ -72,7 +72,7 @@ const { copy, copied } = useClipboard({ copiedDuring: 1800, legacy: true })
 const shareLink = () => copy(window.location.href)
 
 // ---- Wikilinks: [[../../Dược lý/Thuốc KS/Cơ chế phân tử.md#|Cơ chế phân tử]] ----
-const { data: nav } = await useAsyncData('notes-nav', () => clientContent.navigation())
+const { data: nav } = await useNotesNav()
 
 const norm = (s: string) => s.normalize('NFC').toLowerCase().trim()
 const stripPrefix = (s: string) => s.replace(/^\d+\.(?=\D)\s*/, '')

@@ -22,7 +22,7 @@ useHead({
 
 definePageMeta({ title: island.pageTitle, titleIcon: island.titleIcon })
 
-const { data: nav } = await useAsyncData('notes-nav', () => clientContent.navigation())
+const { data: nav } = await useNotesNav()
 
 const breakpoints = useBreakpoints(breakpointsTailwind)
 const isLg = breakpoints.greaterOrEqual('xl')
