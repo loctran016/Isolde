@@ -36,15 +36,16 @@ jobs:
       # Keep the site and the audio in step: point this repo at that version of the notes.
       # Delete this step if you already update the pointer another way.
       - name: Point Isolde at the new notes
-        run: |
-          if ! git diff --quiet -- content; then
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add content
-            git commit -m "chore: update notes"
-            git pull --rebase
-            git push
-          fi
+  shell: bash
+  run: |
+    if ! git diff --quiet -- content; then
+      git config user.name "github-actions[bot]"
+      git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+      git add content
+      git commit -m "chore: update notes"
+      git pull --rebase origin "${GITHUB_REF_NAME}"
+      git push origin HEAD:${GITHUB_REF_NAME}
+    fi
 
       # Audio published by earlier runs. Skipped on the very first run, when the branch doesn't exist yet.
       - name: Does the audio branch exist?
