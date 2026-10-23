@@ -4,13 +4,13 @@ on:
   push:
     branches: [main]
     paths:
-      - "content"
+      - "content" # a submodule update shows up as a change to this one path
       - "scripts/tts-text.mjs"
       - "scripts/extract-tts.mjs"
       - "scripts/generate_tts.py"
       - ".github/workflows/tts.yml"
   repository_dispatch:
-    types: [content-updated]
+    types: [content-updated] # sent by the y repo
   workflow_dispatch:
 
 permissions:
@@ -25,17 +25,17 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 345
 
-    env:
-      HF_HOME: ${{ runner.temp }}/hf-cache
-
     steps:
       - uses: actions/checkout@v4
         with:
-          submodules: recursive
+          submodules: recursive # content/ is the "y" repo
 
+      # Use the newest notes from y, not just the commit this repo currently points to
       - name: Update content to the latest y
         run: git submodule update --init --remote content
 
+      # Keep the site and the audio in step: point this repo at that version of the notes.
+      # Delete this step if you already update the pointer another way.
       - name: Point Isolde at the new notes
         shell: bash
         run: |
@@ -44,16 +44,11 @@ jobs:
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git add content
             git commit -m "chore: update notes"
-
-            git fetch origin "${GITHUB_REF_NAME}"
-            git rebase "origin/${GITHUB_REF_NAME}" || {
-              echo "Rebase failed; resetting to remote branch state."
-              git reset --hard "origin/${GITHUB_REF_NAME}"
-            }
-
+            git pull --rebase origin "${GITHUB_REF_NAME}"
             git push origin HEAD:${GITHUB_REF_NAME}
           fi
 
+      # Audio published by earlier runs. Skipped on the very first run, when the branch doesn't exist yet.
       - name: Does the audio branch exist?
         id: store
         run: |
@@ -71,20 +66,19 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 22 # use the version shown in Vercel: Project Settings > General > Node.js Version
 
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
 
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
+      - run: bun install --frozen-lockfile
 
-      - name: Build site
-        run: bun run build
+      # Prerenders every note, built the same way Vercel builds it
+      - run: bun run build
         env:
           NITRO_PRESET: vercel
-          DEBUG: "true"
+          DEBUG: "true" # temporary: makes the log show the real error behind "[500] Server Error"
           NUXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
           NUXT_PUBLIC_SUPABASE_KEY: placeholder-key
           CLOUDINARY_CLOUD_NAME: placeholder
@@ -92,45 +86,25 @@ jobs:
       - name: Collect the text each note will read aloud
         run: bun scripts/extract-tts.mjs
         env:
-          TTS_HTML_DIR: .vercel/output/static
+          TTS_HTML_DIR: .vercel/output/static # where the vercel preset writes prerendered pages
 
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-      - name: Install ffmpeg
-        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+      - run: sudo apt-get update && sudo apt-get install -y ffmpeg
 
-      - uses: actions/cache@v4
-        id: hf-cache
-        with:
-          path: ${{ runner.temp }}/hf-cache
-          key: hf-vieneu-v3-turbo-${{ runner.os }}-${{ hashFiles('scripts/generate_tts.py') }}
-          restore-keys: |
-            hf-vieneu-v3-turbo-${{ runner.os }}-
-            hf-vieneu-v3-turbo-
+#      - uses: actions/cache@v4
+#        with:
+#          path: ~/.cache/huggingface
+#          key: hf-vieneu-v3-turbo-v1
 
-      - name: Sanity-check Hugging Face cache
-        shell: bash
-        run: |
-          mkdir -p "${HF_HOME}"
-
-          if [ -d "${HF_HOME}/hub" ]; then
-            if ! find "${HF_HOME}/hub" -maxdepth 3 -type f -name "*.data" 2>/dev/null | head -n 1 | grep -q .; then
-              echo "HF cache appears empty or incomplete; clearing it."
-              rm -rf "${HF_HOME}"
-              mkdir -p "${HF_HOME}"
-            fi
-          fi
-
-      - name: Install Vieneu
-        run: pip install vieneu
+      - run: pip install vieneu
 
       - name: Generate the missing audio
         run: python scripts/generate_tts.py
         env:
           TTS_MAX_NEW: "800"
-          TTS_PRECISION: "fp32"
 
       - name: Publish to gh-pages
         if: ${{ hashFiles('tts-out/**') != '' }}
