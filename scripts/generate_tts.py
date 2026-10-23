@@ -10,7 +10,7 @@ from pathlib import Path
 MANIFEST = Path("tts-manifest.json")
 STORE = Path("audio-store/audio")  # published by earlier runs (checked out from gh-pages)
 OUT = Path("tts-out/audio")        # only the NEW files; the publish step adds them to gh-pages
-MAX_NEW = int(os.environ.get("TTS_MAX_NEW", "800"))
+MAX_NEW = int(os.environ.get("TTS_MAX_NEW", "1600"))
 PRECISION = os.environ.get("TTS_PRECISION", "fp32")  # "int8" is ~2x faster but needs a CPU with VNNI
 
 data = json.loads(MANIFEST.read_text(encoding="utf-8"))

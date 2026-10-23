@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { NavigationItem } from 'comark-content'
+import type { MarkdownItPlugin } from 'comark'
 // import { MarkdownDocument } from '@comark/vue'
 // import { parseMarkdown } from 'comark'
 import toc from 'comark/plugins/toc'
