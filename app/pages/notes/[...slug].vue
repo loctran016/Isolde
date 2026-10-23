@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import type { NavigationItem } from 'comark-content'
-import { MarkdownDocument } from '@comark/vue'
+// import { MarkdownDocument } from '@comark/vue'
 // import { parseMarkdown } from 'comark'
 import toc from 'comark/plugins/toc'
-import mermaid, { Mermaid } from '@comark/vue/plugins/mermaid'
+import mermaid, { Mermaid } from '@comark/nuxt/plugins/mermaid'
 import NoteDetails from '~/components/notes/NoteDetails.vue'
 import { defineComarkPlugin } from 'comark/parse'
 import markdownItMultimdTable from 'markdown-it-multimd-table'

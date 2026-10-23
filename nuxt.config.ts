@@ -7,21 +7,8 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
   watch: ['~/uno.config.ts'],
-  modules: [
-    '@unocss/nuxt',
-    '@formkit/auto-animate',
-    '@vueuse/nuxt',
-    'motion-v/nuxt',
-    '@nuxtjs/supabase',
-    'nuxt-echarts',
-    '@nuxt/eslint',
-    '@vite-pwa/nuxt',
-    '@regle/nuxt', // 'nuxt-easy-lightbox',
-    '@nuxtjs/cloudinary',
-    '@vercel/speed-insights',
-    '@nuxt/fonts',
-    '@nuxt/image',
-  ],
+  modules: ['@unocss/nuxt', '@formkit/auto-animate', '@vueuse/nuxt', 'motion-v/nuxt', '@nuxtjs/supabase', 'nuxt-echarts', '@nuxt/eslint', '@vite-pwa/nuxt', // 'nuxt-easy-lightbox',
+  '@regle/nuxt', '@nuxtjs/cloudinary', '@vercel/speed-insights', '@nuxt/fonts', '@nuxt/image', '@comark/nuxt'],
   image: {
     dir: '~~/content', // src paths are now relative to content/
   },
@@ -95,7 +82,7 @@ export default defineNuxtConfig({
     pageTransition: { name: 'page', mode: 'out-in' },
     layoutTransition: { name: 'layout', mode: 'out-in' },
     head: {
-		meta: [
+        meta: [
       { name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' },
       { name: 'apple-mobile-web-app-capable', content: 'yes' },
       { name: 'apple-mobile-web-app-status-bar-style', content: 'black-translucent' },
