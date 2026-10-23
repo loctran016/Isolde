@@ -1,6 +1,7 @@
 """Generates audio/<id>.mp3 for every clip in tts-manifest.json that is not published yet."""
 import json
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -26,7 +27,39 @@ OUT.mkdir(parents=True, exist_ok=True)
 
 from vieneu import Vieneu  # imported late, so a run with nothing to do never loads the model
 
-tts = Vieneu() if PRECISION == "fp32" else Vieneu(precision=PRECISION)
+
+def dereference_hf_cache():
+    """onnxruntime refuses model data that sits behind a symlink pointing outside the model folder,
+    which is exactly how the Hugging Face cache stores files. Replace those links with real files."""
+    hub = Path(
+        os.environ.get("HF_HUB_CACHE")
+        or os.environ.get("HUGGINGFACE_HUB_CACHE")
+        or Path(os.environ.get("HF_HOME") or Path.home() / ".cache" / "huggingface") / "hub"
+    )
+    n = 0
+    for p in hub.glob("models--*/snapshots/**/*"):
+        if p.is_symlink():
+            target = p.resolve()
+            if target.is_file():
+                p.unlink()
+                shutil.copy2(target, p)
+                n += 1
+    print(f"replaced {n} cached symlinks with real files in {hub}")
+
+
+def load_model():
+    make = lambda: Vieneu() if PRECISION == "fp32" else Vieneu(precision=PRECISION)
+    try:
+        return make()
+    except Exception as e:
+        if "External data path" not in str(e):
+            raise
+        print("onnxruntime refused the symlinked cache; replacing the links with real files and retrying...")
+        dereference_hf_cache()
+        return make()
+
+
+tts = load_model()
 
 for n, (cid, text) in enumerate(todo, 1):
     wav = Path(tempfile.gettempdir()) / f"{cid}.wav"
