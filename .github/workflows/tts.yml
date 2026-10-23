@@ -9,6 +9,8 @@ on:
       - 'scripts/extract-tts.mjs'
       - 'scripts/generate_tts.py'
       - '.github/workflows/tts.yml'
+  repository_dispatch:
+    types: [content-updated] # sent by the y repo
   workflow_dispatch:
 
 permissions:
@@ -26,7 +28,23 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive # content/ is the "y" repo
-          # token: ${{ secrets.SUBMODULE_TOKEN }} # needed only if the "y" repo is private
+
+      # Use the newest notes from y, not just the commit this repo currently points to
+      - name: Update content to the latest y
+        run: git submodule update --init --remote content
+
+      # Keep the site and the audio in step: point this repo at that version of the notes.
+      # Delete this step if you already update the pointer another way.
+      - name: Point Isolde at the new notes
+        run: |
+          if ! git diff --quiet -- content; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add content
+            git commit -m "chore: update notes"
+            git pull --rebase
+            git push
+          fi
 
       # Audio published by earlier runs. Skipped on the very first run, when the branch doesn't exist yet.
       - name: Does the audio branch exist?
@@ -44,19 +62,27 @@ jobs:
           ref: gh-pages
           path: audio-store
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22 # use the version shown in Vercel: Project Settings > General > Node.js Version
+
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
 
       - run: bun install --frozen-lockfile
 
-      # Prerenders every note into .output/public
+      # Prerenders every note, built the same way Vercel builds it
       - run: bun run build
         env:
-          NITRO_PRESET: node-server
+          NITRO_PRESET: vercel
+          # add the variables your server needs here, for example:
+          # SOME_VAR: ${{ secrets.SOME_VAR }}
 
       - name: Collect the text each note will read aloud
         run: bun scripts/extract-tts.mjs
+        env:
+          TTS_HTML_DIR: .vercel/output/static # where the vercel preset writes prerendered pages
 
       - uses: actions/setup-python@v5
         with:
