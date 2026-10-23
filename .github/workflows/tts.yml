@@ -107,7 +107,7 @@ jobs:
       - name: Generate the missing audio
         run: python scripts/generate_tts.py
         env:
-          TTS_MAX_NEW: '8000'
+          TTS_MAX_NEW: '4800'
 
       - name: Publish to gh-pages
         if: ${{ hashFiles('tts-out/**') != '' }}
