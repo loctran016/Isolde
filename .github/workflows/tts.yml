@@ -4,11 +4,11 @@ on:
   push:
     branches: [main]
     paths:
-      - 'content' # a submodule update shows up as a change to this one path
-      - 'scripts/tts-text.mjs'
-      - 'scripts/extract-tts.mjs'
-      - 'scripts/generate_tts.py'
-      - '.github/workflows/tts.yml'
+      - "content" # a submodule update shows up as a change to this one path
+      - "scripts/tts-text.mjs"
+      - "scripts/extract-tts.mjs"
+      - "scripts/generate_tts.py"
+      - ".github/workflows/tts.yml"
   repository_dispatch:
     types: [content-updated] # sent by the y repo
   workflow_dispatch:
@@ -24,6 +24,7 @@ jobs:
   tts:
     runs-on: ubuntu-latest
     timeout-minutes: 345
+
     steps:
       - uses: actions/checkout@v4
         with:
@@ -36,16 +37,16 @@ jobs:
       # Keep the site and the audio in step: point this repo at that version of the notes.
       # Delete this step if you already update the pointer another way.
       - name: Point Isolde at the new notes
-  shell: bash
-  run: |
-    if ! git diff --quiet -- content; then
-      git config user.name "github-actions[bot]"
-      git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-      git add content
-      git commit -m "chore: update notes"
-      git pull --rebase origin "${GITHUB_REF_NAME}"
-      git push origin HEAD:${GITHUB_REF_NAME}
-    fi
+        shell: bash
+        run: |
+          if ! git diff --quiet -- content; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add content
+            git commit -m "chore: update notes"
+            git pull --rebase origin "${GITHUB_REF_NAME}"
+            git push origin HEAD:${GITHUB_REF_NAME}
+          fi
 
       # Audio published by earlier runs. Skipped on the very first run, when the branch doesn't exist yet.
       - name: Does the audio branch exist?
@@ -74,11 +75,10 @@ jobs:
       - run: bun install --frozen-lockfile
 
       # Prerenders every note, built the same way Vercel builds it
-       # Prerenders every note, built the same way Vercel builds it
       - run: bun run build
         env:
           NITRO_PRESET: vercel
-          DEBUG: 'true' # temporary: makes the log show the real error behind "[500] Server Error"
+          DEBUG: "true" # temporary: makes the log show the real error behind "[500] Server Error"
           NUXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
           NUXT_PUBLIC_SUPABASE_KEY: placeholder-key
           CLOUDINARY_CLOUD_NAME: placeholder
@@ -90,7 +90,7 @@ jobs:
 
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: "3.11"
 
       - run: sudo apt-get update && sudo apt-get install -y ffmpeg
 
@@ -104,7 +104,7 @@ jobs:
       - name: Generate the missing audio
         run: python scripts/generate_tts.py
         env:
-          TTS_MAX_NEW: '800'
+          TTS_MAX_NEW: "800"
 
       - name: Publish to gh-pages
         if: ${{ hashFiles('tts-out/**') != '' }}
