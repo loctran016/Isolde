@@ -4,13 +4,13 @@ on:
   push:
     branches: [main]
     paths:
-      - "content" # a submodule update shows up as a change to this one path
+      - "content"
       - "scripts/tts-text.mjs"
       - "scripts/extract-tts.mjs"
       - "scripts/generate_tts.py"
       - ".github/workflows/tts.yml"
   repository_dispatch:
-    types: [content-updated] # sent by the y repo
+    types: [content-updated]
   workflow_dispatch:
 
 permissions:
@@ -31,14 +31,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          submodules: recursive # content/ is the "y" repo
+          submodules: recursive
 
-      # Use the newest notes from y, not just the commit this repo currently points to
       - name: Update content to the latest y
         run: git submodule update --init --remote content
 
-      # Keep the site and the audio in step: point this repo at that version of the notes.
-      # Delete this step if you already update the pointer another way.
       - name: Point Isolde at the new notes
         shell: bash
         run: |
@@ -48,7 +45,6 @@ jobs:
             git add content
             git commit -m "chore: update notes"
 
-            # Safe branch-aware rebase + push
             git fetch origin "${GITHUB_REF_NAME}"
             git rebase "origin/${GITHUB_REF_NAME}" || {
               echo "Rebase failed; resetting to remote branch state."
@@ -58,7 +54,6 @@ jobs:
             git push origin HEAD:${GITHUB_REF_NAME}
           fi
 
-      # Audio published by earlier runs. Skipped on the very first run, when the branch doesn't exist yet.
       - name: Does the audio branch exist?
         id: store
         run: |
@@ -76,19 +71,20 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 22 # use the version shown in Vercel: Project Settings > General > Node.js Version
+          node-version: 22
 
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
 
-      - run: bun install --frozen-lockfile
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
 
-      # Prerenders every note, built the same way Vercel builds it
-      - run: bun run build
+      - name: Build site
+        run: bun run build
         env:
           NITRO_PRESET: vercel
-          DEBUG: "true" # temporary: makes the log show the real error behind "[500] Server Error"
+          DEBUG: "true"
           NUXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
           NUXT_PUBLIC_SUPABASE_KEY: placeholder-key
           CLOUDINARY_CLOUD_NAME: placeholder
@@ -96,16 +92,15 @@ jobs:
       - name: Collect the text each note will read aloud
         run: bun scripts/extract-tts.mjs
         env:
-          TTS_HTML_DIR: .vercel/output/static # where the vercel preset writes prerendered pages
+          TTS_HTML_DIR: .vercel/output/static
 
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-      - run: sudo apt-get update && sudo apt-get install -y ffmpeg
+      - name: Install ffmpeg
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
 
-      # Cache is optional; a cache miss is not a failure.
-      # The important part is we keep the HF cache isolated and we clear it if it looks broken.
       - uses: actions/cache@v4
         id: hf-cache
         with:
@@ -120,8 +115,6 @@ jobs:
         run: |
           mkdir -p "${HF_HOME}"
 
-          # If a prior failed run left a partial/broken cache, clear it.
-          # This is safe because a cache miss just means the model redownloads.
           if [ -d "${HF_HOME}/hub" ]; then
             if ! find "${HF_HOME}/hub" -maxdepth 3 -type f -name "*.data" 2>/dev/null | head -n 1 | grep -q .; then
               echo "HF cache appears empty or incomplete; clearing it."
@@ -130,7 +123,8 @@ jobs:
             fi
           fi
 
-      - run: pip install vieneu
+      - name: Install Vieneu
+        run: pip install vieneu
 
       - name: Generate the missing audio
         run: python scripts/generate_tts.py
