@@ -20,6 +20,8 @@ export const ABBREVIATIONS = {
   ĐTĐ: 'đái tháo đường',
   XQ: 'X quang',
   HC: 'hội chứng',
+  XHTH: 'xuất huyết tiêu hoá',
+  VD: 'ví dụ',
 }
 
 export const REPLACEMENTS = [
