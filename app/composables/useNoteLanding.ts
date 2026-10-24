@@ -1,10 +1,15 @@
-// Remembers the last search ("what did I type, which hit did I pick") across the navigation
-type Landing = { q: string; id: string; tick: number }
+// Scrolls to the heading a search hit pointed at, flashes it, and highlights the searched words.
+// Only for navigation that starts from the search box: a click in the table of contents is left
+// alone (the browser already scrolls there).
+
+// What the search box hands over (the title lets us find the heading if its id doesn't match)
+type Landing = { q: string; id: string; tick: number; title?: string }
 
 export const useSearchLanding = () =>
   useState<Landing>('search-landing', () => ({ q: '', id: '', tick: 0 }))
 
 const MARK = 'search-hit'
+const STORE_KEY = 'note-search-landing' // the sessionStorage version of NoteSearch writes here
 
 // Lowercase and strip Vietnamese diacritics, so "tieu hoa" also finds "Tiêu hoá"
 const fold = (s: string) =>
@@ -22,17 +27,36 @@ const safeDecode = (s: string) => {
   }
 }
 
-function waitFor(id: string, timeout = 4000): Promise<HTMLElement | null> {
+// "/notes/a#x" and "/notes/a/#x" and the percent-encoded form all count as the same place
+const samePlace = (a: string, b: string) => {
+  const n = (s: string) => safeDecode(s).replace(/\/+(?=#|$)/, '')
+  return n(a) === n(b)
+}
+
+function waitFor<T extends HTMLElement>(find: () => T | null, timeout = 4000): Promise<T | null> {
   return new Promise((resolve) => {
     const t0 = performance.now()
     const look = () => {
-      const el = document.getElementById(id)
+      const el = find()
       if (el) return resolve(el)
       if (performance.now() - t0 > timeout) return resolve(null)
       requestAnimationFrame(look)
     }
     look()
   })
+}
+
+function findHeading(id: string, title?: string): HTMLElement | null {
+  const byId = document.getElementById(id)
+  if (byId) return byId
+  if (!title) return null
+  // the search plugin's anchor may differ from the heading's id, so fall back to the heading text
+  const want = fold(title).trim()
+  const all = document.querySelectorAll<HTMLElement>(
+    '.markdown-body :is(h1, h2, h3, h4, h5, h6)',
+  )
+  for (const h of all) if (fold(h.textContent ?? '').trim() === want) return h
+  return null
 }
 
 const level = (el: Element) => Number(/^H([1-6])$/.exec(el.tagName)?.[1] ?? 7)
@@ -53,7 +77,7 @@ function clearHighlights() {
 }
 
 // Uses the CSS Custom Highlight API, so the page's DOM is never changed
-function highlightTerms(heading: HTMLElement, q: string) {
+function highlightIn(roots: HTMLElement[], q: string) {
   clearHighlights()
   const HighlightCtor = (globalThis as any).Highlight
   if (typeof CSS === 'undefined' || !('highlights' in CSS) || !HighlightCtor) return
@@ -69,7 +93,7 @@ function highlightTerms(heading: HTMLElement, q: string) {
   const re = new RegExp(terms.map((t) => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|'), 'g')
 
   const ranges: Range[] = []
-  for (const root of sectionRoots(heading)) {
+  for (const root of roots) {
     const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT)
     for (let node = walker.nextNode(); node && ranges.length < 400; node = walker.nextNode()) {
       const text = node.nodeValue ?? ''
@@ -102,11 +126,46 @@ function flash(el: HTMLElement) {
   setTimeout(() => el.classList.remove('search-flash'), 2800)
 }
 
-async function land(hash: string, q: string) {
-  const id = safeDecode(hash.replace(/^#/, ''))
-  if (!id) return
-  const el = await waitFor(id)
-  if (!el) return
+// A search hit that is waiting to be shown on this page, or null.
+// It is taken once, so later clicks (TOC links and so on) never bring it back.
+let consumedTick = 0
+function takePending(landing: { value: Landing }, here: string): Landing | null {
+  // 1. the shared state (set by NoteSearch)
+  const s = landing.value
+  if (s.id && s.tick !== consumedTick && samePlace(s.id, here)) {
+    consumedTick = s.tick
+    return { ...s }
+  }
+  // 2. sessionStorage (written by the sessionStorage version of NoteSearch)
+  try {
+    const raw = sessionStorage.getItem(STORE_KEY)
+    if (raw) {
+      const v = JSON.parse(raw)
+      if (v?.id && samePlace(v.id, here)) {
+        sessionStorage.removeItem(STORE_KEY)
+        return { q: v.q ?? '', id: v.id, tick: 0, title: v.title }
+      }
+    }
+  } catch {}
+  return null
+}
+
+async function land(hit: Landing) {
+  const hashAt = hit.id.indexOf('#')
+  const id = hashAt >= 0 ? safeDecode(hit.id.slice(hashAt + 1)) : ''
+
+  // a page-level hit has no heading: highlight over the whole note
+  if (!id) {
+    const root = await waitFor(() => document.querySelector<HTMLElement>('.markdown-body'))
+    if (root) highlightIn([root], hit.q)
+    return
+  }
+
+  const el = await waitFor(() => findHeading(id, hit.title))
+  if (!el) {
+    console.warn('[landing] heading not found for', id, hit.title)
+    return
+  }
 
   const jump = () => el.scrollIntoView({ block: 'start' })
   jump()
@@ -117,14 +176,15 @@ async function land(hash: string, q: string) {
   }, 700)
 
   flash(el)
-  highlightTerms(el, q)
+  highlightIn(sectionRoots(el), hit.q)
 }
 
+// Violet, readable on both a light and a dark page (the text keeps its own colour)
 const CSS_TEXT = `
-::highlight(${MARK}){background-color:rgba(109, 40, 217,.55);color:#1c1917}
+::highlight(${MARK}){background-color:rgba(139,92,246,.5)}
 .search-flash{animation:search-flash 2.6s ease-out;border-radius:.25rem}
 @keyframes search-flash{
-  0%,35%{background-color:rgba(250,204,21,.35);box-shadow:0 0 0 .45rem rgba(250,204,21,.35)}
+  0%,35%{background-color:rgba(139,92,246,.3);box-shadow:0 0 0 .45rem rgba(139,92,246,.3)}
   100%{background-color:transparent;box-shadow:0 0 0 .45rem transparent}
 }`
 
@@ -135,23 +195,30 @@ export function useNoteLanding() {
 
   useHead({ style: [{ key: 'note-landing-css', innerHTML: CSS_TEXT }] })
 
-  // Highlight the search terms only when this page was opened from that exact search hit
-  const fromSearch = () => safeDecode(landing.value.id) === safeDecode(route.path + route.hash)
+  async function run(initial = false) {
+    const hit = takePending(landing, route.path + route.hash)
+    if (hit) return land(hit)
 
-  const run = useDebounceFn(() => {
-    if (!route.hash) return
-    land(route.hash, fromSearch() ? landing.value.q : '')
-  }, 40)
+    // a link opened straight at a heading (for example a shared link): just scroll there
+    if (initial && route.hash) {
+      const id = safeDecode(route.hash.slice(1))
+      const el = await waitFor(() => document.getElementById(id))
+      el?.scrollIntoView({ block: 'start' })
+    }
+  }
 
-  onMounted(() => run())
-  watch(
-    () => landing.value.tick,
-    () => run(),
-  ) // picking another hit in the same note
-  watch(
-    () => route.hash,
-    () => run(),
-  )
+  const runSoon = useDebounceFn(() => run(), 40)
+  const onEvent = () => runSoon()
+
+  onMounted(() => {
+    run(true)
+    window.addEventListener('note-landing', onEvent) // sent by the sessionStorage version of NoteSearch
+  })
+  watch(() => landing.value.tick, runSoon) // picking another hit in the same note
+  watch(() => route.hash, runSoon)
   onKeyStroke('Escape', clearHighlights)
-  onBeforeUnmount(clearHighlights)
+  onBeforeUnmount(() => {
+    window.removeEventListener('note-landing', onEvent)
+    clearHighlights()
+  })
 }
