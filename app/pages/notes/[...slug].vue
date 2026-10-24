@@ -372,7 +372,7 @@ useNoteLanding()
 
 <template>
   <div
-    class="px-2 lg:max-w-3/5 mt-6 lg:mt-8 prose xl:prose-lg dark:prose-invert prose-headings:font-head mx-auto !max-w-75ch prose-a:no-underline hover:prose-a:text-purple-800/95 dark:hover:prose-a:text-purple-300/90 prose-a:transition-all prose-a:duration-200 prose-headings:tracking-wide prose-table:table-auto prose-td:min-w-10 prose-td:min-w-[calc-size(max-content,min(size,10ch))] prose-img:mx-auto prose-img:rounded-md pb-10 md:pb-16 lg:pb-20"
+    class="px-2 lg:max-w-3/5 mt-6 lg:mt-8 prose xl:prose-lg dark:prose-invert prose-headings:font-head mx-auto xl:!max-w-75ch prose-a:no-underline hover:prose-a:text-purple-800/95 dark:hover:prose-a:text-purple-300/90 prose-a:transition-all prose-a:duration-200 prose-headings:tracking-wide prose-table:table-auto prose-td:min-w-10 prose-td:min-w-[calc-size(max-content,min(size,10ch))] prose-img:mx-auto prose-img:rounded-md pb-10 md:pb-16 lg:pb-20"
   >
     <!-- Breadcrumb + actions -->
     <div class="not-prose mb-4 flex items-center justify-between gap-3">
