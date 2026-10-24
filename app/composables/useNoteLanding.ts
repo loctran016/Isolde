@@ -121,7 +121,7 @@ async function land(hash: string, q: string) {
 }
 
 const CSS_TEXT = `
-::highlight(${MARK}){background-color:rgba(250,204,21,.55);color:#1c1917}
+::highlight(${MARK}){background-color:rgba(109, 40, 217,.55);color:#1c1917}
 .search-flash{animation:search-flash 2.6s ease-out;border-radius:.25rem}
 @keyframes search-flash{
   0%,35%{background-color:rgba(250,204,21,.35);box-shadow:0 0 0 .45rem rgba(250,204,21,.35)}
