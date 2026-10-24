@@ -377,8 +377,8 @@ useNoteLanding()
     <!-- Breadcrumb + actions -->
     <div class="not-prose mb-4 flex items-center justify-between gap-3">
       <NuxtLink class="flex min-w-0 cursor-pointer gap-2 opacity-90" to="/notes">
-        <div class="i-solar:home-2-bold lg:text-lg" />
-        <span class="truncate text-xs lg:text-sm">
+        <div class="i-solar:home-2-bold lg:text-xl" />
+        <span class="truncate text-xs lg:text-base">
           {{ pageTitles[0] }} /
           <span class="opacity-90">
             {{ pageTitles[1] }}
