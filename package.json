@@ -23,7 +23,7 @@
     "@nuxt/image": "2.2.0",
     "@nuxtjs/cloudinary": "^4.1.0",
     "@nuxtjs/supabase": "2.1.0",
-    "@regle/nuxt": "1.28.3",
+    "@regle/nuxt": "1.29.5",
     "@sqlite.org/sqlite-wasm": "^3.54.1-build1",
     "@tanstack/vue-table": "^8.21.3",
     "@vercel/speed-insights": "^2.0.0",
