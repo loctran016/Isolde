@@ -65,7 +65,7 @@ jobs:
           ref: gh-pages
           path: audio-store
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22 # use the version shown in Vercel: Project Settings > General > Node.js Version
 
