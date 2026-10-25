@@ -41,7 +41,7 @@
     "motion-v": "^2.8.0",
     "nuxt": "^4.6.2",
     "nuxt-easy-lightbox": "1.1.0",
-    "nuxt-echarts": "1.0.1",
+    "nuxt-echarts": "1.1.0",
     "reka-ui": "^2.11.0",
     "tibetan-date-calculator": "^1.2.3",
     "unocss-preset-scrollbar-hide": "^1.0.1",
