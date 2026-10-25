@@ -28,7 +28,7 @@
     "@tanstack/vue-table": "^8.21.3",
     "@vercel/speed-insights": "^2.0.0",
     "@vite-pwa/nuxt": "1.1.1",
-    "@vueuse/nuxt": "14.3.0",
+    "@vueuse/nuxt": "14.4.0",
     "@yeger/vue-masonry-wall": "^6.1.4",
     "abcjs": "^6.7.2",
     "beautiful-mermaid": "^1.1.3",
