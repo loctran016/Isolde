@@ -31,6 +31,40 @@ const engine = ref<'neural' | 'browser'>('browser') // engine of the current pla
 const useNeural = computed(() => neuralReady.value && settings.value.engine !== 'browser')
 const canPlay = computed(() => hasSpeech.value || neuralReady.value)
 
+// ---- Seek bar (drag to jump between blocks) and A-B loop ----
+const scrubbing = ref(false) // true while the thumb is being dragged
+const previews = ref<string[]>([]) // first words of every block, shown while dragging
+const loopA = ref<number | null>(null) // 1-based block numbers, same as blockNow
+const loopB = ref<number | null>(null)
+const loopOn = computed(() => loopA.value !== null && loopB.value !== null)
+let wasPlaying = false // was it playing when the drag started?
+let freshStart = false // the position changed while paused: resuming must start from the new block
+
+const loopLabel = computed(() => {
+  if (loopOn.value) return `↻ ${loopA.value}–${loopB.value}`
+  if (loopA.value !== null) return `A ${loopA.value} → ?`
+  return 'A–B'
+})
+const loopHelp = computed(() => {
+  if (loopOn.value) return 'Đang lặp đoạn A–B. Chạm nút lặp để tắt.'
+  if (loopA.value !== null)
+    return `Đã chọn điểm A (đoạn ${loopA.value}). Tua đến đoạn cuối cần lặp rồi chạm nút lặp để chọn B.`
+  return ''
+})
+
+// Position (0 to 1) of a block on the bar
+const frac = (n: number) => (blockTotal.value > 1 ? (n - 1) / (blockTotal.value - 1) : 0)
+// The thumb is 16px wide, so the usable track is 100% - 16px
+const loopStyle = computed(() => {
+  if (loopA.value === null) return null
+  const a = frac(loopA.value)
+  const b = loopB.value !== null ? frac(loopB.value) : a
+  return {
+    left: `calc(8px + (100% - 16px) * ${a} - 3px)`,
+    width: `max(6px, calc((100% - 16px) * ${b - a} + 6px))`,
+  }
+})
+
 function collect(): Chunk[] {
   const root = document.querySelector(props.target)
   return root ? (collectChunks(root) as Chunk[]) : []
@@ -96,13 +130,14 @@ function getAudio() {
   return audio
 }
 
-function highlight(el: HTMLElement | null) {
+// smooth = false while dragging the bar: the page follows the thumb instantly
+function highlight(el: HTMLElement | null, smooth = true) {
   if (el === lit) return
   lit?.classList.remove('tts-active')
   lit = el
   if (el) {
     el.classList.add('tts-active')
-    el.scrollIntoView({ block: 'center', behavior: 'smooth' })
+    el.scrollIntoView({ block: 'center', behavior: smooth ? 'smooth' : 'auto' })
   }
 }
 
@@ -115,8 +150,21 @@ function killSound() {
   if (hasSpeech.value) window.speechSynthesis.cancel()
 }
 
+const firstIndexOfBlock = (n: number) => queue.findIndex((c) => c.block === n - 1)
+
 function speakAt(i: number, chained = false) {
   const mine = ++session
+  freshStart = false
+
+  // A-B loop: after the last piece of block B, go back to the first piece of block A.
+  // Only when playback arrives there by itself, so a manual jump can leave the loop.
+  if (chained && loopOn.value && i > 0) {
+    const prev = queue[i - 1]
+    const next = queue[i]
+    if (prev && prev.block + 1 === loopB.value && (!next || next.block + 1 > loopB.value!))
+      i = Math.max(firstIndexOfBlock(loopA.value!), 0)
+  }
+
   if (i >= queue.length) return stop()
   if (!chained) killSound()
 
@@ -163,7 +211,6 @@ function playNeural(i: number, mine: number) {
     w.src = `${AUDIO_BASE}/${next.id}.mp3`
   }
 }
-
 
 function speakBrowser(i: number, chained: boolean, mine: number) {
   const synth = window.speechSynthesis
@@ -225,6 +272,11 @@ function start() {
   if (!queue.length) return
   hint.value = ''
   blockTotal.value = queue.at(-1)!.block + 1
+  // first words of every block, for the preview bubble while dragging
+  const firsts: string[] = []
+  for (const c of queue) if (firsts[c.block] === undefined) firsts[c.block] = c.text
+  previews.value = firsts
+  loopA.value = loopB.value = null
   engine.value = useNeural.value ? 'neural' : 'browser'
   if (engine.value === 'neural') setupMediaSession()
   // begin at the first block that is on screen (the very top when the note isn't scrolled)
@@ -232,11 +284,7 @@ function start() {
   speakAt(Math.max(first, 0))
 }
 
-const index = () =>
-  Math.max(
-    queue.findIndex((c) => c.block === blockNow.value - 1),
-    0,
-  )
+const index = () => Math.max(firstIndexOfBlock(blockNow.value), 0)
 
 function pause() {
   if (engine.value === 'neural') {
@@ -249,7 +297,8 @@ function pause() {
 }
 
 function resume() {
-  if (engine.value === 'neural' && audio?.src) {
+  // after a seek the loaded clip is the old one, so start again from the block the bar points to
+  if (!freshStart && engine.value === 'neural' && audio?.src) {
     state.value = 'playing'
     hint.value = ''
     audio.play().catch(() => {
@@ -269,6 +318,8 @@ function stop() {
     audio.load()
   }
   state.value = 'idle'
+  scrubbing.value = false
+  loopA.value = loopB.value = null
   highlight(null)
   if ('mediaSession' in navigator) navigator.mediaSession.metadata = null
 }
@@ -284,6 +335,51 @@ function jump(delta: number) {
   if (!queue.length) return
   const target = Math.min(Math.max(blockNow.value - 1 + delta, 0), blockTotal.value - 1)
   speakAt(queue.findIndex((c) => c.block === target))
+}
+
+// ---- Dragging the seek bar ----
+// The first movement pauses the sound; every step moves the highlight (and the page) to that block;
+// letting go starts reading from there again if it was playing before.
+function onScrub(e: Event) {
+  const v = Number((e.target as HTMLInputElement).value)
+  if (!scrubbing.value) {
+    scrubbing.value = true
+    wasPlaying = state.value === 'playing'
+    session++ // a late "ended" event from the clip we are leaving must not start the next one
+    killSound()
+    clearTimeout(watchdog)
+    hint.value = ''
+    state.value = 'paused'
+  }
+  const chunk = queue.find((c) => c.block === v - 1)
+  if (chunk) {
+    blockNow.value = v
+    highlight(chunk.el, false)
+  }
+}
+
+function onScrubEnd() {
+  if (!scrubbing.value) return
+  scrubbing.value = false
+  freshStart = true
+  if (wasPlaying) speakAt(index())
+}
+
+// ---- A-B loop: 1st tap marks A, 2nd tap marks B, 3rd tap clears ----
+function cycleLoop() {
+  if (loopOn.value) {
+    loopA.value = loopB.value = null
+    return
+  }
+  if (loopA.value === null) {
+    loopA.value = blockNow.value
+    return
+  }
+  let a = loopA.value
+  let b = blockNow.value
+  if (b < a) [a, b] = [b, a]
+  loopA.value = a
+  loopB.value = b // the same block twice loops that single block
 }
 
 // Speed applies at once to neural audio; the built-in voice restarts the current piece
@@ -370,78 +466,126 @@ onBeforeUnmount(() => {
     <Teleport to="body">
       <div
         v-if="state !== 'idle'"
-        class="fixed left-4 z-40 flex max-w-[calc(100vw-6rem)] flex-wrap items-center gap-1 rounded-full border border-purple-300/40 bg-stone-50/95 px-2 py-1.5 text-stone-900 shadow-lg backdrop-blur dark:bg-stone-900/95 dark:text-gray-100"
+        class="fixed left-4 z-40 flex w-[min(26rem,calc(100vw-6rem))] flex-col gap-1 rounded-2xl border border-purple-300/40 bg-stone-50/95 px-3 py-2 text-stone-900 shadow-lg backdrop-blur dark:bg-stone-900/95 dark:text-gray-100"
         style="bottom: calc(1rem + env(safe-area-inset-bottom, 0px))"
       >
-        <button
-          class="cursor-pointer rounded-full p-2 hover:bg-purple-500/20"
-          aria-label="Đoạn trước"
-          @click="jump(-1)"
-        >
-          <span class="i-solar:skip-previous-bold block" />
-        </button>
-        <button
-          class="cursor-pointer rounded-full bg-purple-600 p-2 text-white"
-          :aria-label="state === 'playing' ? 'Tạm dừng' : 'Tiếp tục'"
-          @click="toggle"
-        >
-          <span
-            :class="state === 'playing' ? 'i-solar:pause-bold' : 'i-solar:play-bold'"
-            class="block"
+        <!-- Seek bar: drag to jump between blocks (it snaps to each block) -->
+        <div v-if="blockTotal > 1" class="relative">
+          <div
+            v-if="loopStyle"
+            class="pointer-events-none absolute top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-purple-500/70"
+            :style="loopStyle"
           />
-        </button>
-        <button
-          class="cursor-pointer rounded-full p-2 hover:bg-purple-500/20"
-          aria-label="Đoạn sau"
-          @click="jump(1)"
-        >
-          <span class="i-solar:skip-next-bold block" />
-        </button>
-        <button
-          class="cursor-pointer rounded-full p-2 hover:bg-purple-500/20"
-          aria-label="Dừng"
-          @click="stop"
-        >
-          <span class="i-solar:stop-bold block" />
-        </button>
-        <span class="px-1 text-xs tabular-nums opacity-70">{{ blockNow }}/{{ blockTotal }}</span>
-        <button
-          class="cursor-pointer rounded-full px-2 py-1 text-xs tabular-nums hover:bg-purple-500/20"
-          aria-label="Tốc độ đọc"
-          @click="cycleRate"
-        >
-          {{ settings.rate }}×
-        </button>
-        <button
-          v-if="neuralReady"
-          class="cursor-pointer rounded-full px-2 py-1 text-xs font-semibold hover:bg-purple-500/20"
-          :aria-label="
-            engine === 'neural'
-              ? 'Đang dùng giọng AI, chạm để đổi sang giọng máy'
-              : 'Đang dùng giọng máy, chạm để đổi sang giọng AI'
-          "
-          @click="switchEngine"
-        >
-          {{ engine === 'neural' ? 'AI' : 'Máy' }}
-        </button>
-        <select
-          v-if="engine === 'browser' && viVoices.length > 1"
-          class="max-w-28 rounded bg-transparent text-xs outline-none"
-          :value="voice?.name"
-          aria-label="Giọng đọc"
-          @change="pickVoice"
-        >
-          <option v-for="v in viVoices" :key="v.name" :value="v.name">{{ v.name }}</option>
-        </select>
-        <!-- Only warn once the browser has returned voices and none of them is Vietnamese -->
-        <span
-          v-if="engine === 'browser' && voices.length && !viVoices.length"
-          class="px-1 text-xs text-amber-500"
-        >
-          Chưa có giọng tiếng Việt
-        </span>
-        <span v-if="hint" class="basis-full px-2 text-xs text-amber-500">{{ hint }}</span>
-        <span v-if="debug" class="basis-full px-2 text-xs opacity-70">
+          <input
+            type="range"
+            class="tts-range relative w-full cursor-pointer"
+            min="1"
+            :max="blockTotal"
+            step="1"
+            :value="blockNow"
+            aria-label="Tua đến đoạn"
+            :aria-valuetext="`Đoạn ${blockNow} trên ${blockTotal}`"
+            @input="onScrub"
+            @change="onScrubEnd"
+            @pointerup="onScrubEnd"
+            @pointercancel="onScrubEnd"
+          />
+        </div>
+
+        <!-- Preview of the block under the thumb while dragging -->
+        <div v-if="scrubbing" class="truncate px-1 text-xs opacity-80">
+          <span class="font-semibold tabular-nums">{{ blockNow }}/{{ blockTotal }}</span>
+          · {{ previews[blockNow - 1] }}
+        </div>
+
+        <!-- Controls -->
+        <div class="flex flex-wrap items-center gap-1">
+          <button
+            class="cursor-pointer rounded-full p-2 hover:bg-purple-500/20"
+            aria-label="Đoạn trước"
+            @click="jump(-1)"
+          >
+            <span class="i-solar:skip-previous-bold block" />
+          </button>
+          <button
+            class="cursor-pointer rounded-full bg-purple-600 p-2 text-white"
+            :aria-label="state === 'playing' ? 'Tạm dừng' : 'Tiếp tục'"
+            @click="toggle"
+          >
+            <span
+              :class="state === 'playing' ? 'i-solar:pause-bold' : 'i-solar:play-bold'"
+              class="block"
+            />
+          </button>
+          <button
+            class="cursor-pointer rounded-full p-2 hover:bg-purple-500/20"
+            aria-label="Đoạn sau"
+            @click="jump(1)"
+          >
+            <span class="i-solar:skip-next-bold block" />
+          </button>
+          <button
+            class="cursor-pointer rounded-full p-2 hover:bg-purple-500/20"
+            aria-label="Dừng"
+            @click="stop"
+          >
+            <span class="i-solar:stop-bold block" />
+          </button>
+          <span class="px-1 text-xs tabular-nums opacity-70">{{ blockNow }}/{{ blockTotal }}</span>
+          <button
+            class="cursor-pointer rounded-full px-2 py-1 text-xs tabular-nums hover:bg-purple-500/20"
+            aria-label="Tốc độ đọc"
+            @click="cycleRate"
+          >
+            {{ settings.rate }}×
+          </button>
+          <button
+            class="cursor-pointer rounded-full px-2 py-1 text-xs font-semibold tabular-nums hover:bg-purple-500/20"
+            :class="loopA !== null ? 'bg-purple-500/30' : ''"
+            :aria-label="
+              loopOn
+                ? 'Tắt vòng lặp A–B'
+                : loopA !== null
+                  ? 'Chọn điểm B của vòng lặp'
+                  : 'Chọn điểm A của vòng lặp'
+            "
+            @click="cycleLoop"
+          >
+            {{ loopLabel }}
+          </button>
+          <button
+            v-if="neuralReady"
+            class="cursor-pointer rounded-full px-2 py-1 text-xs font-semibold hover:bg-purple-500/20"
+            :aria-label="
+              engine === 'neural'
+                ? 'Đang dùng giọng AI, chạm để đổi sang giọng máy'
+                : 'Đang dùng giọng máy, chạm để đổi sang giọng AI'
+            "
+            @click="switchEngine"
+          >
+            {{ engine === 'neural' ? 'AI' : 'Máy' }}
+          </button>
+          <select
+            v-if="engine === 'browser' && viVoices.length > 1"
+            class="max-w-28 rounded bg-transparent text-xs outline-none"
+            :value="voice?.name"
+            aria-label="Giọng đọc"
+            @change="pickVoice"
+          >
+            <option v-for="v in viVoices" :key="v.name" :value="v.name">{{ v.name }}</option>
+          </select>
+          <!-- Only warn once the browser has returned voices and none of them is Vietnamese -->
+          <span
+            v-if="engine === 'browser' && voices.length && !viVoices.length"
+            class="px-1 text-xs text-amber-500"
+          >
+            Chưa có giọng tiếng Việt
+          </span>
+        </div>
+
+        <span v-if="loopHelp" class="px-1 text-xs opacity-70">{{ loopHelp }}</span>
+        <span v-if="hint" class="px-1 text-xs text-amber-500">{{ hint }}</span>
+        <span v-if="debug" class="px-1 text-xs opacity-70">
           engine: {{ engine }} · AI sẵn sàng: {{ neuralReady }} · giọng: {{ voices.length }} · vi:
           {{ viVoices.length }}
         </span>
@@ -456,5 +600,42 @@ onBeforeUnmount(() => {
   box-shadow: 0 0 0 4px rgba(192, 132, 252, 0.18);
   border-radius: 0.25rem;
   transition: background 0.2s;
+}
+
+/* Seek bar: a thin track and a round thumb that is easy to grab with a finger */
+.tts-range {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  height: 1.75rem;
+  margin: 0;
+}
+.tts-range::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 9999px;
+  background: rgba(148, 163, 184, 0.35);
+}
+.tts-range::-moz-range-track {
+  height: 6px;
+  border-radius: 9999px;
+  background: rgba(148, 163, 184, 0.35);
+}
+.tts-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  margin-top: -5px;
+  border-radius: 9999px;
+  background: rgb(147, 51, 234);
+  border: 2px solid white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+.tts-range::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 9999px;
+  background: rgb(147, 51, 234);
+  border: 2px solid white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
 }
 </style>
