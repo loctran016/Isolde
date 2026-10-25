@@ -31,6 +31,15 @@ const engine = ref<'neural' | 'browser'>('browser') // engine of the current pla
 const useNeural = computed(() => neuralReady.value && settings.value.engine !== 'browser')
 const canPlay = computed(() => hasSpeech.value || neuralReady.value)
 
+// ---- Player chrome: the "..." menu ----
+const menuOpen = ref(false)
+const root = ref<HTMLElement>()
+onClickOutside(root, () => (menuOpen.value = false))
+onKeyStroke('Escape', () => (menuOpen.value = false))
+watch(state, (s) => {
+  if (s === 'idle') menuOpen.value = false
+})
+
 // ---- Seek bar (drag to jump between blocks) and A-B loop ----
 const scrubbing = ref(false) // true while the thumb is being dragged
 const previews = ref<string[]>([]) // first words of every block, shown while dragging
@@ -41,27 +50,38 @@ let wasPlaying = false // was it playing when the drag started?
 let freshStart = false // the position changed while paused: resuming must start from the new block
 
 const loopLabel = computed(() => {
-  if (loopOn.value) return `↻ ${loopA.value}–${loopB.value}`
-  if (loopA.value !== null) return `A ${loopA.value} → ?`
-  return 'A–B'
+  if (loopOn.value) return `${loopA.value}–${loopB.value} · Tắt`
+  if (loopA.value !== null) return `A ${loopA.value} → chọn B`
+  return 'Đặt điểm A'
 })
 const loopHelp = computed(() => {
-  if (loopOn.value) return 'Đang lặp đoạn A–B. Chạm nút lặp để tắt.'
+  if (loopOn.value) return `Đang lặp đoạn ${loopA.value}–${loopB.value}`
   if (loopA.value !== null)
-    return `Đã chọn điểm A (đoạn ${loopA.value}). Tua đến đoạn cuối cần lặp rồi chạm nút lặp để chọn B.`
+    return `Điểm A: đoạn ${loopA.value}. Tua đến đoạn cuối cần lặp rồi chọn B trong menu ⋯`
   return ''
 })
 
-// Position (0 to 1) of a block on the bar
+// What the small bubble above the player says: the block under the thumb while dragging,
+// otherwise a warning (for example the silent switch), otherwise the loop help
+const status = computed(() =>
+  scrubbing.value
+    ? `${blockNow.value}/${blockTotal.value} · ${previews.value[blockNow.value - 1] ?? ''}`
+    : hint.value || loopHelp.value,
+)
+
+// Fill of the bar up to the thumb, and the position of the loop segment under it.
+// The thumb is 12px wide, so the usable track is 100% - 12px.
+const pct = computed(() =>
+  blockTotal.value > 1 ? ((blockNow.value - 1) / (blockTotal.value - 1)) * 100 : 0,
+)
 const frac = (n: number) => (blockTotal.value > 1 ? (n - 1) / (blockTotal.value - 1) : 0)
-// The thumb is 16px wide, so the usable track is 100% - 16px
 const loopStyle = computed(() => {
   if (loopA.value === null) return null
   const a = frac(loopA.value)
   const b = loopB.value !== null ? frac(loopB.value) : a
   return {
-    left: `calc(8px + (100% - 16px) * ${a} - 3px)`,
-    width: `max(6px, calc((100% - 16px) * ${b - a} + 6px))`,
+    left: `calc(6px + (100% - 12px) * ${a})`,
+    width: `max(4px, calc((100% - 12px) * ${b - a}))`,
   }
 })
 
@@ -462,86 +482,74 @@ onBeforeUnmount(() => {
       </span>
     </button>
 
-    <!-- Floating player (bottom left, so it never covers the search button) -->
+    <!-- Player: bottom left, so it never covers the search button -->
     <Teleport to="body">
       <div
         v-if="state !== 'idle'"
-        class="fixed left-4 z-40 flex w-[min(26rem,calc(100vw-6rem))] flex-col gap-1 rounded-2xl border border-purple-300/40 bg-stone-50/95 px-3 py-2 text-stone-900 shadow-lg backdrop-blur dark:bg-stone-900/95 dark:text-gray-100"
+        ref="root"
+        class="fixed left-4 z-40 w-[min(26rem,calc(100vw-6rem))]"
         style="bottom: calc(1rem + env(safe-area-inset-bottom, 0px))"
       >
-        <!-- Seek bar: drag to jump between blocks (it snaps to each block) -->
-        <div v-if="blockTotal > 1" class="relative">
-          <div
-            v-if="loopStyle"
-            class="pointer-events-none absolute top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-purple-500/70"
-            :style="loopStyle"
-          />
-          <input
-            type="range"
-            class="tts-range relative w-full cursor-pointer"
-            min="1"
-            :max="blockTotal"
-            step="1"
-            :value="blockNow"
-            aria-label="Tua đến đoạn"
-            :aria-valuetext="`Đoạn ${blockNow} trên ${blockTotal}`"
-            @input="onScrub"
-            @change="onScrubEnd"
-            @pointerup="onScrubEnd"
-            @pointercancel="onScrubEnd"
-          />
+        <!-- Bubble: the block under the thumb while dragging, or a warning / loop help -->
+        <div
+          v-if="status && !menuOpen"
+          class="absolute bottom-full left-0 mb-2 max-w-full rounded-lg bg-neutral-900/95 px-3 py-1.5 text-xs shadow-lg"
+          :class="scrubbing ? 'truncate text-white' : hint ? 'text-amber-300' : 'text-white/80'"
+          role="status"
+        >
+          {{ status }}
         </div>
 
-        <!-- Preview of the block under the thumb while dragging -->
-        <div v-if="scrubbing" class="truncate px-1 text-xs opacity-80">
-          <span class="font-semibold tabular-nums">{{ blockNow }}/{{ blockTotal }}</span>
-          · {{ previews[blockNow - 1] }}
-        </div>
+        <!-- Menu: voice, A-B loop, previous / next block -->
+        <div
+          v-if="menuOpen"
+          class="absolute bottom-full right-0 mb-2 w-64 rounded-xl border border-white/10 bg-neutral-900/95 p-2 text-sm text-white shadow-xl backdrop-blur"
+        >
+          <div class="px-2 pb-1 pt-1 text-xs uppercase tracking-wide text-white/50">Giọng đọc</div>
+          <div class="flex gap-1 px-1">
+            <button
+              type="button"
+              class="flex-1 cursor-pointer rounded-lg px-3 py-1.5 text-center transition-colors disabled:cursor-not-allowed disabled:opacity-40"
+              :class="engine === 'neural' ? 'bg-purple-600' : 'bg-white/10 hover:bg-white/20'"
+              :disabled="!neuralReady"
+              @click="engine !== 'neural' && switchEngine()"
+            >
+              AI
+            </button>
+            <button
+              type="button"
+              class="flex-1 cursor-pointer rounded-lg px-3 py-1.5 text-center transition-colors"
+              :class="engine === 'browser' ? 'bg-purple-600' : 'bg-white/10 hover:bg-white/20'"
+              @click="engine !== 'browser' && switchEngine()"
+            >
+              Máy
+            </button>
+          </div>
+          <p v-if="!neuralReady" class="px-2 pt-1 text-xs text-white/50">
+            Giọng AI chưa có cho ghi chú này.
+          </p>
+          <select
+            v-if="engine === 'browser' && viVoices.length > 1"
+            class="mt-2 w-full rounded-lg bg-white/10 px-2 py-1.5 text-sm outline-none"
+            :value="voice?.name"
+            aria-label="Giọng đọc"
+            @change="pickVoice"
+          >
+            <option v-for="v in viVoices" :key="v.name" :value="v.name" class="bg-neutral-800">
+              {{ v.name }}
+            </option>
+          </select>
+          <p
+            v-if="engine === 'browser' && voices.length && !viVoices.length"
+            class="px-2 pt-1 text-xs text-amber-300"
+          >
+            Chưa có giọng tiếng Việt
+          </p>
 
-        <!-- Controls -->
-        <div class="flex flex-wrap items-center gap-1">
+          <div class="my-2 border-t border-white/10" />
           <button
-            class="cursor-pointer rounded-full p-2 hover:bg-purple-500/20"
-            aria-label="Đoạn trước"
-            @click="jump(-1)"
-          >
-            <span class="i-solar:skip-previous-bold block" />
-          </button>
-          <button
-            class="cursor-pointer rounded-full bg-purple-600 p-2 text-white"
-            :aria-label="state === 'playing' ? 'Tạm dừng' : 'Tiếp tục'"
-            @click="toggle"
-          >
-            <span
-              :class="state === 'playing' ? 'i-solar:pause-bold' : 'i-solar:play-bold'"
-              class="block"
-            />
-          </button>
-          <button
-            class="cursor-pointer rounded-full p-2 hover:bg-purple-500/20"
-            aria-label="Đoạn sau"
-            @click="jump(1)"
-          >
-            <span class="i-solar:skip-next-bold block" />
-          </button>
-          <button
-            class="cursor-pointer rounded-full p-2 hover:bg-purple-500/20"
-            aria-label="Dừng"
-            @click="stop"
-          >
-            <span class="i-solar:stop-bold block" />
-          </button>
-          <span class="px-1 text-xs tabular-nums opacity-70">{{ blockNow }}/{{ blockTotal }}</span>
-          <button
-            class="cursor-pointer rounded-full px-2 py-1 text-xs tabular-nums hover:bg-purple-500/20"
-            aria-label="Tốc độ đọc"
-            @click="cycleRate"
-          >
-            {{ settings.rate }}×
-          </button>
-          <button
-            class="cursor-pointer rounded-full px-2 py-1 text-xs font-semibold tabular-nums hover:bg-purple-500/20"
-            :class="loopA !== null ? 'bg-purple-500/30' : ''"
+            type="button"
+            class="flex w-full cursor-pointer items-center justify-between rounded-lg px-2 py-2 text-left hover:bg-white/10"
             :aria-label="
               loopOn
                 ? 'Tắt vòng lặp A–B'
@@ -551,44 +559,117 @@ onBeforeUnmount(() => {
             "
             @click="cycleLoop"
           >
-            {{ loopLabel }}
+            <span>Vòng lặp A–B</span>
+            <span
+              class="text-xs tabular-nums"
+              :class="loopA !== null ? 'text-purple-300' : 'text-white/50'"
+            >
+              {{ loopLabel }}
+            </span>
           </button>
-          <button
-            v-if="neuralReady"
-            class="cursor-pointer rounded-full px-2 py-1 text-xs font-semibold hover:bg-purple-500/20"
-            :aria-label="
-              engine === 'neural'
-                ? 'Đang dùng giọng AI, chạm để đổi sang giọng máy'
-                : 'Đang dùng giọng máy, chạm để đổi sang giọng AI'
-            "
-            @click="switchEngine"
-          >
-            {{ engine === 'neural' ? 'AI' : 'Máy' }}
-          </button>
-          <select
-            v-if="engine === 'browser' && viVoices.length > 1"
-            class="max-w-28 rounded bg-transparent text-xs outline-none"
-            :value="voice?.name"
-            aria-label="Giọng đọc"
-            @change="pickVoice"
-          >
-            <option v-for="v in viVoices" :key="v.name" :value="v.name">{{ v.name }}</option>
-          </select>
-          <!-- Only warn once the browser has returned voices and none of them is Vietnamese -->
-          <span
-            v-if="engine === 'browser' && voices.length && !viVoices.length"
-            class="px-1 text-xs text-amber-500"
-          >
-            Chưa có giọng tiếng Việt
-          </span>
+
+          <div class="my-2 border-t border-white/10" />
+          <div class="flex gap-1 px-1">
+            <button
+              type="button"
+              class="flex flex-1 cursor-pointer items-center justify-center gap-1 rounded-lg bg-white/10 px-2 py-1.5 text-xs hover:bg-white/20"
+              @click="jump(-1)"
+            >
+              <span class="i-solar:skip-previous-bold" /> Đoạn trước
+            </button>
+            <button
+              type="button"
+              class="flex flex-1 cursor-pointer items-center justify-center gap-1 rounded-lg bg-white/10 px-2 py-1.5 text-xs hover:bg-white/20"
+              @click="jump(1)"
+            >
+              Đoạn sau <span class="i-solar:skip-next-bold" />
+            </button>
+          </div>
+
+          <p v-if="debug" class="px-2 pt-2 text-xs text-white/50">
+            engine: {{ engine }} · AI sẵn sàng: {{ neuralReady }} · giọng: {{ voices.length }} ·
+            vi: {{ viVoices.length }}
+          </p>
         </div>
 
-        <span v-if="loopHelp" class="px-1 text-xs opacity-70">{{ loopHelp }}</span>
-        <span v-if="hint" class="px-1 text-xs text-amber-500">{{ hint }}</span>
-        <span v-if="debug" class="px-1 text-xs opacity-70">
-          engine: {{ engine }} · AI sẵn sàng: {{ neuralReady }} · giọng: {{ voices.length }} · vi:
-          {{ viVoices.length }}
-        </span>
+        <!-- The bar -->
+        <div
+          class="relative flex items-center gap-1 rounded-full border border-white/10 bg-neutral-900/95 py-1 pl-1 pr-1.5 text-white shadow-lg backdrop-blur"
+        >
+          <button
+            type="button"
+            class="flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-full text-lg hover:bg-white/15"
+            :aria-label="state === 'playing' ? 'Tạm dừng' : 'Tiếp tục'"
+            @click="toggle"
+          >
+            <span :class="state === 'playing' ? 'i-solar:pause-bold' : 'i-solar:play-bold'" />
+          </button>
+
+          <span class="min-w-[3.25rem] shrink-0 text-center text-xs tabular-nums text-white/90">
+            {{ blockNow }}/{{ blockTotal }}
+          </span>
+
+          <!-- Seek bar: drag to jump between blocks (it snaps to each block) -->
+          <div class="relative min-w-0 flex-1">
+            <input
+              v-if="blockTotal > 1"
+              type="range"
+              class="tts-range"
+              min="1"
+              :max="blockTotal"
+              step="1"
+              :value="blockNow"
+              :style="{ '--p': pct + '%' }"
+              aria-label="Tua đến đoạn"
+              :aria-valuetext="`Đoạn ${blockNow} trên ${blockTotal}`"
+              @input="onScrub"
+              @change="onScrubEnd"
+              @pointerup="onScrubEnd"
+              @pointercancel="onScrubEnd"
+            />
+            <!-- A-B loop, drawn as a purple segment under the bar -->
+            <div
+              v-if="loopStyle"
+              class="pointer-events-none absolute top-[calc(50%+8px)] h-[3px] rounded-full bg-purple-400"
+              :style="loopStyle"
+            />
+          </div>
+
+          <button
+            type="button"
+            class="shrink-0 cursor-pointer rounded-full px-2 py-1.5 text-xs tabular-nums hover:bg-white/15"
+            aria-label="Tốc độ đọc"
+            @click="cycleRate"
+          >
+            {{ settings.rate }}×
+          </button>
+
+          <button
+            type="button"
+            class="relative flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-full text-lg hover:bg-white/15"
+            :class="menuOpen ? 'bg-white/15' : ''"
+            aria-label="Tuỳ chọn"
+            :aria-expanded="menuOpen"
+            @click="menuOpen = !menuOpen"
+          >
+            <span class="i-solar:menu-dots-bold" />
+            <!-- a dot while an A-B loop is set, so it is not forgotten behind the menu -->
+            <span
+              v-if="loopA !== null"
+              class="absolute right-1 top-1 size-2 rounded-full bg-purple-400"
+            />
+          </button>
+
+          <!-- Stop: a small badge on the corner, like in the reference -->
+          <button
+            type="button"
+            class="absolute -right-1.5 -top-1.5 flex size-5 cursor-pointer items-center justify-center rounded-full border border-white/20 bg-neutral-700 text-xs text-white hover:bg-neutral-600"
+            aria-label="Dừng"
+            @click="stop"
+          >
+            <span class="i-solar:close-circle-bold" />
+          </button>
+        </div>
       </div>
     </Teleport>
   </ClientOnly>
@@ -602,40 +683,48 @@ onBeforeUnmount(() => {
   transition: background 0.2s;
 }
 
-/* Seek bar: a thin track and a round thumb that is easy to grab with a finger */
+/* Seek bar: a thin white track that fills up to the thumb, like the reference */
 .tts-range {
   -webkit-appearance: none;
   appearance: none;
   background: transparent;
-  height: 1.75rem;
+  width: 100%;
+  height: 1.75rem; /* a tall touch target around a thin track */
   margin: 0;
+  cursor: pointer;
+  --p: 0%;
 }
 .tts-range::-webkit-slider-runnable-track {
-  height: 6px;
+  height: 4px;
   border-radius: 9999px;
-  background: rgba(148, 163, 184, 0.35);
+  background: linear-gradient(to right, #fff var(--p), rgba(255, 255, 255, 0.3) var(--p));
 }
 .tts-range::-moz-range-track {
-  height: 6px;
+  height: 4px;
   border-radius: 9999px;
-  background: rgba(148, 163, 184, 0.35);
+  background: rgba(255, 255, 255, 0.3);
+}
+.tts-range::-moz-range-progress {
+  height: 4px;
+  border-radius: 9999px;
+  background: #fff;
 }
 .tts-range::-webkit-slider-thumb {
   -webkit-appearance: none;
-  width: 16px;
-  height: 16px;
-  margin-top: -5px;
+  width: 12px;
+  height: 12px;
+  margin-top: -4px; /* centres the 12px thumb on the 4px track */
+  border: 0;
   border-radius: 9999px;
-  background: rgb(147, 51, 234);
-  border: 2px solid white;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
 }
 .tts-range::-moz-range-thumb {
-  width: 16px;
-  height: 16px;
+  width: 12px;
+  height: 12px;
+  border: 0;
   border-radius: 9999px;
-  background: rgb(147, 51, 234);
-  border: 2px solid white;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
 }
 </style>
