@@ -89,7 +89,7 @@ jobs:
         env:
           TTS_HTML_DIR: .vercel/output/static # where the vercel preset writes prerendered pages
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.11'
 
