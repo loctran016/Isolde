@@ -27,7 +27,7 @@ jobs:
     timeout-minutes: 345
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           submodules: recursive # content/ is the "y" repo
 
@@ -59,7 +59,7 @@ jobs:
             echo "exists=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         if: steps.store.outputs.exists == 'true'
         with:
           ref: gh-pages
