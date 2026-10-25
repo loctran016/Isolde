@@ -92,10 +92,16 @@ function hide() {
 }
 function go(hit: Hit) {
   // the note page reads this to scroll to the heading and highlight what was searched
-  landing.value = { q: query.value.trim(), id: hit.id, tick: Date.now() }
+  landing.value = {
+    q: query.value.trim(),
+    id: hit.id,
+    title: hit.title, // lets the page find the heading by its text if the anchor id differs
+    tick: Date.now(),
+  }
   hide()
   navigateTo(hit.id)
 }
+
 
 // Ctrl/Cmd + F opens the search (this replaces the browser's own find on this site)
 onKeyStroke(['f', 'F'], (e) => {
