@@ -372,7 +372,7 @@ useNoteLanding()
 
 <template>
   <div
-    class="px-2 lg:max-w-3/5 mt-6 lg:mt-8 prose xl:prose-lg dark:prose-invert prose-headings:font-head mx-auto xl:!max-w-75ch prose-a:no-underline hover:prose-a:text-purple-800/95 dark:hover:prose-a:text-purple-300/90 prose-a:transition-all prose-a:duration-200 prose-headings:tracking-wide prose-table:table-auto prose-td:min-w-10 prose-td:min-w-[calc-size(max-content,min(size,10ch))] prose-img:mx-auto prose-img:rounded-md pb-10 md:pb-16 lg:pb-20"
+    class="px-2 lg:max-w-3/5 mt-6 lg:mt-8 prose xl:prose-lg dark:prose-invert prose-headings:font-head mx-auto xl:!max-w-75ch prose-a:no-underline hover:prose-a:text-purple-800/95 dark:hover:prose-a:text-purple-300/90 prose-a:transition-all prose-a:duration-200 prose-headings:tracking-wide prose-table:table-auto prose-td:min-w-10 prose-td:min-w-[calc-size(max-content,min(size,10ch))] prose-img:mx-auto prose-img:rounded-md pb-10 xl:pb-14"
   >
     <!-- Breadcrumb + actions -->
     <div class="not-prose mb-4 flex items-center justify-between gap-3">
@@ -421,7 +421,7 @@ useNoteLanding()
       class="not-prose mb-6 rounded-lg bg-slate-500/10 px-5 py-3 [&_li]:list-none [&_li]:pl-0 [&[open]>summary_.chev]:rotate-180"
     >
       <summary
-        class="flex cursor-pointer select-none list-none items-center gap-2 font-head text-xl font-semibold opacity-90 md:text-2xl [&::-webkit-details-marker]:hidden"
+        class="flex cursor-pointer select-none list-none items-center gap-2 font-head text-xl font-semibold opacity-90 xl:text-2xl [&::-webkit-details-marker]:hidden"
       >
         <span class="i-solar:book-bookmark-minimalistic-line-duotone" />
         Mục lục
