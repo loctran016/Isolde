@@ -12,6 +12,7 @@ export const ABBREVIATIONS = {
   ĐM: 'động mạch',
   TM: 'tĩnh mạch',
   HA: 'huyết áp',
+  THA: 'tăng huyết áp',
   KS: 'kháng sinh',
   LS: 'lâm sàng',
   CLS: 'cận lâm sàng',
@@ -22,6 +23,9 @@ export const ABBREVIATIONS = {
   HC: 'hội chứng',
   XHTH: 'xuất huyết tiêu hoá',
   VD: 'ví dụ',
+  HCVC: 'hội chứng vành cấp',
+  HCVM: 'hội chứng vành mạn',
+  NMCT: 'nhồi máu cơ tim',
 }
 
 export const REPLACEMENTS = [
