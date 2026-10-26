@@ -12,6 +12,10 @@ const props = withDefaults(defineProps<{ target?: string; lang?: string; title?:
 // GitHub Pages of this repo: the workflow publishes audio/<id>.mp3 there
 const AUDIO_BASE = 'https://loctran016.github.io/Isolde/audio'
 
+// How many upcoming clips are downloaded while the current one plays, and how many clips are kept
+const PREFETCH_AHEAD = 5
+const MAX_CACHED = 40
+
 type Chunk = { el: HTMLElement; text: string; block: number; id: string }
 
 const route = useRoute()
@@ -132,6 +136,50 @@ async function probe(tries = 3) {
   }
 }
 
+// ---- Clip cache: the next few clips are downloaded while the current one plays ----
+const ready = new Map<string, string>() // clip id -> blob: URL (insertion order: oldest first)
+const pending = new Set<string>() // downloads in flight
+const missing = new Set<string>() // clips the server answered 404 for
+let cacheGen = 0 // bumped when the cache is thrown away, so late downloads are ignored
+
+function fetchClip(id: string) {
+  if (ready.has(id) || pending.has(id) || missing.has(id)) return
+  const gen = cacheGen
+  pending.add(id)
+  $fetch<Blob>(`${AUDIO_BASE}/${id}.mp3`, { responseType: 'blob' })
+    .then((blob) => {
+      if (gen !== cacheGen) return // the note changed meanwhile
+      const typed = blob.type ? blob : blob.slice(0, blob.size, 'audio/mpeg')
+      ready.set(id, URL.createObjectURL(typed))
+    })
+    .catch((e: any) => {
+      if (gen !== cacheGen) return
+      // 404: the clip does not exist (yet). Other errors (offline...) are not remembered, so it is retried later
+      if ((e?.statusCode ?? e?.status ?? e?.response?.status) === 404) missing.add(id)
+    })
+    .finally(() => {
+      if (gen === cacheGen) pending.delete(id)
+    })
+}
+
+// Drop the oldest clips when there are too many, never the ones in `keep`
+function trimClips(keep: Set<string>) {
+  for (const [id, url] of ready) {
+    if (ready.size <= MAX_CACHED) break
+    if (keep.has(id)) continue
+    URL.revokeObjectURL(url)
+    ready.delete(id)
+  }
+}
+
+function clearClips() {
+  cacheGen++
+  for (const url of ready.values()) URL.revokeObjectURL(url)
+  ready.clear()
+  pending.clear()
+  missing.clear()
+}
+
 let queue: Chunk[] = []
 let session = 0 // every (re)start bumps this, so a late "end" event from an old clip is ignored
 let current: SpeechSynthesisUtterance | null = null // keep a reference: Chrome can garbage-collect it mid-speech
@@ -172,18 +220,36 @@ function killSound() {
 
 const firstIndexOfBlock = (n: number) => queue.findIndex((c) => c.block === n - 1)
 
+// The piece that follows piece j. With an A-B loop on, the piece after block B is the first piece of A.
+// Used only when playback moves on by itself, so a manual jump can leave the loop.
+function nextIndex(j: number) {
+  const next = j + 1
+  if (loopOn.value) {
+    const cur = queue[j]
+    const nx = queue[next]
+    if (cur && cur.block + 1 === loopB.value && (!nx || nx.block + 1 > loopB.value!))
+      return Math.max(firstIndexOfBlock(loopA.value!), 0)
+  }
+  return next
+}
+
+// Start downloading the next clips, following the loop if there is one
+function prefetchFrom(i: number) {
+  const keep = new Set<string>([queue[i].id])
+  let j = i
+  for (let k = 0; k < PREFETCH_AHEAD; k++) {
+    j = nextIndex(j)
+    const c = queue[j]
+    if (!c) break
+    keep.add(c.id)
+    fetchClip(c.id)
+  }
+  trimClips(keep)
+}
+
 function speakAt(i: number, chained = false) {
   const mine = ++session
   freshStart = false
-
-  // A-B loop: after the last piece of block B, go back to the first piece of block A.
-  // Only when playback arrives there by itself, so a manual jump can leave the loop.
-  if (chained && loopOn.value && i > 0) {
-    const prev = queue[i - 1]
-    const next = queue[i]
-    if (prev && prev.block + 1 === loopB.value && (!next || next.block + 1 > loopB.value!))
-      i = Math.max(firstIndexOfBlock(loopA.value!), 0)
-  }
 
   if (i >= queue.length) return stop()
   if (!chained) killSound()
@@ -197,17 +263,27 @@ function speakAt(i: number, chained = false) {
   else speakBrowser(i, chained, mine)
 }
 
+// This one clip is missing: read only this block with the built-in voice, then go back to the AI voice
+function readWithBrowserVoice(i: number, mine: number) {
+  console.warn('[tts] missing clip', queue[i].id, JSON.stringify(queue[i].text))
+  if (hasSpeech.value) speakBrowser(i, true, mine)
+  else speakAt(nextIndex(i), true)
+}
+
 function playNeural(i: number, mine: number) {
   const a = getAudio()
+  const id = queue[i].id
+
+  prefetchFrom(i) // download the next clips while this one plays
+
+  // already known to be missing: no need to wait for a network error
+  if (missing.has(id)) return readWithBrowserVoice(i, mine)
+
   a.onended = () => {
-    if (mine === session) speakAt(i + 1, true)
+    if (mine === session) speakAt(nextIndex(i), true)
   }
   a.onerror = () => {
-    if (mine !== session) return
-    // this one clip is missing: read only this block with the built-in voice, then go back to the AI voice
-    console.warn('[tts] missing clip', queue[i].id, JSON.stringify(queue[i].text))
-    if (hasSpeech.value) speakBrowser(i, true, mine)
-    else speakAt(i + 1, true)
+    if (mine === session) readWithBrowserVoice(i, mine)
   }
   a.onplaying = () => {
     if (mine === session) hint.value = ''
@@ -215,21 +291,15 @@ function playNeural(i: number, mine: number) {
 
   const rate = settings.value.rate
   a.defaultPlaybackRate = rate // set before src: loading a new src resets playbackRate to this
-  a.src = `${AUDIO_BASE}/${queue[i].id}.mp3`
+  // A downloaded clip (a blob: URL) starts at once. Otherwise stream it straight from the server,
+  // right here, because iOS only lets audio start inside the tap.
+  a.src = ready.get(id) ?? `${AUDIO_BASE}/${id}.mp3`
   a.playbackRate = rate
   a.play().catch((e) => {
     if (mine !== session || e?.name === 'AbortError') return
     hint.value = 'Chạm ▶ để phát (trình duyệt chặn tự phát).'
     state.value = 'paused'
   })
-
-  // warm the cache with the next clip so the gap between blocks stays short
-  const next = queue[i + 1]
-  if (next) {
-    const w = new Audio()
-    w.preload = 'auto'
-    w.src = `${AUDIO_BASE}/${next.id}.mp3`
-  }
 }
 
 function speakBrowser(i: number, chained: boolean, mine: number) {
@@ -244,11 +314,11 @@ function speakBrowser(i: number, chained: boolean, mine: number) {
     hint.value = ''
   }
   u.onend = () => {
-    if (mine === session) speakAt(i + 1, true)
+    if (mine === session) speakAt(nextIndex(i), true)
   }
   u.onerror = (e) => {
     if (mine !== session || e.error === 'canceled' || e.error === 'interrupted') return
-    speakAt(i + 1, true)
+    speakAt(nextIndex(i), true)
   }
   current = u
 
@@ -447,6 +517,7 @@ watch(
   () => route.path,
   () => {
     stop()
+    clearClips() // the next note has different clips
     neuralReady.value = false
     setTimeout(probe, 600)
   },
@@ -454,6 +525,7 @@ watch(
 
 onBeforeUnmount(() => {
   stop()
+  clearClips()
   clearTimeout(pollTimer)
   if (hasSpeech.value && onVoicesChanged)
     window.speechSynthesis.removeEventListener('voiceschanged', onVoicesChanged)
