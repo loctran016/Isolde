@@ -26,6 +26,10 @@ export const ABBREVIATIONS = {
   HCVC: 'hội chứng vành cấp',
   HCVM: 'hội chứng vành mạn',
   NMCT: 'nhồi máu cơ tim',
+  RL: 'rối loạn',
+  GP: 'giải phẫu',
+  GPB: 'giải phẫu bệnh',
+  MP: 'mô phôi',
 }
 
 export const REPLACEMENTS = [
