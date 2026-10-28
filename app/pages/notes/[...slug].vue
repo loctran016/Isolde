@@ -367,12 +367,37 @@ const topHeading = computed(() => {
   return min === 7 ? 2 : min
 })
 
+// Number the headings from the parsed document itself instead of with CSS counters, so the
+// numbers do not depend on how the page is nested, and they match the table of contents.
+// "top" is the shallowest heading level in the note (its headings become "1.", "2.", ...).
+function numberHeadings(nodes: any[], top: number) {
+  const counts: number[] = [] // counts[d] = how many headings were seen so far at depth d + 1
+  const walk = (list: any[]) => {
+    for (const n of list) {
+      if (!Array.isArray(n)) continue
+      const m = /^h([1-6])$/.exec(String(n[0]))
+      if (m) {
+        const depth = Number(m[1]) - top + 1
+        if (depth >= 1 && depth <= 3) {
+          counts[depth - 1] = (counts[depth - 1] ?? 0) + 1
+          counts.length = depth // a new heading starts again at 1 for everything below it
+          const label = Array.from({ length: depth }, (_, i) => counts[i] ?? 1).join('.')
+          ;(n[1] ??= {})['data-num'] = `${label}.`
+        }
+      }
+      walk(n.slice(2))
+    }
+  }
+  walk(nodes)
+}
+numberHeadings(page.value.nodes, topHeading.value)
+  
 useNoteLanding()
 </script>
 
 <template>
   <div
-    class="px-2 lg:max-w-3/5 mt-6 lg:mt-8 prose xl:prose-lg dark:prose-invert prose-headings:font-head mx-auto xl:!max-w-75ch prose-a:no-underline hover:prose-a:text-purple-800/95 dark:hover:prose-a:text-purple-300/90 prose-a:transition-all prose-a:duration-200 prose-headings:tracking-wide prose-table:table-auto prose-td:min-w-10 prose-td:min-w-[calc-size(max-content,min(size,10ch))] prose-img:mx-auto prose-img:rounded-md pb-10 xl:pb-14"
+    class="px-2 mt-6 lg:mt-8 prose antialiased prose-p:text-zinc-300 prose-headings:text-zinc-100 prose-headings:font-semibold dark:prose-invert mx-auto prose-a:no-underline hover:prose-a:text-purple-800/95 dark:hover:prose-a:text-purple-300/90 prose-a:transition-all prose-a:duration-200 prose-headings:tracking-wide prose-p:tracking-wide prose-table:table-auto prose-td:min-w-10 prose-td:min-w-[calc-size(max-content,min(size,10ch))] prose-img:mx-auto prose-img:rounded-md pb-10 xl:pb-14"
   >
     <!-- Breadcrumb + actions -->
     <div class="not-prose mb-4 flex items-center justify-between gap-3">
@@ -421,7 +446,7 @@ useNoteLanding()
       class="not-prose mb-6 rounded-lg bg-slate-500/10 px-5 py-3 [&_li]:list-none [&_li]:pl-0 [&[open]>summary_.chev]:rotate-180"
     >
       <summary
-        class="flex cursor-pointer select-none list-none items-center gap-2 font-head text-xl font-semibold opacity-90 xl:text-2xl [&::-webkit-details-marker]:hidden"
+        class="flex cursor-pointer select-none list-none items-center gap-2 text-xl font-semibold opacity-90 xl:text-2xl [&::-webkit-details-marker]:hidden"
       >
         <span class="i-solar:book-bookmark-minimalistic-line-duotone" />
         Mục lục
@@ -486,38 +511,9 @@ useNoteLanding()
 [id] {
   scroll-margin-top: calc(5rem + env(safe-area-inset-top, 0px));
 }
-
-/* Numbering is relative to the note's top heading level (set via .top-h1 / .top-h2 / .top-h3) */
-.markdown-body {
-  counter-reset: n1 n2 n3;
-}
-
-/* Level 1 -> "1." */
-:is(.markdown-body.top-h1 h1, .markdown-body.top-h2 h2, .markdown-body.top-h3 h3) {
-  counter-reset: n2 n3;
-  counter-increment: n1;
-}
-:is(.markdown-body.top-h1 h1, .markdown-body.top-h2 h2, .markdown-body.top-h3 h3)::before {
-  content: counter(n1) '. ';
-  font-weight: bold;
-}
-
-/* Level 2 -> "1.1." */
-:is(.markdown-body.top-h1 h2, .markdown-body.top-h2 h3, .markdown-body.top-h3 h4) {
-  counter-reset: n3;
-  counter-increment: n2;
-}
-:is(.markdown-body.top-h1 h2, .markdown-body.top-h2 h3, .markdown-body.top-h3 h4)::before {
-  content: counter(n1) '.' counter(n2) '. ';
-  font-weight: bold;
-}
-
-/* Level 3 -> "1.1.1." */
-:is(.markdown-body.top-h1 h3, .markdown-body.top-h2 h4, .markdown-body.top-h3 h5) {
-  counter-increment: n3;
-}
-:is(.markdown-body.top-h1 h3, .markdown-body.top-h2 h4, .markdown-body.top-h3 h5)::before {
-  content: counter(n1) '.' counter(n2) '.' counter(n3) '. ';
+/* The number is stored on each heading (data-num) by numberHeadings() in the script */
+.markdown-body [data-num]::before {
+  content: attr(data-num) ' ';
   font-weight: bold;
 }
 
