@@ -12,9 +12,7 @@ useHead({
 </script>
 
 <template>
-  <div
-    class="w-full bg-orange-50 text-stone-900 dark:bg-slate-900 dark:text-slate-200 font-sans app-shell flex flex-col overflow-hidden"
-  >
+  <div class="w-full bg-orange-50 text-stone-900 dark:bg-[#181920] dark:text-[#f8f8f2] font-sans app-shell flex flex-col overflow-hidden">
     <ScrollAreaRoot
       style="
         --scrollbar-size: 18px;
@@ -23,14 +21,9 @@ useHead({
       class="relative flex-1 min-h-0 [--header-height:4.1875rem]"
     >
       <ScrollAreaViewport class="w-full h-full">
-        <header class="sticky top-0 z-20 border-b border-stone/40 dark:border-white/10">
-          <!-- Status-bar strip: tinted, but no backdrop-filter -->
-          <div class="h-[env(safe-area-inset-top)] bg-white/30 dark:bg-stone-700/30" />
-
-          <!-- Header bar: the blur lives here, below the strip -->
-          <div
-            class="h-[var(--header-height)] flex items-center bg-white/30 dark:bg-stone-700/30 backdrop-blur-xl backdrop-saturate-150"
-          >
+        <header class="sticky top-0 z-20 border-b border-stone/40 dark:border-[#6272a4]/20">
+  <div class="h-[env(safe-area-inset-top)] bg-white/30 dark:bg-[#282a36]/40" />
+  <div class="h-[var(--header-height)] flex items-center bg-white/30 dark:bg-[#282a36]/40 backdrop-blur-xl backdrop-saturate-150">
             <div
               class="w-full md:max-w-95% lg:max-w-6xl mx-auto flex items-center justify-between gap-4 px-4"
             >
