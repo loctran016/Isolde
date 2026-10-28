@@ -396,9 +396,7 @@ useNoteLanding()
 </script>
 
 <template>
-  <div
-    class="px-2 mt-6 lg:mt-8 prose antialiased prose-p:text-zinc-300 prose-headings:text-zinc-100 prose-headings:font-semibold dark:prose-invert mx-auto prose-a:no-underline hover:prose-a:text-purple-800/95 dark:hover:prose-a:text-purple-300/90 prose-a:transition-all prose-a:duration-200 prose-headings:tracking-wider prose-p:tracking-wide prose-table:table-auto prose-td:min-w-10 prose-td:min-w-[calc-size(max-content,min(size,10ch))] prose-img:mx-auto prose-img:rounded-md pb-10 xl:pb-14"
-  >
+  <div class="px-2 mt-6 lg:mt-8 prose antialiased font-sans dark:prose-invert mx-auto pb-10 xl:pb-14 prose-p:text-[#f8f8f2]/80 prose-headings:text-[#f8f8f2] prose-headings:font-semibold prose-headings:tracking-wide prose-p:tracking-wide prose-a:text-[#ff79c6] prose-a:no-underline hover:prose-a:text-[#8be9fd] prose-a:transition-colors prose-a:duration-200 prose-strong:text-[#8be9fd] prose-strong:font-semibold prose-code:text-[#50fa7b] prose-code:bg-[#282a36] prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-table:table-auto prose-td:min-w-[calc-size(max-content,min(size,10ch))] prose-img:mx-auto prose-img:rounded-md">
     <!-- Breadcrumb + actions -->
     <div class="not-prose mb-4 flex items-center justify-between gap-3">
       <NuxtLink class="flex min-w-0 cursor-pointer gap-2 opacity-90" to="/notes">
@@ -412,11 +410,7 @@ useNoteLanding()
       </NuxtLink>
 
       <div class="flex shrink-0 items-center gap-2">
-        <NuxtLink
-          to="/notes/graph"
-          class="flex items-center gap-1.5 rounded-full border border-purple-300/30 px-3 py-1.5 text-xs transition-colors hover:bg-purple-500/20 lg:text-sm"
-          aria-label="Xem đồ thị ghi chú"
-        >
+        <NuxtLink to="/notes/graph" class="flex items-center gap-1.5 rounded-full border border-[#6272a4]/30 px-3 py-1.5 text-xs transition-colors hover:bg-[#282a36] lg:text-sm" aria-label="Xem đồ thị ghi chú">
           <span class="i-solar:graph-linear text-base" />
           <span class="hidden sm:inline">Đồ thị</span>
         </NuxtLink>
@@ -441,13 +435,8 @@ useNoteLanding()
 
     <h1>{{ pageTitles[2] }}</h1>
 
-    <details
-      v-if="tocLinks.length"
-      class="not-prose mb-6 rounded-lg bg-slate-500/10 px-5 py-3 [&_li]:list-none [&_li]:pl-0 [&[open]>summary_.chev]:rotate-180"
-    >
-      <summary
-        class="flex cursor-pointer select-none list-none items-center gap-2 font-head text-xl font-semibold opacity-90 xl:text-2xl [&::-webkit-details-marker]:hidden"
-      >
+    <details v-if="tocLinks.length" class="not-prose mb-6 rounded-lg bg-[#282a36]/40 border border-[#6272a4]/20 px-5 py-3 [&_li]:list-none [&_li]:pl-0 [&[open]>summary_.chev]:rotate-180">
+  <summary class="flex cursor-pointer select-none list-none items-center gap-2 font-sans text-xl font-semibold text-[#8be9fd] opacity-90 xl:text-2xl [&::-webkit-details-marker]:hidden">
         <span class="i-solar:book-bookmark-minimalistic-line-duotone" />
         Mục lục
         <span
