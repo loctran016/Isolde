@@ -397,13 +397,13 @@ useNoteLanding()
 
 <template>
   <div
-    class="px-2 mt-6 lg:mt-8 prose antialiased prose-p:text-zinc-300 prose-headings:text-zinc-100 prose-headings:font-semibold dark:prose-invert mx-auto prose-a:no-underline hover:prose-a:text-purple-800/95 dark:hover:prose-a:text-purple-300/90 prose-a:transition-all prose-a:duration-200 prose-headings:tracking-wide prose-p:tracking-wide prose-table:table-auto prose-td:min-w-10 prose-td:min-w-[calc-size(max-content,min(size,10ch))] prose-img:mx-auto prose-img:rounded-md pb-10 xl:pb-14"
+    class="px-2 mt-6 lg:mt-8 prose antialiased prose-zinc prose-purple prose-h1:font-bold prose-h2:font-bold prose-headings:font-semibold dark:prose-invert mx-auto prose-a:no-underline hover:prose-a:text-purple-800/95 dark:hover:prose-a:text-purple-300/90 prose-a:transition-all prose-a:duration-200 prose-p:tracking-[0.01em] prose-table:table-auto prose-td:min-w-10 prose-td:min-w-[calc-size(max-content,min(size,10ch))] prose-img:mx-auto prose-img:rounded-md pb-10 xl:pb-14"
   >
     <!-- Breadcrumb + actions -->
     <div class="not-prose mb-4 flex items-center justify-between gap-3">
       <NuxtLink class="flex min-w-0 cursor-pointer gap-2 opacity-90" to="/notes">
         <div class="i-solar:home-2-bold lg:text-xl" />
-        <span class="truncate text-xs lg:text-base">
+        <span class="truncate text-sm lg:text-base">
           {{ pageTitles[0] }} /
           <span class="opacity-90">
             {{ pageTitles[1] }}
