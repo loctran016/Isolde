@@ -443,7 +443,7 @@ useNoteLanding()
 
     <details
       v-if="tocLinks.length"
-      class="not-prose mb-4 rounded-lg bg-slate-500 z-10 top-20 sticky px-4 py-2 [&_li]:list-none [&_li]:pl-0 [&[open]>summary_.chev]:rotate-180"
+      class="not-prose mb-4 rounded-lg bg-white dark:bg-slate-800 z-10 top-20 sticky px-4 py-2 [&_li]:list-none [&_li]:pl-0 [&[open]>summary_.chev]:rotate-180"
     >
       <summary
         class="flex cursor-pointer select-none list-none items-center gap-2 font-semibold opacity-90 xl:text-lg [&::-webkit-details-marker]:hidden"
