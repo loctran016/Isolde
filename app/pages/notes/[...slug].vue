@@ -476,11 +476,34 @@ useNoteLanding()
   max-width: 100%;
   margin: 1.5em 0;
   -webkit-overflow-scrolling: touch;
+  /* background of the sticky first column: it must match the page, or the text scrolling under it shows through */
+  --sticky-bg: #fff7ed; /* light: orange-50 */
 }
+.dark .table-wrap {
+  --sticky-bg: #0f172a; /* dark: slate-900 */
+}
+
 .prose .table-wrap table {
   width: max-content;
   min-width: 100%;
   margin: 0;
+  /* "separate" instead of "collapse": a sticky cell keeps its own borders only in this mode */
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+/* Row lines live on the cells now (a row border is not drawn in "separate" mode) */
+.prose .table-wrap :is(td, th) {
+  border-bottom: 1px solid var(--tw-prose-td-borders);
+}
+.prose .table-wrap thead th {
+  border-bottom-color: var(--tw-prose-th-borders);
+}
+.prose .table-wrap tbody tr:last-child td {
+  border-bottom: 0;
+}
+.prose .table-wrap tbody tr {
+  border-bottom: 0;
 }
 
 /* Cell width caps: phones, then md (iPad), then xl (laptop). Long text wraps inside the cap. */
@@ -495,6 +518,35 @@ useNoteLanding()
 @media (min-width: 1280px) {
   .table-wrap :is(td, th) {
     max-width: 28rem;
+  }
+}
+
+/* First column: narrow, and it stays in view while the table scrolls sideways */
+.table-wrap :is(td, th):first-child {
+  width: 7.5rem;
+  min-width: 7.5rem;
+  max-width: 7.5rem;
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: var(--sticky-bg);
+  box-shadow: 1px 0 0 rgba(148, 163, 184, 0.25); /* a thin edge so you can see it is pinned */
+}
+.table-wrap thead th:first-child {
+  z-index: 2;
+}
+@media (min-width: 768px) {
+  .table-wrap :is(td, th):first-child {
+    width: 9rem;
+    min-width: 9rem;
+    max-width: 9rem;
+  }
+}
+@media (min-width: 1280px) {
+  .table-wrap :is(td, th):first-child {
+    width: 11rem;
+    min-width: 11rem;
+    max-width: 11rem;
   }
 }
 
