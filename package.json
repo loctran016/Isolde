@@ -22,6 +22,7 @@
     "@nuxt/fonts": "0.14.0",
     "@nuxt/image": "2.2.0",
     "@nuxtjs/cloudinary": "^4.1.0",
+    "@nuxtjs/google-fonts": "3.2.0",
     "@nuxtjs/supabase": "2.1.0",
     "@regle/nuxt": "1.28.3",
     "@sqlite.org/sqlite-wasm": "^3.54.1-build1",

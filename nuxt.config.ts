@@ -19,9 +19,9 @@ export default defineNuxtConfig({
     '@regle/nuxt',
     '@nuxtjs/cloudinary',
     '@vercel/speed-insights',
-    '@nuxt/fonts',
     '@nuxt/image',
     '@comark/nuxt',
+    '@nuxtjs/google-fonts',
   ],
   image: {
     dir: '~~/content', // src paths are now relative to content/
@@ -46,7 +46,7 @@ export default defineNuxtConfig({
         '@internationalized/date',
         'reka-ui',
         'elkjs',
-'elkjs/lib/elk.bundled.js'
+        'elkjs/lib/elk.bundled.js',
       ],
     },
 
@@ -87,11 +87,14 @@ export default defineNuxtConfig({
     cloudinaryApiKey: process.env.CLOUDINARY_API_KEY,
     cloudinaryApiSecret: process.env.CLOUDINARY_API_SECRET,
   },
-  fonts: {
-    families: [
-      { name: 'Inter', provider: 'google' },
-      { name: 'Space Grotesk', provider: 'google' },
-    ],
+  googleFonts: {
+    families: {
+      Inter: '100..900',
+      'Space Grotesk': '300..700',
+    },
+    display: 'swap',
+    download: true, // self-host the font files at build time
+    preload: true,
   },
   echarts: {
     renderer: 'canvas',
@@ -122,10 +125,6 @@ export default defineNuxtConfig({
           tagPriority: 'critical',
         },
       ],
-      //   link: [
-      //     { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
-      //     { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' },
-      //   ],
     },
   },
   components: [
@@ -169,7 +168,7 @@ export default defineNuxtConfig({
       periodicSyncForUpdates: 3600,
     },
     devOptions: {
-      enabled: true,
+      enabled: false,
       type: 'module',
       suppressWarnings: true,
     },

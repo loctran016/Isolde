@@ -18,24 +18,10 @@ export default defineConfig({
         `:root{--font-sans:"Inter",ui-sans-serif,system-ui,sans-serif;--font-head:"Space Grotesk",ui-sans-serif,system-ui,sans-serif}`,
     },
   ],
-  //   extendTheme(theme) {
-  //     theme.font = {
-  //       ...theme.font,
-  //       sans: 'Inter Variable, sans-serif',
-  //       head: 'Space Grotesk Variable, sans-serif',
-  //     }
-  //   },
-  //   theme: {
-  //     font: {
-  //       // ← was fontFamily
-  //       sans: 'Inter Variable, sans-serif',
-  //       head: 'Space Grotesk Variable, sans-serif',
-  //     },
-  //   },
   theme: {
     font: {
-      sans: ['Inter', 'sans-serif'],
-      head: ['Space Grotesk', 'sans-serif'],
+      sans: '"Inter", ui-sans-serif, system-ui, sans-serif',
+      head: '"Space Grotesk", ui-sans-serif, system-ui, sans-serif',
     },
   },
   shortcuts: {
