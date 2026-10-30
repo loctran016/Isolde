@@ -23,7 +23,7 @@ useHead({
       class="relative flex-1 min-h-0 [--header-height:4.1875rem]"
     >
       <ScrollAreaViewport class="w-full h-full">
-        <header class="sticky top-0 z-20 border-b border-stone/40 dark:border-white/10">
+        <header class="z-20 border-b border-stone/40 dark:border-white/10">
           <!-- Status-bar strip: tinted, but no backdrop-filter -->
           <div class="h-[env(safe-area-inset-top)] bg-white/30 dark:bg-stone-700/30" />
 
