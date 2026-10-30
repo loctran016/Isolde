@@ -577,4 +577,9 @@ useNoteLanding()
 .prose summary + h3 {
   margin-top: 0 !important;
 }
+
+.prose li ul li {
+list-style-type: circle;
+}
+  
 </style>
