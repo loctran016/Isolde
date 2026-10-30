@@ -10,8 +10,8 @@ withDefaults(defineProps<{ links: Link[]; depth?: number; prefix?: string }>(), 
 <template>
   <ul
     :class="depth === 0
-      ? 'space-y-0.5'
-      : 'mt-0.5 mb-2 ml-2 space-y-0.5 border-l border-slate-500/30 pl-3'"
+      ? 'space-y-0.5 max-h-30 overflow-y-scroll'
+      : 'mt-0.3 mb-2 ml-2 space-y-0.3 border-l border-slate-500/30 pl-3'"
   >
     <li v-for="(link, i) in links" :key="link.id">
       <a
