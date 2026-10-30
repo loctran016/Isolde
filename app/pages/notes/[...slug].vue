@@ -578,7 +578,7 @@ useNoteLanding()
   margin-top: 0 !important;
 }
 
-.prose li ul li {
+.markdown-body li ul li {
 list-style-type: circle;
 }
   
