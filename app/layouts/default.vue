@@ -29,7 +29,7 @@ useHead({
       "
       class="relative flex-1 min-h-0 [--header-height:4.1875rem]"
     >
-      <ScrollAreaViewport class="w-full h-full">
+      <ScrollAreaViewport class="w-full h-full" style="overflow-y: scroll">
         <header class="sticky top-0 z-20 border-b border-white/40 dark:border-white/10">
           <!-- Status-bar strip: tinted, but no backdrop-filter -->
           <div class="h-[env(safe-area-inset-top)] bg-pink-100/30 dark:bg-pink-700/30" />
@@ -84,6 +84,12 @@ body,
   overscroll-behavior: none;
 }
 
+/* Base height for every display mode, so the scroll area is always constrained.
+   The display-mode rules below override it. */
+.app-shell {
+  height: 100dvh;
+}
+
 @media (display-mode: browser) {
   html,
   body,
@@ -95,6 +101,7 @@ body,
   .app-shell {
     position: fixed;
     inset: 0;
+    height: auto;
   }
 }
 

@@ -5,12 +5,18 @@ withDefaults(defineProps<{ links: Link[]; depth?: number; prefix?: string }>(), 
   depth: 0,
   prefix: '',
 })
+
+// Collapse the surrounding <details> (the "Mục lục" box) after a link is clicked
+function closeToc(e: MouseEvent) {
+  const details = (e.currentTarget as HTMLElement).closest('details')
+  if (details) details.open = false
+}
 </script>
 
 <template>
   <ul
     :class="depth === 0
-      ? 'space-y-0.5 max-h-30 overflow-y-scroll'
+      ? 'space-y-0.5 max-h-40 overflow-y-scroll'
       : 'mt-0.3 mb-2 ml-2 space-y-0.3 border-l border-slate-500/30 pl-3'"
   >
     <li v-for="(link, i) in links" :key="link.id">
@@ -20,6 +26,7 @@ withDefaults(defineProps<{ links: Link[]; depth?: number; prefix?: string }>(), 
         :class="depth === 0
           ? 'font-medium opacity-90 hover:opacity-100'
           : 'text-sm opacity-70 hover:opacity-100'"
+        @click="closeToc"
       >
         <span class="shrink-0 tabular-nums opacity-60">{{ prefix }}{{ i + 1 }}.</span>
         <span>{{ link.text }}</span>
