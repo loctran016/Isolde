@@ -443,7 +443,7 @@ useNoteLanding()
 
     <details
       v-if="tocLinks.length"
-      class="not-prose mb-4 rounded-lg bg-white dark:bg-slate-800 z-10 top-[calc(0.5rem + env(safe-area-inset-top, 0px))] sticky px-4 py-2 [&_li]:list-none [&_li]:pl-0 [&[open]>summary_.chev]:rotate-180 toc-wrapper"
+      class="not-prose mb-4 rounded-lg bg-orange-50/30 dark:bg-slate-800/30 backdrop-blur-xl backdrop-saturate-150 z-10 sticky px-4 py-2 [&_li]:list-none [&_li]:pl-0 [&[open]>summary_.chev]:rotate-180 toc-wrapper"
     >
       <summary
         class="flex cursor-pointer select-none list-none items-center gap-2 font-semibold opacity-90 xl:text-lg [&::-webkit-details-marker]:hidden"
@@ -523,8 +523,7 @@ useNoteLanding()
 
 /* First column: narrow, and it stays in view while the table scrolls sideways */
 .table-wrap :is(td, th):first-child {
-  width: 7.5rem;
-  min-width: 7.5rem;
+  width: max-content;
   max-width: 7.5rem;
   position: sticky;
   left: 0;
