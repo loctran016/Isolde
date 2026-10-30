@@ -13,7 +13,7 @@ useHead({
 
 <template>
   <div
-    class="w-full bg-orange-50 text-stone-900 dark:bg-slate-900 dark:text-slate-200 font-sans app-shell flex flex-col overflow-hidden"
+    class="w-full h-dvh bg-orange-50 text-stone-900 dark:bg-slate-900 dark:text-slate-200 font-sans app-shell flex flex-col overflow-hidden"
   >
     <ScrollAreaRoot
       style="
@@ -22,7 +22,7 @@ useHead({
       "
       class="relative flex-1 min-h-0 [--header-height:4.1875rem]"
     >
-      <ScrollAreaViewport class="w-full h-full">
+      <ScrollAreaViewport class="w-full h-full" style="overflow-y: scroll">
         <header class="z-20 border-b border-stone/40 dark:border-white/10">
           <!-- Status-bar strip: tinted, but no backdrop-filter -->
           <div class="h-[env(safe-area-inset-top)] bg-white/30 dark:bg-stone-700/30" />
