@@ -560,7 +560,7 @@ useNoteLanding()
 }
 
 [id] {
-  scroll-margin-top: calc(3rem + env(safe-area-inset-top, 0px));
+  scroll-margin-top: calc(4rem + env(safe-area-inset-top, 0px));
 }
 
 .toc-wrapper {
