@@ -454,7 +454,7 @@ useNoteLanding()
           class="chev i-solar:alt-arrow-down-linear ml-auto transition-transform duration-200"
         />
       </summary>
-      <div class="pt-3">
+      <div class="pt-2 ml-2">
         <TocLinks :links="tocLinks" />
       </div>
     </details>
