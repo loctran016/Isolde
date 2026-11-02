@@ -22,7 +22,7 @@ const multimdTable = defineComarkPlugin(() => ({
   markdownItPlugins: [multimdTablePlugin],
 }))
 
-const plugins = [toc({ depth: 3, title: 'On This Page' }), multimdTable(), mermaid()]
+const plugins = [({ depth: 3, title: 'On This Page' }), multimdTable(), mermaid()]
 
 const route = useRoute()
 const path = route.path.replace(/\/+$/, '') || '/'
@@ -443,7 +443,7 @@ useNoteLanding()
 
     <details
       v-if="tocLinks.length"
-      class="not-prose mb-2 rounded-lg bg-amber-100/10 dark:bg-slate-800/30 backdrop-blur-xl backdrop-saturate-150 z-10 sticky px-4 py-2 [&_li]:list-none [&_li]:pl-0 [&[open]>summary_.chev]:rotate-180 toc-wrapper border-1 border-stone-600/20 dark:border-slate-200/20"
+      class="not-prose mb-2 rounded-lg xl:top-10 bg-amber-100/10 dark:bg-slate-800/30 backdrop-blur-xl backdrop-saturate-150 z-10 sticky px-4 py-2 [&_li]:list-none [&_li]:pl-0 [&[open]>summary_.chev]:rotate-180 toc-wrapper border-1 border-stone-600/20 dark:border-slate-200/20"
     >
       <summary
         class="flex cursor-pointer select-none list-none items-center gap-2 font-semibold opacity-90 xl:text-lg [&::-webkit-details-marker]:hidden"
@@ -564,7 +564,7 @@ useNoteLanding()
 }
 
 .toc-wrapper {
-  top: calc(0.5rem + env(safe-area-inset-top, 0px));
+  top: calc(0.7rem + env(safe-area-inset-top, 0px));
 }
 /* The number is stored on each heading (data-num) by numberHeadings() in the script */
 .markdown-body [data-num]::before {
