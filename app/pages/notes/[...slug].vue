@@ -443,7 +443,7 @@ useNoteLanding()
 
     <details
       v-if="tocLinks.length"
-      class="not-prose rounded-lg xl:top-10 bg-amber-100/10 dark:bg-slate-800/30 backdrop-blur-xl backdrop-saturate-150 z-10 sticky px-4 py-2 [&_li]:list-none [&_li]:pl-0 [&[open]>summary_.chev]:rotate-180 toc-wrapper border-1 border-stone-600/20 dark:border-slate-200/20"
+      class="not-prose -mt-2 rounded-lg xl:top-10 bg-amber-100/10 dark:bg-slate-800/30 backdrop-blur-xl backdrop-saturate-150 z-10 sticky px-4 py-2 [&_li]:list-none [&_li]:pl-0 [&[open]>summary_.chev]:rotate-180 toc-wrapper border-1 border-stone-600/20 dark:border-slate-200/20"
     >
       <summary
         class="flex cursor-pointer select-none list-none items-center gap-2 font-semibold opacity-90 xl:text-lg [&::-webkit-details-marker]:hidden"
@@ -560,7 +560,7 @@ useNoteLanding()
 }
 
 [id] {
-  scroll-margin-top: calc(4rem + env(safe-area-inset-top, 0px));
+  scroll-margin-top: calc(4.2rem + env(safe-area-inset-top, 0px));
 }
 
 .toc-wrapper {
