@@ -560,11 +560,11 @@ useNoteLanding()
 }
 
 [id] {
-  scroll-margin-top: calc(4.2rem + env(safe-area-inset-top, 0px));
+  scroll-margin-top: calc(5.5rem + env(safe-area-inset-top, 0px));
 }
 
 .toc-wrapper {
-  top: calc(0.7rem + env(safe-area-inset-top, 0px));
+  top: calc(1rem + env(safe-area-inset-top, 0px));
 }
 /* The number is stored on each heading (data-num) by numberHeadings() in the script */
 .markdown-body [data-num]::before {
