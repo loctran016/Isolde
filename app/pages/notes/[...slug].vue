@@ -561,6 +561,8 @@ useNoteLanding()
 
 [id] {
   scroll-margin-top: calc(5rem + env(safe-area-inset-top, 0px));
+top: calc(5rem + env(safe-area-inset-top, 0px));
+position: sticky
 }
 
 .toc-wrapper {
