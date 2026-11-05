@@ -11,7 +11,7 @@ import {
   PaginationPrev,
   PaginationRoot,
 } from 'reka-ui'
-import { breakpointsTailwind, useBreakpoints } from '@vueuse/core'
+import { breakpointsTailwind, useBreakpoints, useResizeObserver, useScroll } from '@vueuse/core'
 import noteSubject from '~/data/noteSubject.js'
 const island = getIsland('/notes')!
 
@@ -106,6 +106,30 @@ const subjects = computed(() => {
   return [...counts].map(([name, count]) => ({ name, count }))
 })
 
+// ---- Filter pills: two rows, the rest scrolls sideways; the arrow shows all of them ----
+const pillsExpanded = ref(false)
+const pillsEl = ref<HTMLElement>()
+const pillsOverflow = ref(false) // do the pills need more than two rows?
+const { arrivedState } = useScroll(pillsEl)
+
+function measurePills() {
+  const el = pillsEl.value
+  if (!el || pillsExpanded.value) return // measured only in the two-row layout
+  pillsOverflow.value = el.scrollWidth > el.clientWidth + 1
+}
+useResizeObserver(pillsEl, measurePills) // runs again when the layout switches or the width changes
+watch(subjects, () => nextTick(measurePills))
+onMounted(() => nextTick(measurePills))
+
+// Soft fade on the side that still has pills to scroll to
+const pillsFade = computed(() => {
+  if (pillsExpanded.value || !pillsOverflow.value) return undefined
+  const left = arrivedState.left ? '#000 0' : 'transparent 0, #000 2.5rem'
+  const right = arrivedState.right ? '#000 100%' : '#000 calc(100% - 2.5rem), transparent 100%'
+  const mask = `linear-gradient(to right, ${left}, ${right})`
+  return { maskImage: mask, WebkitMaskImage: mask }
+})
+
 // Count only pins that still exist (a renamed or deleted note won't inflate it)
 const todoCount = computed(
   () => allPages.value.filter((p) => pinOrder.value.has(p.page.path)).length,
@@ -167,54 +191,80 @@ watch([selectedSubject, search, onlyTodo], () => {
         </button>
       </div>
 
-      <!-- Filters -->
-      <div class="flex flex-wrap items-center gap-2">
-        <button
-          type="button"
-          class="px-3 py-1 rounded-full text-sm border transition-colors cursor-pointer"
+      <!-- Filters: two rows you can swipe sideways; the arrow shows all of them at once -->
+      <div class="flex items-start gap-2">
+        <div
+          ref="pillsEl"
+          class="min-w-0 flex-1"
           :class="
-            selectedSubject === 'all' && !onlyTodo
-              ? 'bg-purple-600 border-purple-600 text-white'
-              : 'border-purple-300/50 hover:bg-purple-500/20'
+            pillsExpanded
+              ? 'flex flex-wrap gap-2'
+              : 'grid grid-rows-2 grid-flow-col auto-cols-max justify-items-start gap-2 overflow-x-auto overscroll-x-contain scrollbar-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden'
           "
-          @click="
-            () => {
-              selectedSubject = 'all'
-              onlyTodo = false
-            }
-          "
+          :style="pillsFade"
         >
-          Tất cả
-          <span class="opacity-70 ml-1">{{ allPages.length }}</span>
-        </button>
+          <button
+            type="button"
+            class="px-3 py-1 rounded-full text-sm border transition-colors cursor-pointer whitespace-nowrap"
+            :class="
+              selectedSubject === 'all' && !onlyTodo
+                ? 'bg-purple-600 border-purple-600 text-white'
+                : 'border-purple-300/50 hover:bg-purple-500/20'
+            "
+            @click="
+              () => {
+                selectedSubject = 'all'
+                onlyTodo = false
+              }
+            "
+          >
+            Tất cả
+            <span class="opacity-70 ml-1">{{ allPages.length }}</span>
+          </button>
+          <button
+            type="button"
+            class="flex items-center gap-1 px-3 py-1 rounded-full text-sm border transition-colors cursor-pointer whitespace-nowrap"
+            :class="
+              onlyTodo
+                ? 'bg-purple-600 border-purple-600 text-white'
+                : 'border-purple-300/50 hover:bg-purple-500/20'
+            "
+            @click="onlyTodo = !onlyTodo"
+          >
+            <span class="i-solar:pin-bold" />
+            Chưa ôn
+            <span class="opacity-70 ml-0.5">{{ todoCount }}</span>
+          </button>
+          <button
+            v-for="s in subjects"
+            :key="s.name"
+            type="button"
+            class="px-3 py-1 rounded-full text-sm border transition-colors cursor-pointer whitespace-nowrap"
+            :class="
+              selectedSubject === s.name
+                ? 'bg-purple-600 border-purple-600 text-white'
+                : 'border-purple-300/50 hover:bg-purple-500/20'
+            "
+            @click="selectedSubject = s.name"
+          >
+            {{ s.name }}
+            <span class="opacity-70 ml-1">{{ s.count }}</span>
+          </button>
+        </div>
+
+        <!-- Only shown when the pills need more than two rows -->
         <button
+          v-if="pillsOverflow || pillsExpanded"
           type="button"
-          class="flex items-center gap-1 px-3 py-1 rounded-full text-sm border transition-colors cursor-pointer"
-          :class="
-            onlyTodo
-              ? 'bg-purple-600 border-purple-600 text-white'
-              : 'border-purple-300/50 hover:bg-purple-500/20'
-          "
-          @click="onlyTodo = !onlyTodo"
+          class="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-full border border-purple-300/50 transition-colors hover:bg-purple-500/20"
+          :aria-label="pillsExpanded ? 'Thu gọn bộ lọc' : 'Xem tất cả bộ lọc'"
+          :aria-expanded="pillsExpanded"
+          @click="pillsExpanded = !pillsExpanded"
         >
-          <span class="i-solar:pin-bold" />
-          Chưa ôn
-          <span class="opacity-70 ml-0.5">{{ todoCount }}</span>
-        </button>
-        <button
-          v-for="s in subjects"
-          :key="s.name"
-          type="button"
-          class="px-3 py-1 rounded-full text-sm border transition-colors cursor-pointer"
-          :class="
-            selectedSubject === s.name
-              ? 'bg-purple-600 border-purple-600 text-white'
-              : 'border-purple-300/50 hover:bg-purple-500/20'
-          "
-          @click="selectedSubject = s.name"
-        >
-          {{ s.name }}
-          <span class="opacity-70 ml-1">{{ s.count }}</span>
+          <span
+            class="i-solar:alt-arrow-down-linear block transition-transform duration-200"
+            :class="pillsExpanded ? 'rotate-180' : ''"
+          />
         </button>
       </div>
 
