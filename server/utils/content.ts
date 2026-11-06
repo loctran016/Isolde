@@ -45,7 +45,7 @@ export const content = comarkContent({
   markdown: {
     plugins: [mermaid(), toc(), multiMDTable(), subscript(), superscript()],
   },
-  plugins: [media(), sqliteFullTextSearch({ database: sqliteWasm() }), pdf({ prefix: 'notes' })],
+  plugins: [media(), sqliteFullTextSearch({ database: sqliteWasm() }), pdf({ prefix: 'notes', assets: 'assets:notes-raw' })],
 })
 
 // GET /api/content/pdf?path=/notes/...   (add &debug=1 to see how the raw markdown was looked up)

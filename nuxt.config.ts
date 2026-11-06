@@ -29,6 +29,8 @@ export default defineNuxtConfig({
   nitro: {
     serverAssets: [
       { baseName: 'comark', dir: fileURLToPath(new URL('./.content', import.meta.url)) },
+      // raw .md + images, bundled into the Vercel function (used by the PDF export)
+      { baseName: 'notes-raw', dir: fileURLToPath(new URL('./content', import.meta.url)) },
     ],
     publicAssets: [
       {
@@ -66,7 +68,7 @@ export default defineNuxtConfig({
   },
   build: {
     analyze: {
-      template: 'raw-data', // was 'json' — invalid
+      template: 'raw-data', // was 'json' -- invalid
       filename: 'stats.json',
     },
   },
@@ -76,6 +78,7 @@ export default defineNuxtConfig({
     '/sw.js': { ssr: false, prerender: false },
     // ISR on static content pages – regenerate every 2 minutes
     '/musical': { swr: 300 },
+    '/notes': { swr: 30 },
     '/gallery': { swr: 300 },
     '/': { swr: 30 },
 
@@ -147,7 +150,7 @@ export default defineNuxtConfig({
   },
   pwa: {
     registerType: 'prompt',
-    injectRegister: null, // disable auto-registration — we'll register manually, deferred
+    injectRegister: null, // disable auto-registration -- we'll register manually, deferred
     manifest: {
       name: 'Isolde',
       short_name: 'Isolde',
