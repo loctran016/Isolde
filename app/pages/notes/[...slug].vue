@@ -71,6 +71,29 @@ console.log('Page value', page.value)
 const { copy, copied } = useClipboard({ copiedDuring: 1800, legacy: true })
 const shareLink = () => copy(window.location.href)
 
+// ---- PDF export ----
+// The PDF is built on the server from the note's raw markdown (comark-pdf), so it does not depend
+// on this page: no dark theme, no interactive components, none of the rewrites done below.
+const pdfBusy = ref(false)
+async function exportPdf() {
+  if (pdfBusy.value) return
+  pdfBusy.value = true
+  try {
+    const res = await fetch(`/api/content/pdf?path=${encodeURIComponent(path)}`)
+    if (!res.ok) throw new Error(`PDF export failed (${res.status})`)
+    const url = URL.createObjectURL(await res.blob())
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${pageTitles.at(-1) || 'note'}.pdf`
+    a.click()
+    setTimeout(() => URL.revokeObjectURL(url), 10_000)
+  } catch (err) {
+    console.error(err)
+  } finally {
+    pdfBusy.value = false
+  }
+}
+
 // ---- Wikilinks: [[../../Dược lý/Thuốc KS/Cơ chế phân tử.md#|Cơ chế phân tử]] ----
 const { data: nav } = await useNotesNav()
 
@@ -234,12 +257,12 @@ const symbols: Record<string, string> = {
   '<-->': '⟷',
   '==>': '⟹',
   '-->': '⟶',
-  '—>': '⟶',
+  '-->': '⟶',
   '<==': '⟸',
   '<--': '⟵',
 }
 // longest patterns first so "<==>" is not split into "<=" + "=>"
-const symbolRe = /<==>|<-->|<=>|<->|==>|-->|—>|<==|<--|\+\/-|<=|>=|!=|~=|=>|->|<-/g
+const symbolRe = /<==>|<-->|<=>|<->|==>|-->|-->|<==|<--|\+\/-|<=|>=|!=|~=|=>|->|<-/g
 const skipTags = new Set(['code', 'pre', 'mermaid', 'math', 'script', 'style'])
 
 const replaceSymbols = (nodes: any[]) => {
@@ -424,6 +447,19 @@ useNoteLanding()
         <button
           type="button"
           class="flex cursor-pointer items-center gap-1.5 rounded-full border border-purple-300/30 px-3 py-1.5 text-xs transition-colors hover:bg-purple-500/20 lg:text-sm"
+          aria-label="Xuất PDF"
+          :disabled="pdfBusy"
+          @click="exportPdf"
+        >
+          <span
+            :class="pdfBusy ? 'i-svg-spinners:ring-resize' : 'i-solar:download-minimalistic-linear'"
+            class="text-base"
+          />
+          <span class="hidden sm:inline">{{ pdfBusy ? 'Đang xuất…' : 'Xuất PDF' }}</span>
+        </button>
+        <button
+          type="button"
+          class="flex cursor-pointer items-center gap-1.5 rounded-full border border-purple-300/30 px-3 py-1.5 text-xs transition-colors hover:bg-purple-500/20 lg:text-sm"
           aria-label="Sao chép liên kết"
           aria-live="polite"
           @click="shareLink"
@@ -560,11 +596,13 @@ useNoteLanding()
 }
 
 [id] {
-  scroll-margin-top: calc(4.2rem + env(safe-area-inset-top, 0px));
+  scroll-margin-top: calc(5rem + env(safe-area-inset-top, 0px));
+/* top: calc(5rem + env(safe-area-inset-top, 0px));
+position: sticky */
 }
 
 .toc-wrapper {
-  top: calc(0.7rem + env(safe-area-inset-top, 0px));
+  top: calc(1rem + env(safe-area-inset-top, 0px));
 }
 /* The number is stored on each heading (data-num) by numberHeadings() in the script */
 .markdown-body [data-num]::before {
@@ -581,5 +619,5 @@ useNoteLanding()
 .markdown-body li ul li {
 list-style-type: circle;
 }
-  
+
 </style>

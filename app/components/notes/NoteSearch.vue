@@ -129,7 +129,7 @@ function enter() {
     <!-- Floating button -->
     <button
       type="button"
-      class="fixed right-4 z-40 flex size-12 cursor-pointer items-center justify-center rounded-full border border-purple-300/40 bg-purple-600 text-xl text-white shadow-lg transition-transform hover:scale-105 active:scale-95"
+      class="fixed right-4 bottom-4 z-40 flex size-12 cursor-pointer items-center justify-center rounded-full border border-purple-300/40 bg-purple-600 text-xl text-white shadow-lg transition-transform hover:scale-105 active:scale-95"
       style="bottom: calc(1rem + env(safe-area-inset-bottom, 0px))"
       aria-label="Tìm kiếm ghi chú"
       title="Tìm kiếm (Ctrl/⌘ + F)"

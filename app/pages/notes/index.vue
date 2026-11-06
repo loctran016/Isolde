@@ -11,7 +11,7 @@ import {
   PaginationPrev,
   PaginationRoot,
 } from 'reka-ui'
-import { breakpointsTailwind, useBreakpoints } from '@vueuse/core'
+import { breakpointsTailwind, useBreakpoints, useResizeObserver, useScroll } from '@vueuse/core'
 import noteSubject from '~/data/noteSubject.js'
 const island = getIsland('/notes')!
 
@@ -111,6 +111,77 @@ const todoCount = computed(
   () => allPages.value.filter((p) => pinOrder.value.has(p.page.path)).length,
 )
 
+// ---- Filter pills: two brick-like rows that scroll sideways together; the arrow shows all ----
+type Pill = { key: string; kind: 'all' | 'todo' | 'subject'; label: string; count: number }
+
+const pills = computed<Pill[]>(() => [
+  { key: 'all', kind: 'all', label: 'Tất cả', count: allPages.value.length },
+  { key: 'todo', kind: 'todo', label: 'Chưa ôn', count: todoCount.value },
+  ...subjects.value.map((s) => ({
+    key: s.name,
+    kind: 'subject' as const,
+    label: s.name,
+    count: s.count,
+  })),
+])
+
+const pillsExpanded = ref(false)
+
+// Rough width of a pill from its text, only used to balance the two rows
+const pillWidth = (p: Pill) =>
+  44 + (p.label.length + String(p.count).length) * 7.5 + (p.kind === 'todo' ? 18 : 0)
+
+// Two rows: each pill goes to the row that is shorter so far, so both rows end at about the same
+// place and the pills keep their own widths. Expanded: one list that wraps by itself.
+const pillRows = computed<Pill[][]>(() => {
+  if (pillsExpanded.value) return [pills.value]
+  const rows: Pill[][] = [[], []]
+  const used = [0, 0]
+  for (const p of pills.value) {
+    const r = used[0] <= used[1] ? 0 : 1
+    rows[r].push(p)
+    used[r] += pillWidth(p) + 8
+  }
+  return rows
+})
+
+const isActive = (p: Pill) =>
+  p.kind === 'all'
+    ? selectedSubject.value === 'all' && !onlyTodo.value
+    : p.kind === 'todo'
+      ? onlyTodo.value
+      : selectedSubject.value === p.label
+
+function pickPill(p: Pill) {
+  if (p.kind === 'all') {
+    selectedSubject.value = 'all'
+    onlyTodo.value = false
+  } else if (p.kind === 'todo') onlyTodo.value = !onlyTodo.value
+  else selectedSubject.value = p.label
+}
+
+const pillsEl = ref<HTMLElement>()
+const pillsOverflow = ref(false) // do the pills need more width than the screen has?
+const { arrivedState } = useScroll(pillsEl)
+
+function measurePills() {
+  const el = pillsEl.value
+  if (!el || pillsExpanded.value) return // measured only in the two-row layout
+  pillsOverflow.value = el.scrollWidth > el.clientWidth + 1
+}
+useResizeObserver(pillsEl, measurePills) // runs again when the width changes
+watch([pills, pillsExpanded], () => nextTick(measurePills))
+onMounted(() => nextTick(measurePills))
+
+// Soft fade on the side that still has pills to scroll to
+const pillsFade = computed(() => {
+  if (pillsExpanded.value || !pillsOverflow.value) return undefined
+  const left = arrivedState.left ? '#000 0' : 'transparent 0, #000 2.5rem'
+  const right = arrivedState.right ? '#000 100%' : '#000 calc(100% - 2.5rem), transparent 100%'
+  const mask = `linear-gradient(to right, ${left}, ${right})`
+  return { maskImage: mask, WebkitMaskImage: mask }
+})
+
 const filteredPages = computed(() => {
   const q = normalize(search.value)
   const matches = allPages.value.filter(
@@ -167,54 +238,58 @@ watch([selectedSubject, search, onlyTodo], () => {
         </button>
       </div>
 
-      <!-- Filters -->
-      <div class="flex flex-wrap items-center gap-2">
-        <button
-          type="button"
-          class="px-3 py-1 rounded-full text-sm border transition-colors cursor-pointer"
+      <!-- Filters: two brick-like rows you can swipe sideways; the arrow shows all of them at once -->
+      <div class="flex items-start gap-2">
+        <div
+          ref="pillsEl"
+          class="min-w-0 flex-1"
           :class="
-            selectedSubject === 'all' && !onlyTodo
-              ? 'bg-purple-600 border-purple-600 text-white'
-              : 'border-purple-300/50 hover:bg-purple-500/20'
+            pillsExpanded
+              ? ''
+              : 'overflow-x-auto overscroll-x-contain scrollbar-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden'
           "
-          @click="
-            () => {
-              selectedSubject = 'all'
-              onlyTodo = false
-            }
-          "
+          :style="pillsFade"
         >
-          Tất cả
-          <span class="opacity-70 ml-1">{{ allPages.length }}</span>
-        </button>
+          <div class="flex flex-col gap-2" :class="pillsExpanded ? '' : 'w-max'">
+            <div
+              v-for="(row, r) in pillRows"
+              :key="r"
+              class="flex gap-2"
+              :class="pillsExpanded ? 'flex-wrap' : 'flex-nowrap'"
+            >
+              <button
+                v-for="p in row"
+                :key="p.key"
+                type="button"
+                class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm border transition-colors cursor-pointer whitespace-nowrap"
+                :class="
+                  isActive(p)
+                    ? 'bg-purple-600 border-purple-600 text-white'
+                    : 'border-purple-300/50 hover:bg-purple-500/20'
+                "
+                @click="pickPill(p)"
+              >
+                <span v-if="p.kind === 'todo'" class="i-solar:pin-bold" />
+                {{ p.label }}
+                <span class="opacity-70">{{ p.count }}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Only shown when the pills need more than the visible width -->
         <button
+          v-if="pillsOverflow || pillsExpanded"
           type="button"
-          class="flex items-center gap-1 px-3 py-1 rounded-full text-sm border transition-colors cursor-pointer"
-          :class="
-            onlyTodo
-              ? 'bg-purple-600 border-purple-600 text-white'
-              : 'border-purple-300/50 hover:bg-purple-500/20'
-          "
-          @click="onlyTodo = !onlyTodo"
+          class="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-full border border-purple-300/50 transition-colors hover:bg-purple-500/20"
+          :aria-label="pillsExpanded ? 'Thu gọn bộ lọc' : 'Xem tất cả bộ lọc'"
+          :aria-expanded="pillsExpanded"
+          @click="pillsExpanded = !pillsExpanded"
         >
-          <span class="i-solar:pin-bold" />
-          Chưa ôn
-          <span class="opacity-70 ml-0.5">{{ todoCount }}</span>
-        </button>
-        <button
-          v-for="s in subjects"
-          :key="s.name"
-          type="button"
-          class="px-3 py-1 rounded-full text-sm border transition-colors cursor-pointer"
-          :class="
-            selectedSubject === s.name
-              ? 'bg-purple-600 border-purple-600 text-white'
-              : 'border-purple-300/50 hover:bg-purple-500/20'
-          "
-          @click="selectedSubject = s.name"
-        >
-          {{ s.name }}
-          <span class="opacity-70 ml-1">{{ s.count }}</span>
+          <span
+            class="i-solar:alt-arrow-down-linear block transition-transform duration-200"
+            :class="pillsExpanded ? 'rotate-180' : ''"
+          />
         </button>
       </div>
 
