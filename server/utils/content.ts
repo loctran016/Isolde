@@ -1,3 +1,4 @@
+// server/utils/content.ts
 import { comarkContent } from 'comark-content'
 import { defineComarkPlugin } from 'comark/parse'
 import media from 'comark-content/plugins/media'
@@ -10,6 +11,7 @@ import markdownItSup from 'markdown-it-sup'
 
 import sqliteWasm from 'comark-content/database/sqlite-wasm'
 import sqliteFullTextSearch from 'comark-content/plugins/sqlite-full-text-search'
+import pdf from './pdf-plugin'
 
 const multiMDTable = defineComarkPlugin(() => ({
   name: 'multiMDTable',
@@ -43,7 +45,7 @@ export const content = comarkContent({
   markdown: {
     plugins: [mermaid(), toc(), multiMDTable(), subscript(), superscript()],
   },
-  plugins: [media(), sqliteFullTextSearch({ database: sqliteWasm() })],
+  plugins: [media(), sqliteFullTextSearch({ database: sqliteWasm() }), pdf()],
 })
 
 import type { Node } from 'comark'
@@ -64,7 +66,7 @@ function parseSubscript(node: Node): Node[] {
 
   const [tag, props, ...children] = node
 
-  // Comment node: [null, attrs, content] — don't split its body.
+  // Comment node: [null, attrs, content] -- don't split its body.
   if (tag === null) return [node]
 
   return [[tag, props ?? {}, ...children.flatMap(parseSubscript)]]
