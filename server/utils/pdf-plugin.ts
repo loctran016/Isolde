@@ -27,6 +27,59 @@ const MIME: Record<string, string> = {
   webp: 'image/webp', svg: 'image/svg+xml',
 }
 
+// ---- Vietnamese-capable font (server only, read lazily on the first PDF export) ----
+// jasy needs real TTF/OTF bytes (not the woff2 subsets that @nuxtjs/google-fonts downloads).
+// The files live in server/assets/fonts/ and are bundled into the server function only:
+// the browser never downloads them and nothing is read when a page loads.
+const FONT_FAMILY = 'Be Vietnam Pro'
+const FONT_FILES = {
+  regular: 'BeVietnamPro-Regular.ttf',
+  bold: 'BeVietnamPro-Bold.ttf', // swap for 'BeVietnamPro-SemiBold.ttf' to get a lighter "bold"
+  italic: 'BeVietnamPro-Italic.ttf',
+  boldItalic: 'BeVietnamPro-BoldItalic.ttf',
+}
+
+type FontsOption = Record<string, Uint8Array | Record<string, Uint8Array>>
+
+let fontCache: Promise<{ full: FontsOption; regularOnly: FontsOption } | undefined> | undefined
+function loadFonts() {
+  fontCache ??= (async () => {
+    try {
+      const { useStorage } = await import('nitropack/runtime')
+      const st = useStorage('assets:pdf-fonts')
+      const read = async (file: string) => {
+        try {
+          const raw = await st.getItemRaw(file)
+          return raw ? new Uint8Array(raw as ArrayBuffer) : undefined
+        } catch {
+          return undefined
+        }
+      }
+      const [regular, bold, italic, boldItalic] = await Promise.all([
+        read(FONT_FILES.regular),
+        read(FONT_FILES.bold),
+        read(FONT_FILES.italic),
+        read(FONT_FILES.boldItalic),
+      ])
+      if (!regular) throw new Error(`${FONT_FILES.regular} not found in server/assets/fonts`)
+
+      // The README only says "Uint8Array | FontFaces", so the face keys are given under both
+      // common spellings; unknown keys are ignored.
+      const faces: Record<string, Uint8Array> = { regular, normal: regular }
+      if (bold) faces.bold = bold
+      if (italic) faces.italic = italic
+      if (boldItalic) Object.assign(faces, { boldItalic, bolditalic: boldItalic })
+
+      console.log('[pdf] fonts loaded:', Object.keys(faces).join(', '))
+      return { full: { [FONT_FAMILY]: faces }, regularOnly: { [FONT_FAMILY]: regular } }
+    } catch (e) {
+      console.warn('[pdf] custom font not loaded, falling back to Helvetica (no Vietnamese):', e)
+      return undefined
+    }
+  })()
+  return fontCache
+}
+
 const safeDecode = (s: string) => {
   try {
     return decodeURIComponent(s)
@@ -184,16 +237,30 @@ export default defineContentPlugin<PdfOptions, PdfMethods>((options = {}) => {
             .join('')
 
           const title = file.meta.stem.split('/').at(-1)!.replace(/^\d+\.(?=\D)\s*/, '')
-          const bytes = await renderPdf(md, {
-            pdf: {
-              format: 'A4',
-              margin: '20mm',
-              title,
-              footer: 'Page {{ page }} of {{ totalPages }}',
-              onOverflow: 'warn', // default is 'error': one unsplittable row at a page bottom aborts the whole PDF
-            },
-            visuals: { image: 'embed' },
-          })
+          const fonts = await loadFonts()
+          const render = (fontsOption?: FontsOption) =>
+            renderPdf(md, {
+              ...(fontsOption ? { fonts: fontsOption as any } : {}),
+              pdf: {
+                ...(fontsOption ? { font: FONT_FAMILY } : {}),
+                format: 'A4',
+                margin: '20mm',
+                title,
+                footer: 'Page {{ page }} of {{ totalPages }}',
+                onOverflow: 'warn', // default is 'error': one unsplittable row at a page bottom aborts the PDF
+              },
+              visuals: { image: 'embed' },
+            })
+
+          let bytes: Uint8Array
+          try {
+            bytes = await render(fonts?.full)
+          } catch (err) {
+            if (!fonts) throw err
+            // bold/italic faces rejected -> retry with the regular face only
+            console.warn('[pdf] render with bold/italic faces failed, retrying regular only:', err)
+            bytes = await render(fonts.regularOnly)
+          }
           return { bytes, title }
         },
       }
