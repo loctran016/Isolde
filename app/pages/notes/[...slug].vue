@@ -502,6 +502,23 @@ useNoteLanding()
       :plugins="plugins"
     ></MarkdownDocument>
     <NoteSearch />
+<div class="giscus" />
+<script src="https://giscus.app/client.js"
+        data-repo="loctran016/Isolde"
+        data-repo-id="R_kgDOTFB4VA"
+        data-category="General"
+        data-category-id="DIC_kwDOTFB4VM4DJWfX"
+        data-mapping="pathname"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="1"
+        data-input-position="top"
+        data-theme="purple_dark"
+        data-lang="vi"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async>
+</script>
   </div>
 </template>
 
