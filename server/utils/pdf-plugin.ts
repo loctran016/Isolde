@@ -185,7 +185,13 @@ export default defineContentPlugin<PdfOptions, PdfMethods>((options = {}) => {
 
           const title = file.meta.stem.split('/').at(-1)!.replace(/^\d+\.(?=\D)\s*/, '')
           const bytes = await renderPdf(md, {
-            pdf: { format: 'A4', margin: '20mm', title, footer: 'Page {{ page }} of {{ totalPages }}' },
+            pdf: {
+              format: 'A4',
+              margin: '20mm',
+              title,
+              footer: 'Page {{ page }} of {{ totalPages }}',
+              onOverflow: 'warn', // default is 'error': one unsplittable row at a page bottom aborts the whole PDF
+            },
             visuals: { image: 'embed' },
           })
           return { bytes, title }
