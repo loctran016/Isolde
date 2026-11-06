@@ -457,19 +457,6 @@ useNoteLanding()
         <button
           type="button"
           class="flex cursor-pointer items-center gap-1.5 rounded-full border border-purple-300/30 px-3 py-1.5 text-xs transition-colors hover:bg-purple-500/20 lg:text-sm"
-          aria-label="Xuất PDF"
-          :disabled="pdfBusy"
-          @click="exportPdf"
-        >
-          <span
-            :class="pdfBusy ? 'i-svg-spinners:ring-resize' : 'i-solar:download-minimalistic-linear'"
-            class="text-base"
-          />
-          <span class="hidden sm:inline">{{ pdfBusy ? 'Đang xuất…' : 'Xuất PDF' }}</span>
-        </button>
-        <button
-          type="button"
-          class="flex cursor-pointer items-center gap-1.5 rounded-full border border-purple-300/30 px-3 py-1.5 text-xs transition-colors hover:bg-purple-500/20 lg:text-sm"
           aria-label="Sao chép liên kết"
           aria-live="polite"
           @click="shareLink"
@@ -511,6 +498,19 @@ useNoteLanding()
       :components="{ mermaid: Mermaid, details: NoteDetails }"
       :plugins="plugins"
     ></MarkdownDocument>
+            <button
+          type="button"
+          class="flex cursor-pointer items-center gap-1.5 rounded-full border border-purple-300/30 px-3 py-1.5 text-xs transition-colors hover:bg-purple-500/20 lg:text-sm"
+          aria-label="Xuất PDF"
+          :disabled="pdfBusy"
+          @click="exportPdf"
+        >
+          <span
+            :class="pdfBusy ? 'i-svg-spinners:ring-resize' : 'i-solar:download-minimalistic-linear'"
+            class="text-base"
+          />
+          <span class="">{{ pdfBusy ? 'Đang xuất…' : 'Xuất PDF' }}</span>
+        </button>
     <NoteSearch />
   </div>
 </template>
