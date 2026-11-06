@@ -4,7 +4,7 @@ import { renderPdf } from 'comark-pdf'
 import { posix } from 'node:path'
 
 interface PdfOptions {
-  /** Same prefix as fs('./content', { prefix }) -- without slashes. */
+  /** Same prefix as fs('./content', { prefix }) — without slashes. */
   prefix?: string
   /** Nitro server-assets storage that holds the raw .md and image files (see nuxt.config). */
   assets?: string
@@ -18,9 +18,9 @@ interface PdfMethods {
 const SYMBOLS: Record<string, string> = {
   '<=>': '⇔', '<->': '↔', '=>': '⇒', '->': '→', '<-': '←', '<=': '≤', '>=': '≥',
   '!=': '≠', '+/-': '±', '~=': '≈', '<==>': '⟺', '<-->': '⟷', '==>': '⟹',
-  '-->': '⟶', '-->': '⟶', '<==': '⟸', '<--': '⟵',
+  '-->': '⟶', '—>': '⟶', '<==': '⟸', '<--': '⟵',
 }
-const SYMBOL_RE = /<==>|<-->|<=>|<->|==>|-->|-->|<==|<--|\+\/-|<=|>=|!=|~=|=>|->|<-/g
+const SYMBOL_RE = /<==>|<-->|<=>|<->|==>|-->|—>|<==|<--|\+\/-|<=|>=|!=|~=|=>|->|<-/g
 
 const MIME: Record<string, string> = {
   png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif',
@@ -217,7 +217,8 @@ export default defineContentPlugin<PdfOptions, PdfMethods>((options = {}) => {
             return `data:${MIME[ext] ?? 'application/octet-stream'};base64,${b64}`
           }
 
-          let md = raw
+          // decomposed (NFD) accents are a common cause of dropped letters, so always compose them
+          let md = raw.normalize('NFC')
           // ![[pic.png]] / ![[pic.png|300]]
           md = await replaceAsync(md, /!\[\[([^\]|]+)(?:\|[^\]]*)?\]\]/g, async (_m, src) =>
             `![](${await inlineImage(src!.trim())})`,
