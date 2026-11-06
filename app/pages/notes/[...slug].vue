@@ -80,15 +80,25 @@ async function exportPdf() {
   pdfBusy.value = true
   try {
     const res = await fetch(`/api/content/pdf?path=${encodeURIComponent(path)}`)
-    if (!res.ok) throw new Error(`PDF export failed (${res.status})`)
-    const url = URL.createObjectURL(await res.blob())
+    if (!res.ok) {
+      const message = await res.text()
+      console.error('[pdf]', res.status, message)
+      window.alert(`PDF lỗi ${res.status}: ${message.slice(0, 300)}`)
+      return
+    }
+    const blob = await res.blob()
+    console.log('[pdf] received', blob.type, blob.size, 'bytes')
+    const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
     a.download = `${pageTitles.at(-1) || 'note'}.pdf`
+    document.body.appendChild(a) // Safari / iPad need the link in the DOM
     a.click()
-    setTimeout(() => URL.revokeObjectURL(url), 10_000)
+    a.remove()
+    setTimeout(() => URL.revokeObjectURL(url), 30_000)
   } catch (err) {
-    console.error(err)
+    console.error('[pdf] request failed', err)
+    window.alert(`PDF lỗi: ${err instanceof Error ? err.message : String(err)}`)
   } finally {
     pdfBusy.value = false
   }
@@ -502,23 +512,6 @@ useNoteLanding()
       :plugins="plugins"
     ></MarkdownDocument>
     <NoteSearch />
-<div class="giscus" />
-<script src="https://giscus.app/client.js"
-        data-repo="loctran016/Isolde"
-        data-repo-id="R_kgDOTFB4VA"
-        data-category="General"
-        data-category-id="DIC_kwDOTFB4VM4DJWfX"
-        data-mapping="pathname"
-        data-strict="0"
-        data-reactions-enabled="1"
-        data-emit-metadata="1"
-        data-input-position="top"
-        data-theme="purple_dark"
-        data-lang="vi"
-        data-loading="lazy"
-        crossorigin="anonymous"
-        async>
-</script>
   </div>
 </template>
 

@@ -45,7 +45,34 @@ export const content = comarkContent({
   markdown: {
     plugins: [mermaid(), toc(), multiMDTable(), subscript(), superscript()],
   },
-  plugins: [media(), sqliteFullTextSearch({ database: sqliteWasm() }), pdf()],
+  plugins: [media(), sqliteFullTextSearch({ database: sqliteWasm() }), pdf({ prefix: 'notes' })],
+})
+
+// GET /api/content/pdf?path=/notes/...   (add &debug=1 to see how the raw markdown was looked up)
+content.addServeHandler('pdf', async (request) => {
+  const url = new URL(request.url)
+  const path = url.searchParams.get('path') ?? ''
+  try {
+    if (url.searchParams.has('debug')) return Response.json(await content.pdfDebug(path))
+
+    const out = await content.pdf(path)
+    if (!out) {
+      return new Response(`PDF: raw markdown not found for "${path}". Open the same URL with &debug=1`, {
+        status: 404,
+      })
+    }
+    return new Response(out.bytes as BodyInit, {
+      headers: {
+        'content-type': 'application/pdf',
+        'content-disposition': `attachment; filename="note.pdf"; filename*=UTF-8''${encodeURIComponent(out.title)}.pdf`,
+      },
+    })
+  } catch (err) {
+    console.error('[pdf] render failed:', err)
+    return new Response(`PDF render failed: ${err instanceof Error ? err.message : String(err)}`, {
+      status: 500,
+    })
+  }
 })
 
 import type { Node } from 'comark'
