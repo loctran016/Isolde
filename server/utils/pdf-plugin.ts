@@ -193,6 +193,65 @@ export default defineContentPlugin<PdfOptions, PdfMethods>((options = {}) => {
         async pdfDebug(path) {
           const { info } = await locate(path)
           const fonts = await loadFonts()
+          info.fontLoaded = !!fonts
+          info.fontError = fontError
+          try {
+            const { useStorage } = await import('nitropack/runtime')
+            info.fontKeys = await useStorage('assets:pdf-fonts').getKeys()
+          } catch (e) {
+            info.fontKeysError = String(e)
+          }
+          return info
+        },
+
+        async pdf(path) {
+          const { info, file, raw, rawKey, store } = await locate(path)
+          if (!file || !raw || !rawKey) {
+            console.warn('[pdf] raw markdown not found:', JSON.stringify(info))
+            return null
+          }
+
+          const noteDir = posix.dirname(rawKey)
+
+          // images: read from the same server assets and inline them as data URIs
+          const inlineImage = async (src: string): Promise<string> => {
+            if (!store || /^(https?:|data:)/.test(src)) return src
+            const rel = nfc(posix.join(noteDir, safeDecode(src)))
+            const base = nfc(posix.basename(safeDecode(src)))
+            const hit =
+              store.byNorm.get(rel) ?? [...store.byNorm.keys()].find((k) => k.endsWith(`/${base}`) || k === base)
+            if (!hit) return src
+            const bytes = await store.st.getItemRaw(store.byNorm.get(hit) ?? hit)
+            if (!bytes) return src
+            const ext = hit.split('.').at(-1)!.toLowerCase()
+            const b64 = Buffer.from(bytes as ArrayBuffer).toString('base64')
+            return `data:${MIME[ext] ?? 'application/octet-stream'};base64,${b64}`
+          }
+
+          // decomposed (NFD) accents are a common cause of dropped letters, so always compose them
+          let md = raw.normalize('NFC')
+          // code blocks (``` or ~~~, including mermaid) are left out of the PDF
+          md = md.replace(/^[ \t]*(`{3,}|~{3,})[^\n]*\n[\s\S]*?^[ \t]*\1[ \t]*$/gm, '').replace(/\n{3,}/g, '\n\n')
+          // ![[pic.png]] / ![[pic.png|300]]
+          md = await replaceAsync(md, /!\[\[([^\]|]+)(?:\|[^\]]*)?\]\]/g, async (_m, src) =>
+            `![](${await inlineImage(src!.trim())})`,
+          )
+          // ![alt](pic.png)
+          md = await replaceAsync(md, /!\[([^\]]*)\]\(([^)\s]+)(?:\s+"[^"]*")?\)/g, async (_m, alt, src) =>
+            `![${alt}](${await inlineImage(src!)})`,
+          )
+          // [[note|label]] -> label
+          md = md.replace(/\[\[([^\]|#]+)(?:#[^\]|]*)?(?:\|([^\]]*))?\]\]/g, (_m, target: string, alias?: string) =>
+            alias?.trim() || target.split('/').at(-1)!.replace(/\.md$/i, '').replace(/^\d+\.(?=\D)\s*/, ''),
+          )
+          // symbol shortcuts outside fenced code blocks
+          md = md
+            .split(/(```[\s\S]*?```)/g)
+            .map((part, i) => (i % 2 ? part : part.replace(SYMBOL_RE, (m) => SYMBOLS[m]!)))
+            .join('')
+
+          const title = file.meta.stem.split('/').at(-1)!.replace(/^\d+\.(?=\D)\s*/, '')
+          const fonts = await loadFonts()
 
           // jasy sometimes cannot move the block that follows a table to the next page and then
           // overflows (or draws over the footer). Where the page breaks fall depends on the margin
@@ -201,7 +260,11 @@ export default defineContentPlugin<PdfOptions, PdfMethods>((options = {}) => {
           for (const bottom of [20, 20.7, 21.4, 22.1, 19.3, 22.8, 18.6, 23.5])
             for (const gap of [8, 7.3, 8.7]) ATTEMPTS.push({ bottom, gap })
 
-          const render = (fontsOption: FontsOption | undefined, at: { bottom?: number; gap?: number }, overflow: 'error' | 'warn') =>
+          const render = (
+            fontsOption: FontsOption | undefined,
+            at: { bottom?: number; gap?: number },
+            overflow: 'error' | 'warn',
+          ) =>
             renderPdf(md, {
               ...(fontsOption ? { fonts: fontsOption as any } : {}),
               pdf: {
