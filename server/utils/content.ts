@@ -53,6 +53,14 @@ content.addServeHandler('pdf', async (request) => {
   const url = new URL(request.url)
   const path = url.searchParams.get('path') ?? ''
   try {
+    // On a cold serverless start this route can be the first thing to touch `content`; plugin
+    // methods such as content.pdf only exist once the instance is initialised.
+    await content.init()
+    if (typeof content.pdf !== 'function') {
+      return new Response('PDF plugin is not registered: add pdf({ ... }) to the plugins list in content.ts', {
+        status: 500,
+      })
+    }
     if (url.searchParams.has('debug')) return Response.json(await content.pdfDebug(path))
 
     const out = await content.pdf(path)
