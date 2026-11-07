@@ -4,7 +4,7 @@ import { renderPdf } from 'comark-pdf'
 import { posix } from 'node:path'
 
 interface PdfOptions {
-  /** Same prefix as fs('./content', { prefix }) — without slashes. */
+  /** Same prefix as fs('./content', { prefix }) -- without slashes. */
   prefix?: string
   /** Nitro server-assets storage that holds the raw .md and image files (see nuxt.config). */
   assets?: string
@@ -18,9 +18,9 @@ interface PdfMethods {
 const SYMBOLS: Record<string, string> = {
   '<=>': '⇔', '<->': '↔', '=>': '⇒', '->': '→', '<-': '←', '<=': '≤', '>=': '≥',
   '!=': '≠', '+/-': '±', '~=': '≈', '<==>': '⟺', '<-->': '⟷', '==>': '⟹',
-  '-->': '⟶', '—>': '⟶', '<==': '⟸', '<--': '⟵',
+  '-->': '⟶', '-->': '⟶', '<==': '⟸', '<--': '⟵',
 }
-const SYMBOL_RE = /<==>|<-->|<=>|<->|==>|-->|—>|<==|<--|\+\/-|<=|>=|!=|~=|=>|->|<-/g
+const SYMBOL_RE = /<==>|<-->|<=>|<->|==>|-->|-->|<==|<--|\+\/-|<=|>=|!=|~=|=>|->|<-/g
 
 const MIME: Record<string, string> = {
   png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif',
@@ -41,6 +41,7 @@ const FONT_FILES = {
 
 type FontsOption = Record<string, Uint8Array | Record<string, Uint8Array>>
 
+let fontError: string | undefined
 let fontCache: Promise<{ full: FontsOption; regularOnly: FontsOption } | undefined> | undefined
 function loadFonts() {
   fontCache ??= (async () => {
@@ -63,17 +64,18 @@ function loadFonts() {
       ])
       if (!regular) throw new Error(`${FONT_FILES.regular} not found in server/assets/fonts`)
 
-      // The README only says "Uint8Array | FontFaces", so the face keys are given under both
-      // common spellings; unknown keys are ignored.
-      const faces: Record<string, Uint8Array> = { regular, normal: regular }
+      // jasy's documented shape: { normal, bold?, italic?, boldItalic? }
+      const faces: Record<string, Uint8Array> = { normal: regular }
       if (bold) faces.bold = bold
       if (italic) faces.italic = italic
-      if (boldItalic) Object.assign(faces, { boldItalic, bolditalic: boldItalic })
+      if (boldItalic) faces.boldItalic = boldItalic
 
       console.log('[pdf] fonts loaded:', Object.keys(faces).join(', '))
       return { full: { [FONT_FAMILY]: faces }, regularOnly: { [FONT_FAMILY]: regular } }
     } catch (e) {
+      fontError = String(e)
       console.warn('[pdf] custom font not loaded, falling back to Helvetica (no Vietnamese):', e)
+      fontCache = undefined // retry on the next export
       return undefined
     }
   })()
@@ -190,6 +192,15 @@ export default defineContentPlugin<PdfOptions, PdfMethods>((options = {}) => {
       return {
         async pdfDebug(path) {
           const { info } = await locate(path)
+          const fonts = await loadFonts()
+          info.fontLoaded = !!fonts
+          info.fontError = fontError
+          try {
+            const { useStorage } = await import('nitropack/runtime')
+            info.fontKeys = await useStorage('assets:pdf-fonts').getKeys()
+          } catch (e) {
+            info.fontKeysError = String(e)
+          }
           return info
         },
 

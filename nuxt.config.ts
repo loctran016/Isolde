@@ -31,6 +31,8 @@ export default defineNuxtConfig({
       { baseName: 'comark', dir: fileURLToPath(new URL('./.content', import.meta.url)) },
       // raw .md + images, bundled into the Vercel function (used by the PDF export)
       { baseName: 'notes-raw', dir: fileURLToPath(new URL('./content', import.meta.url)) },
+      // TTF fonts with Vietnamese glyphs for the PDF export (put them in server/assets/fonts/)
+      { baseName: 'pdf-fonts', dir: fileURLToPath(new URL('./server/assets/fonts', import.meta.url)) },
     ],
     publicAssets: [
       {
@@ -78,9 +80,9 @@ export default defineNuxtConfig({
     '/sw.js': { ssr: false, prerender: false },
     // ISR on static content pages – regenerate every 2 minutes
     '/musical': { swr: 300 },
-    '/notes': { swr: 30 },
     '/gallery': { swr: 300 },
-    '/': { swr: 30 },
+    '/': { swr: 300 },
+    '/notes': { swr: 300 },
 
     // All other pages remain dynamic SSR (default)
     // '/fitness': { ssr: true },   ← implicit, no rule needed
