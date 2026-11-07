@@ -276,7 +276,7 @@ export default defineContentPlugin<PdfOptions, PdfMethods>((options = {}) => {
                     : { top: '20mm', left: '20mm', right: '20mm', bottom: `${at.bottom}mm` },
                 ...(at.gap === undefined ? {} : { gap: at.gap }),
                 title,
-                footer: 'Page {{ page }} of {{ totalPages }}',
+                footerRight: 'Page {{ page }} of {{ totalPages }}',
                 onOverflow: overflow,
               },
               visuals: { image: 'embed' },
