@@ -9,6 +9,14 @@ import { defineComarkPlugin } from 'comark/parse'
 import markdownItMultimdTable from 'markdown-it-multimd-table'
 import Giscus from '@giscus/vue'
 
+const { themePref, cycleTheme } = useTheme()
+
+const giscusTheme = computed(() => {
+  if (themePref.value === 'system') return 'preferred_color_scheme'
+  if (themePref.value === 'dark') return 'dark_protanopia'
+  return 'light_protanopia'
+})
+
 const multimdTablePlugin: MarkdownItPlugin = (md) => {
   md.use(markdownItMultimdTable, {
     multiline: true,
@@ -520,14 +528,13 @@ useNoteLanding()
       mapping="pathname"
       strict="0"
       reactions-enabled="1"
-      emit-metadata="0"
-      input-position="bottom"
-      theme="preferred_color_scheme"
+      emit-metadata="1"
+      input-position="top"
+      :theme="giscusTheme"
       lang="vi"
       crossorigin="anonymous"
       async
-    >
-    </Giscus>
+    />
     <!-- <NoteComments /> -->
     <NoteSearch />
   </div>
