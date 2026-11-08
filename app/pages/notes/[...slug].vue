@@ -3,11 +3,11 @@ import type { NavigationItem } from 'comark-content'
 import type { MarkdownItPlugin } from 'comark'
 // import { MarkdownDocument } from '@comark/vue'
 // import { parseMarkdown } from 'comark'
-import toc from 'comark/plugins/toc'
 import mermaid, { Mermaid } from '@comark/nuxt/plugins/mermaid'
 import NoteDetails from '~/components/notes/NoteDetails.vue'
 import { defineComarkPlugin } from 'comark/parse'
 import markdownItMultimdTable from 'markdown-it-multimd-table'
+import Giscus from '@giscus/vue'
 
 const multimdTablePlugin: MarkdownItPlugin = (md) => {
   md.use(markdownItMultimdTable, {
@@ -22,7 +22,7 @@ const multimdTable = defineComarkPlugin(() => ({
   markdownItPlugins: [multimdTablePlugin],
 }))
 
-const plugins = [({ depth: 3, title: 'On This Page' }), multimdTable(), mermaid()]
+const plugins = [multimdTable(), mermaid()]
 
 const route = useRoute()
 const path = route.path.replace(/\/+$/, '') || '/'
@@ -424,7 +424,7 @@ function numberHeadings(nodes: any[], top: number) {
   walk(nodes)
 }
 numberHeadings(page.value.nodes, topHeading.value)
-  
+
 useNoteLanding()
 </script>
 
@@ -498,19 +498,37 @@ useNoteLanding()
       :components="{ mermaid: Mermaid, details: NoteDetails }"
       :plugins="plugins"
     ></MarkdownDocument>
-            <button
-          type="button"
-          class="flex cursor-pointer items-center gap-1.5 rounded-full border border-purple-300/30 px-3 py-1.5 text-xs transition-colors hover:bg-purple-500/20 lg:text-sm"
-          aria-label="Xuất PDF"
-          :disabled="pdfBusy"
-          @click="exportPdf"
-        >
-          <span
-            :class="pdfBusy ? 'i-svg-spinners:ring-resize' : 'i-solar:download-minimalistic-linear'"
-            class="text-base"
-          />
-          <span class="">{{ pdfBusy ? 'Đang xuất…' : 'Xuất PDF' }}</span>
-        </button>
+    <button
+      type="button"
+      class="flex cursor-pointer items-center gap-1.5 rounded-full border border-purple-300/30 px-3 py-1.5 text-xs transition-colors hover:bg-purple-500/20 lg:text-sm"
+      aria-label="Xuất PDF"
+      :disabled="pdfBusy"
+      @click="exportPdf"
+    >
+      <span
+        :class="pdfBusy ? 'i-svg-spinners:ring-resize' : 'i-solar:download-minimalistic-linear'"
+        class="text-base"
+      />
+      <span class="">{{ pdfBusy ? 'Đang xuất…' : 'Xuất PDF' }}</span>
+    </button>
+    <Giscus
+      src="https://giscus.app/client.js"
+      repo="loctran016/Isolde"
+      repoId="R_kgDOTFB4VA"
+      category="General"
+      categoryId="DIC_kwDOTFB4VM4DJWfX"
+      mapping="pathname"
+      strict="0"
+      reactions-enabled="1"
+      emit-metadata="0"
+      input-position="bottom"
+      theme="preferred_color_scheme"
+      lang="vi"
+      crossorigin="anonymous"
+      async
+    >
+    </Giscus>
+    <!-- <NoteComments /> -->
     <NoteSearch />
   </div>
 </template>
@@ -607,7 +625,7 @@ useNoteLanding()
 
 [id] {
   scroll-margin-top: calc(5rem + env(safe-area-inset-top, 0px));
-/* top: calc(5rem + env(safe-area-inset-top, 0px));
+  /* top: calc(5rem + env(safe-area-inset-top, 0px));
 position: sticky */
 }
 
@@ -627,7 +645,6 @@ position: sticky */
 }
 
 .markdown-body li ul li {
-list-style-type: circle;
+  list-style-type: circle;
 }
-
 </style>
