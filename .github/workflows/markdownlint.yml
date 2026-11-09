@@ -1,4 +1,4 @@
-name: Markdown Linter
+name: Markdown Linter & Spellchecker
 
 on:
   push:
@@ -71,6 +71,6 @@ jobs:
       - name: Spellchecker CLI
         uses: tbroadley/spellchecker-cli-action@v1
         with:
-          language: 'vi-VN'
+          language: 'vi'
       - name: Spellchecker CLI Summary
         uses: austenstone/spellchecker-cli-action-summary@v1.0
