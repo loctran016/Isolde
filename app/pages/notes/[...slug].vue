@@ -442,7 +442,10 @@ useNoteLanding()
   >
     <!-- Breadcrumb + actions -->
     <div class="not-prose mb-4 flex items-center justify-between gap-3">
-      <NuxtLink class="flex min-w-0 cursor-pointer gap-2 opacity-90" to="/notes">
+      <NuxtLink
+        class="flex min-w-0 cursor-pointer gap-2 opacity-90"
+        :to="{ path: '/notes', query: { subject: pageTitles[0] } }"
+      >
         <div class="i-solar:home-2-bold lg:text-xl" />
         <span class="truncate text-sm lg:text-base">
           {{ pageTitles[0] }} /
@@ -508,7 +511,7 @@ useNoteLanding()
     ></MarkdownDocument>
     <button
       type="button"
-      class="flex cursor-pointer items-center gap-1.5 rounded-full border border-purple-300/30 px-3 py-1.5 text-xs transition-colors hover:bg-purple-500/20 lg:text-sm"
+      class="flex cursor-pointer items-center gap-1.5 rounded-full border border-purple-300/30 px-3 py-1.5 text-xs transition-colors hover:bg-purple-500/20 lg:text-sm ml-auto"
       aria-label="Xuất PDF"
       :disabled="pdfBusy"
       @click="exportPdf"
@@ -535,10 +538,30 @@ useNoteLanding()
       crossorigin="anonymous"
       async
     />
-    <!-- <NoteComments /> -->
     <NoteSearch />
   </div>
-<div class="px-2 py-6 w-screen bg-slate-100/10 dark:bg-slate-800/10"> <a href="https://isolde.vercel.app">Isolde</a> © 2026 by <a href="https://github.com/loctran016">Tran Tan Loc</a> is licensed under <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a><img src="https://mirrors.creativecommons.org/presskit/icons/cc.svg" alt="" style="max-width: 1em;max-height:1em;margin-left: .2em;"><img src="https://mirrors.creativecommons.org/presskit/icons/by.svg" alt="" style="max-width: 1em;max-height:1em;margin-left: .2em;"><img src="https://mirrors.creativecommons.org/presskit/icons/nc.svg" alt="" style="max-width: 1em;max-height:1em;margin-left: .2em;"><img src="https://mirrors.creativecommons.org/presskit/icons/sa.svg" alt="" style="max-width: 1em;max-height:1em;margin-left: .2em;"></div> 
+  <div class="px-2 py-6 w-screen bg-slate-100/10 dark:bg-slate-800/10 flex">
+    <a href="https://isolde.vercel.app">Isolde</a> © 2026 by
+    <a href="https://github.com/loctran016">Tran Tan Loc</a> is licensed under
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a
+    ><img
+      src="https://mirrors.creativecommons.org/presskit/icons/cc.svg"
+      alt=""
+      style="max-width: 1em; max-height: 1em; margin-left: 0.2em"
+    /><img
+      src="https://mirrors.creativecommons.org/presskit/icons/by.svg"
+      alt=""
+      style="max-width: 1em; max-height: 1em; margin-left: 0.2em"
+    /><img
+      src="https://mirrors.creativecommons.org/presskit/icons/nc.svg"
+      alt=""
+      style="max-width: 1em; max-height: 1em; margin-left: 0.2em"
+    /><img
+      src="https://mirrors.creativecommons.org/presskit/icons/sa.svg"
+      alt=""
+      style="max-width: 1em; max-height: 1em; margin-left: 0.2em"
+    />
+  </div>
 </template>
 
 <style>

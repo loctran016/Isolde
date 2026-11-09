@@ -182,6 +182,39 @@ const pillsFade = computed(() => {
   return { maskImage: mask, WebkitMaskImage: mask }
 })
 
+// ---- Opened from a note's breadcrumb as /notes?subject=Nội khoa: select that pill ----
+const route = useRoute()
+const router = useRouter()
+
+// A selected pill can be off screen in the sideways-scrolling rows, so bring it into view
+function scrollActivePill() {
+  pillsEl.value
+    ?.querySelector('[data-active="true"]')
+    ?.scrollIntoView({ inline: 'center', block: 'nearest' })
+}
+
+function applyQuery() {
+  const s = route.query.subject
+  const wanted = typeof s === 'string' ? s : 'all'
+  // an unknown name (a renamed folder, a typed URL) falls back to "Tất cả"
+  selectedSubject.value = subjects.value.some((x) => x.name === wanted) ? wanted : 'all'
+  if (selectedSubject.value !== 'all') {
+    onlyTodo.value = false
+    nextTick(() => requestAnimationFrame(scrollActivePill))
+  }
+}
+
+// Client only (like the pins above), so the prerendered page and the first client render match
+onMounted(applyQuery)
+watch(() => route.query.subject, applyQuery) // e.g. the notes icon in the header (no ?subject) resets it
+
+// Keep the address in step with the chosen pill, so Back, Reload and shared links keep the filter
+watch(selectedSubject, (s) => {
+  const current = typeof route.query.subject === 'string' ? route.query.subject : 'all'
+  if (s === current) return
+  router.replace({ query: { ...route.query, subject: s === 'all' ? undefined : s } })
+})
+
 const filteredPages = computed(() => {
   const q = normalize(search.value)
   const matches = allPages.value.filter(
@@ -267,6 +300,7 @@ watch([selectedSubject, search, onlyTodo], () => {
                     ? 'bg-purple-600 border-purple-600 text-white'
                     : 'border-purple-300/50 hover:bg-purple-500/20'
                 "
+                :data-active="isActive(p)"
                 @click="pickPill(p)"
               >
                 <span v-if="p.kind === 'todo'" class="i-solar:pin-bold" />

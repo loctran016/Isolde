@@ -1,0 +1,76 @@
+name: Markdown Linter
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'content' # a submodule update shows up as a change to this one path
+  repository_dispatch:
+    types: [content-updated] # sent by the y repo
+  workflow_dispatch:
+
+concurrency:
+  group: note-audio
+  cancel-in-progress: false
+
+jobs:
+  markdown-lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: recursive # content/ is the "y" repo
+
+      # Use the newest notes from y, not just the commit this repo currently points to
+      - name: Update content to the latest y
+        run: git submodule update --init --remote content
+
+      # Keep the site and the audio in step: point this repo at that version of the notes.
+      # Delete this step if you already update the pointer another way.
+      - name: Point Isolde at the new notes
+        shell: bash
+        run: |
+          if ! git diff --quiet -- content; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add content
+            git commit -m "chore: update notes"
+            git pull --rebase origin "${GITHUB_REF_NAME}"
+            git push origin HEAD:${GITHUB_REF_NAME}
+          fi
+      - name: Markdownlint
+        uses: DavidAnson/markdownlint-cli2-action@main
+        with:
+          globs: 'content/**/*.md'
+  spellchecker:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: recursive # content/ is the "y" repo
+
+      # Use the newest notes from y, not just the commit this repo currently points to
+      - name: Update content to the latest y
+        run: git submodule update --init --remote content
+
+      # Keep the site and the audio in step: point this repo at that version of the notes.
+      # Delete this step if you already update the pointer another way.
+      - name: Point Isolde at the new notes
+        shell: bash
+        run: |
+          if ! git diff --quiet -- content; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add content
+            git commit -m "chore: update notes"
+            git pull --rebase origin "${GITHUB_REF_NAME}"
+            git push origin HEAD:${GITHUB_REF_NAME}
+          fi
+      - name: Spellchecker CLI
+        uses: tbroadley/spellchecker-cli-action@v1
+        with:
+          language: 'vi-VN'
+      - name: Spellchecker CLI Summary
+        uses: austenstone/spellchecker-cli-action-summary@v1.0
