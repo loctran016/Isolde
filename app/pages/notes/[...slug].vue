@@ -540,7 +540,7 @@ useNoteLanding()
     />
     <NoteSearch />
   </div>
-  <div class="px-2 py-6 w-screen bg-slate-100/10 dark:bg-slate-800/10 flex">
+  <div class="px-2 py-4 w-screen bg-slate-100/20 dark:bg-slate-800/30 items-center flex-wrap gap-2 flex">
     <a href="https://isolde.vercel.app">Isolde</a> © 2026 by
     <a href="https://github.com/loctran016">Tran Tan Loc</a> is licensed under
     <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a
