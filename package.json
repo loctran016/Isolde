@@ -37,6 +37,7 @@
     "cloudinary": "^2.11.0",
     "comark-content": "^0.4.1",
     "comark-pdf": "^0.8.0",
+    "comark-ui": "^0.10.1",
     "dayjs": "^1.11.23",
     "echarts": "^6.1.0",
     "exceljs": "^4.4.0",

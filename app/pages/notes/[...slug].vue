@@ -1,21 +1,22 @@
 <script setup lang="ts">
 import type { NavigationItem } from 'comark-content'
 import type { MarkdownItPlugin } from 'comark'
-// import { MarkdownDocument } from '@comark/vue'
-// import { parseMarkdown } from 'comark'
 import mermaid, { Mermaid } from '@comark/nuxt/plugins/mermaid'
 import NoteDetails from '~/components/notes/NoteDetails.vue'
 import { defineComarkPlugin } from 'comark/parse'
 import markdownItMultimdTable from 'markdown-it-multimd-table'
 import Giscus from '@giscus/vue'
+import comarkUi from 'comark-ui/vue'
 
-const { themePref, cycleTheme } = useTheme()
+const { themePref } = useTheme()
 
 const giscusTheme = computed(() => {
   if (themePref.value === 'system') return 'preferred_color_scheme'
   if (themePref.value === 'dark') return 'dark_protanopia'
   return 'light_protanopia'
 })
+
+const { plugins: comarkUiPlugins, components: comarkUiComponents } = comarkUi()
 
 const multimdTablePlugin: MarkdownItPlugin = (md) => {
   md.use(markdownItMultimdTable, {
@@ -30,7 +31,7 @@ const multimdTable = defineComarkPlugin(() => ({
   markdownItPlugins: [multimdTablePlugin],
 }))
 
-const plugins = [multimdTable(), mermaid()]
+const plugins = [comarkUiPlugins, multimdTable(), mermaid()]
 
 const route = useRoute()
 const path = route.path.replace(/\/+$/, '') || '/'
@@ -506,7 +507,7 @@ useNoteLanding()
     <MarkdownDocument
       :value="page"
       :class="['markdown-body', `top-h${topHeading}`]"
-      :components="{ mermaid: Mermaid, details: NoteDetails }"
+      :components="{ mermaid: Mermaid, details: NoteDetails, comarkUiComponents }"
       :plugins="plugins"
     ></MarkdownDocument>
     <button
@@ -540,7 +541,9 @@ useNoteLanding()
     />
     <NoteSearch />
   </div>
-  <div class="px-2 py-4 w-screen bg-slate-100/20 dark:bg-slate-800/30 items-center flex-wrap gap-2 flex">
+  <div
+    class="px-2 py-4 w-screen bg-slate-100/20 dark:bg-slate-800/30 items-center flex-wrap gap-2 flex"
+  >
     <a href="https://isolde.vercel.app">Isolde</a> © 2026 by
     <a href="https://github.com/loctran016">Tran Tan Loc</a> is licensed under
     <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a
