@@ -37,7 +37,7 @@ export const content = comarkContent({
   ),
   markdown: {
     plugins: [
-      ...comarkUiPlugins,
+     // ...comarkUiPlugins,
       mermaid(),
       toc(),
       multiMDTable(),
