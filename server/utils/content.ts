@@ -7,27 +7,20 @@ import mermaid from 'comark/plugins/mermaid'
 import toc from 'comark/plugins/toc'
 import { withSnapshot } from 'comark-content/sources/snapshot'
 import markdownItMultiMDTable from 'markdown-it-multimd-table'
-import markdownItSup from 'markdown-it-sup'
+import comarkUi from 'comark-ui/html' // server side: use the framework-free entry, not comark-ui/vue
 
 import sqliteWasm from 'comark-content/database/sqlite-wasm'
 import sqliteFullTextSearch from 'comark-content/plugins/sqlite-full-text-search'
 import pdf from './pdf-plugin'
 
+// Only the parse plugins are needed here; the components are registered on the page.
+// comark-ui also ships its own mermaid (Pele), mark (^sup^, ==mark==), footnotes, math...
+// If something in your notes changes after adding it, pass `false` for that plugin here.
+const { plugins: comarkUiPlugins } = comarkUi()
+
 const multiMDTable = defineComarkPlugin(() => ({
   name: 'multiMDTable',
   markdownItPlugins: [markdownItMultiMDTable],
-}))
-
-const subscript = defineComarkPlugin(() => ({
-  name: 'subscript',
-  post(state) {
-    state.tree.nodes = state.tree.nodes.flatMap(parseSubscript)
-  },
-}))
-
-const superscript = defineComarkPlugin(() => ({
-  name: 'superscript',
-  markdownItPlugins: [markdownItSup],
 }))
 
 export const content = comarkContent({
@@ -43,7 +36,12 @@ export const content = comarkContent({
       ),
   ),
   markdown: {
-    plugins: [mermaid(), toc(), multiMDTable(), subscript(), superscript()],
+    plugins: [
+      ...comarkUiPlugins,
+      mermaid(),
+      toc(),
+      multiMDTable(),
+    ],
   },
   plugins: [media(), sqliteFullTextSearch({ database: sqliteWasm() }), pdf({ prefix: 'notes', assets: 'assets:notes-raw' })],
 })
@@ -82,27 +80,3 @@ content.addServeHandler('pdf', async (request) => {
     })
   }
 })
-
-import type { Node } from 'comark'
-
-function parseSubscript(node: Node): Node[] {
-  if (typeof node === 'string') {
-    const nodes: Node[] = []
-
-    for (const [index, part] of Object.entries(node.split(/~([^~\n]+)~/u))) {
-      if (part) {
-        const isEvenIndex = Number(index) % 2 === 0
-        nodes.push(isEvenIndex ? part : ['sub', {}, part])
-      }
-    }
-
-    return nodes
-  }
-
-  const [tag, props, ...children] = node
-
-  // Comment node: [null, attrs, content] -- don't split its body.
-  if (tag === null) return [node]
-
-  return [[tag, props ?? {}, ...children.flatMap(parseSubscript)]]
-}
