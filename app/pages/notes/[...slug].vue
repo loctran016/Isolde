@@ -10,10 +10,14 @@ import comarkUi from 'comark-ui/vue'
 
 const { themePref } = useTheme()
 
+// Custom giscus themes live in public/giscus/ (light.css, dark.css, system.css).
+// giscus needs an absolute URL, so the site origin is added in front.
+const origin = useRequestURL().origin
+
 const giscusTheme = computed(() => {
-  if (themePref.value === 'system') return 'preferred_color_scheme'
-  if (themePref.value === 'dark') return 'dark_protanopia'
-  return 'light_protanopia'
+  if (themePref.value === 'system') return `${origin}/giscus/system.css`
+  if (themePref.value === 'dark') return `${origin}/giscus/dark.css`
+  return `${origin}/giscus/light.css`
 })
 
 const { plugins: comarkUiPlugins, components: comarkUiComponents } = comarkUi()
@@ -541,8 +545,9 @@ useNoteLanding()
     />
     <NoteSearch />
   </div>
+  <!-- pb-24 keeps the floating search button from covering the licence text -->
   <div
-    class="px-2 py-4 w-screen bg-slate-100/20 dark:bg-slate-800/30 items-center flex-wrap gap-2 flex"
+    class="px-2 pt-4 pb-24 w-screen bg-slate-100/20 dark:bg-slate-800/30 items-center flex-wrap gap-2 flex"
   >
     <a href="https://isolde.vercel.app">Isolde</a> © 2026 by
     <a href="https://github.com/loctran016">Tran Tan Loc</a> is licensed under
