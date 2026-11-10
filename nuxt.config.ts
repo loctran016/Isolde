@@ -167,6 +167,7 @@ export default defineNuxtConfig({
       globPatterns: ['**/*.{js,css,html,png,svg,ico}'],
       navigateFallback: '/',
       navigateFallbackDenylist: [/^\/api\//], // optional, good practice
+  maximumFileSizeToCacheInBytes: 3000000
     },
     client: {
       installPrompt: true,
