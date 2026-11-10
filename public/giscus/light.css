@@ -1,0 +1,43 @@
+/* Isolde giscus theme: light (page bg = orange-50 #fff7ed, text = stone-900) */
+@import url("https://giscus.app/themes/light.css");
+
+main {
+  --color-canvas-default: #fffbf6;  /* comment cards, a step lighter than the page */
+  --color-canvas-overlay: #fffbf6;
+  --color-canvas-inset: #fff1e0;    /* textarea / inset areas */
+  --color-canvas-subtle: #fdf0e1;   /* tab bar, headers */
+
+  --color-fg-default: #1c1917;      /* stone-900 */
+  --color-fg-muted: #57534e;        /* stone-600 */
+  --color-fg-subtle: #78716c;       /* stone-500 */
+
+  --color-border-default: #dfd6cb;
+  --color-border-muted: #ece4d9;
+  --color-neutral-muted: rgba(120, 100, 80, 0.15);
+
+  --color-accent-fg: #7e22ce;       /* purple-700 */
+  --color-accent-emphasis: #9333ea; /* purple-600 */
+
+  --color-btn-text: #1c1917;
+  --color-btn-bg: #fdf0e1;
+  --color-btn-border: #dfd6cb;
+  --color-btn-hover-bg: #f9e5d0;
+  --color-btn-hover-border: #cfc3b5;
+  --color-btn-active-bg: #f4dcc3;
+  --color-btn-selected-bg: #f4dcc3;
+
+  --color-btn-primary-text: #ffffff;
+  --color-btn-primary-bg: #9333ea;
+  --color-btn-primary-border: rgba(126, 34, 206, 0.6);
+  --color-btn-primary-hover-bg: #7e22ce;
+  --color-btn-primary-hover-border: rgba(107, 33, 168, 0.6);
+  --color-btn-primary-selected-bg: #6b21a8;
+  --color-btn-primary-disabled-text: rgba(255, 255, 255, 0.85);
+  --color-btn-primary-disabled-bg: #d8b4fe;
+  --color-btn-primary-disabled-border: rgba(147, 51, 234, 0.2);
+
+  --color-action-list-item-default-hover-bg: rgba(120, 100, 80, 0.1);
+  --color-segmented-control-bg: rgba(120, 100, 80, 0.1);
+  --color-segmented-control-button-bg: #fffbf6;
+  --color-segmented-control-button-selected-border: #cfc3b5;
+}

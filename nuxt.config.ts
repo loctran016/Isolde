@@ -83,7 +83,7 @@ export default defineNuxtConfig({
     '/gallery': { swr: 300 },
     '/': { swr: 300 },
     '/notes': { swr: 300 },
-
+    '/giscus/**': { headers: { 'access-control-allow-origin': 'https://giscus.app' } },
     // All other pages remain dynamic SSR (default)
     // '/fitness': { ssr: true },   ← implicit, no rule needed
   },

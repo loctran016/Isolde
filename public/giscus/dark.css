@@ -1,0 +1,43 @@
+/* Isolde giscus theme: dark (page bg = slate-900 #0f172a, text = slate-200) */
+@import url("https://giscus.app/themes/dark.css");
+
+main {
+  --color-canvas-default: #162036;  /* comment cards, a step lighter than the page */
+  --color-canvas-overlay: #162036;
+  --color-canvas-inset: #0f172a;    /* textarea = same as page, reads as inset */
+  --color-canvas-subtle: #1e293b;   /* tab bar, headers (slate-800) */
+
+  --color-fg-default: #e2e8f0;      /* slate-200 */
+  --color-fg-muted: #94a3b8;        /* slate-400 */
+  --color-fg-subtle: #64748b;       /* slate-500 */
+
+  --color-border-default: #334155;  /* slate-700 */
+  --color-border-muted: #263247;
+  --color-neutral-muted: rgba(148, 163, 184, 0.2);
+
+  --color-accent-fg: #d8b4fe;       /* purple-300 */
+  --color-accent-emphasis: #9333ea;
+
+  --color-btn-text: #e2e8f0;
+  --color-btn-bg: #1e293b;
+  --color-btn-border: #334155;
+  --color-btn-hover-bg: #273449;
+  --color-btn-hover-border: #475569;
+  --color-btn-active-bg: #2f3d54;
+  --color-btn-selected-bg: #2f3d54;
+
+  --color-btn-primary-text: #ffffff;
+  --color-btn-primary-bg: #9333ea;
+  --color-btn-primary-border: rgba(216, 180, 254, 0.25);
+  --color-btn-primary-hover-bg: #a855f7;
+  --color-btn-primary-hover-border: rgba(216, 180, 254, 0.35);
+  --color-btn-primary-selected-bg: #7e22ce;
+  --color-btn-primary-disabled-text: rgba(226, 232, 240, 0.5);
+  --color-btn-primary-disabled-bg: #3b2a5c;
+  --color-btn-primary-disabled-border: rgba(216, 180, 254, 0.1);
+
+  --color-action-list-item-default-hover-bg: rgba(148, 163, 184, 0.12);
+  --color-segmented-control-bg: rgba(148, 163, 184, 0.12);
+  --color-segmented-control-button-bg: #1e293b;
+  --color-segmented-control-button-selected-border: #475569;
+}
