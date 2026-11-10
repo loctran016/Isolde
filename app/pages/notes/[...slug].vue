@@ -20,8 +20,6 @@ const giscusTheme = computed(() => {
   return `${origin}/giscus/light.css`
 })
 
-import comarkUi from 'comark-ui/vue'
-
 // comark-ui bundles every block (steps, cards, tabs, ...). It returns { plugins, components }.
 const { plugins: comarkUiPlugins, components: comarkUiComponents } = comarkUi()
 
@@ -518,7 +516,6 @@ useNoteLanding()
       :value="page"
       :class="['markdown-body', `top-h${topHeading}`]"
       :components="{ ...comarkUiComponents, mermaid: Mermaid, details: NoteDetails }"
-      :plugins="plugins"
     ></MarkdownDocument>
     <button
       type="button"
