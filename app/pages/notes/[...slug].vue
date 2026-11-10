@@ -20,6 +20,9 @@ const giscusTheme = computed(() => {
   return `${origin}/giscus/light.css`
 })
 
+import comarkUi from 'comark-ui/vue'
+
+// comark-ui bundles every block (steps, cards, tabs, ...). It returns { plugins, components }.
 const { plugins: comarkUiPlugins, components: comarkUiComponents } = comarkUi()
 
 const multimdTablePlugin: MarkdownItPlugin = (md) => {
@@ -35,7 +38,8 @@ const multimdTable = defineComarkPlugin(() => ({
   markdownItPlugins: [multimdTablePlugin],
 }))
 
-const plugins = [comarkUiPlugins, multimdTable(), mermaid()]
+// comarkUiPlugins is an array, so it is spread (not nested) into the list
+const plugins = [...comarkUiPlugins, multimdTable(), mermaid()]
 
 const route = useRoute()
 const path = route.path.replace(/\/+$/, '') || '/'
@@ -320,6 +324,7 @@ wrapTables(page.value.nodes)
 // Auto-runs when the URL has ?parseTest. You can also call it from the browser console:
 //   __comarkTest()                                        -> the built-in multimd sample
 //   __comarkTest('| a | b |\n|---|---|\n| 1 | 2 |')        -> your own markdown
+//   __comarkTest('::steps{level="3"}\n### One\nHi\n### Two\nHo\n::')  -> check comark-steps
 const PARSE_SAMPLE = String.raw`|             | Grouping            ||
 | First       | Second   | Third    |
 | ----------- | :------: | -------: |
@@ -356,7 +361,7 @@ async function runParseTest(markdown: string = PARSE_SAMPLE) {
   const cases: { name: string; plugins: any[] }[] = [
     { name: 'no plugins', plugins: [] },
     { name: 'multimd-table only', plugins: [multimdTable()] },
-    { name: 'page plugins (toc + multimd + mermaid)', plugins },
+    { name: 'page plugins (comark-ui + multimd + mermaid)', plugins },
   ]
 
   for (const c of cases) {
@@ -508,10 +513,11 @@ useNoteLanding()
       </div>
     </details>
 
+    <!-- comark-ui components are spread first, so your own mermaid and details still win -->
     <MarkdownDocument
       :value="page"
       :class="['markdown-body', `top-h${topHeading}`]"
-      :components="{ mermaid: Mermaid, details: NoteDetails, comarkUiComponents }"
+      :components="{ ...comarkUiComponents, mermaid: Mermaid, details: NoteDetails }"
       :plugins="plugins"
     ></MarkdownDocument>
     <button
