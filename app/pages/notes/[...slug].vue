@@ -594,7 +594,7 @@ useNoteLanding()
   max-width: 100%;
   margin: 1.5em 0;
   border: 1px solid var(--tbl-line);
-  border-radius: 0.75rem;
+  border-radius: 0.5rem;
   -webkit-overflow-scrolling: touch;
 }
 .dark .table-wrap {
