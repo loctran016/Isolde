@@ -13,15 +13,17 @@ import sqliteWasm from 'comark-content/database/sqlite-wasm'
 import sqliteFullTextSearch from 'comark-content/plugins/sqlite-full-text-search'
 import pdf from './pdf-plugin'
 
-// Only the parse plugins are needed here; the components are registered on the page.
-// comark-ui also ships its own mermaid (Pele), mark (^sup^, ==mark==), footnotes, math...
-// If something in your notes changes after adding it, pass `false` for that plugin here.
 const { plugins: comarkUiPlugins } = comarkUi()
+
+const multiMDTablePlugin: MarkdownItPlugin = (md) => {
+  md.use(markdownItMultiMDTable, { multiline: true, rowspan: true, headerless: true })
+}
 
 const multiMDTable = defineComarkPlugin(() => ({
   name: 'multiMDTable',
-  markdownItPlugins: [markdownItMultiMDTable],
+  markdownItPlugins: [multiMDTablePlugin],
 }))
+
 
 export const content = comarkContent({
   source: withSnapshot(

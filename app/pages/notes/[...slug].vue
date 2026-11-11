@@ -643,15 +643,78 @@ useNoteLanding()
 }
 
 /* Zebra rows: odd and even rows get two slightly different tints */
-.prose .table-wrap tbody tr:nth-child(odd) > * {
+
+/* .prose .table-wrap tbody tr:nth-child(odd) > * {
   background: var(--tbl-odd);
 }
 .prose .table-wrap tbody tr:nth-child(even) > * {
   background: var(--tbl-even);
+} */
+
+/* Above is old version, below is new */
+
+.prose .table-wrap tbody tr:nth-child(odd) > * {
+  background: var(--row-bg, var(--tbl-odd));
 }
+.prose .table-wrap tbody tr:nth-child(even) > * {
+  background: var(--row-bg, var(--tbl-even));
+}
+
 .prose .table-wrap tbody tr:hover > * {
   background: var(--tbl-hover);
 }
+
+/* ---- Grouped tables: a band row starts a group; the rows below take its colour until the next band ---- */
+.table-wrap {
+  --h1: #0ea5e9; /* group 1: sky */
+  --h2: #10b981; /* group 2: emerald */
+  --h3: #6366f1; /* group 3: indigo */
+  --h4: #f97316; /* group 4: orange */
+  --row-1: color-mix(in srgb, var(--tbl-bg) 90%, var(--h1));
+  --row-2: color-mix(in srgb, var(--tbl-bg) 90%, var(--h2));
+  --row-3: color-mix(in srgb, var(--tbl-bg) 90%, var(--h3));
+  --row-4: color-mix(in srgb, var(--tbl-bg) 90%, var(--h4));
+  --band-1c: color-mix(in srgb, var(--tbl-bg) 68%, var(--h1));
+  --band-2c: color-mix(in srgb, var(--tbl-bg) 68%, var(--h2));
+  --band-3c: color-mix(in srgb, var(--tbl-bg) 68%, var(--h3));
+  --band-4c: color-mix(in srgb, var(--tbl-bg) 68%, var(--h4));
+}
+
+/* rows after a band (zero specificity, so the last band above a row wins) */
+:where(.table-wrap tbody tr:has(.band-1) ~ tr) { --row-bg: var(--row-1); }
+:where(.table-wrap tbody tr:has(.band-2) ~ tr) { --row-bg: var(--row-2); }
+:where(.table-wrap tbody tr:has(.band-3) ~ tr) { --row-bg: var(--row-3); }
+:where(.table-wrap tbody tr:has(.band-4) ~ tr) { --row-bg: var(--row-4); }
+
+/* the band rows themselves */
+.table-wrap tbody tr:has(.band-1) { --row-bg: var(--band-1c); font-weight: 600; }
+.table-wrap tbody tr:has(.band-2) { --row-bg: var(--band-2c); font-weight: 600; }
+.table-wrap tbody tr:has(.band-3) { --row-bg: var(--band-3c); font-weight: 600; }
+.table-wrap tbody tr:has(.band-4) { --row-bg: var(--band-4c); font-weight: 600; }
+
+/* section title rows ("Glucocorticoids"): plain background, larger text */
+.table-wrap tbody tr:has(.sec) { --row-bg: var(--tbl-bg); }
+.table-wrap .sec { font-size: 1.05em; font-weight: 700; color: var(--tbl-tint); }
+
+/* a grey, merged "not applicable" cell */
+.prose .table-wrap tbody tr > td:has(.na) {
+  background: color-mix(in srgb, var(--tbl-bg) 70%, #94a3b8);
+  text-align: center;
+}
+
+/* cells that span columns may be as wide as the columns they cover (the width caps above are for single cells) */
+.prose .table-wrap :is(th, td)[colspan],
+.prose .table-wrap :is(th, td):first-child[colspan] {
+  max-width: none;
+  width: auto;
+  min-width: 0;
+}
+.prose .table-wrap thead th[colspan],
+.prose .table-wrap thead th[rowspan] {
+  text-align: center;
+  vertical-align: middle;
+}
+
 
 /* First column: pinned while the table scrolls sideways (it takes the colour of its own row) */
 .prose .table-wrap :is(th, td):first-child {
