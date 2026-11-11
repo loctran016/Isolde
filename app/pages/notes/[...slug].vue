@@ -576,87 +576,119 @@ useNoteLanding()
 </template>
 
 <style>
-/* The wrapper scrolls sideways; the table keeps normal table layout inside it */
+/* ---------- Tables ---------- */
+
+/* Colours. Every cell gets an opaque background (a mix of the page colour and violet), so the
+   pinned first column can cover the text that scrolls underneath it. */
 .table-wrap {
+  --tbl-bg: #fff7ed; /* page background, light: orange-50 */
+  --tbl-tint: #7c3aed; /* violet-600 */
+  --tbl-line: rgba(100, 116, 139, 0.35);
+  --tbl-head: color-mix(in srgb, var(--tbl-bg) 86%, var(--tbl-tint)); /* header row */
+  --tbl-odd: color-mix(in srgb, var(--tbl-bg) 97%, var(--tbl-tint)); /* rows 1, 3, 5... */
+  --tbl-even: color-mix(in srgb, var(--tbl-bg) 92%, var(--tbl-tint)); /* rows 2, 4, 6... */
+  --tbl-hover: color-mix(in srgb, var(--tbl-bg) 84%, var(--tbl-tint));
+
+  /* the scrolling frame: a rounded box with the outer border */
   overflow-x: auto;
   max-width: 100%;
   margin: 1.5em 0;
+  border: 1px solid var(--tbl-line);
+  border-radius: 0.75rem;
   -webkit-overflow-scrolling: touch;
-  /* background of the sticky first column: it must match the page, or the text scrolling under it shows through */
-  --sticky-bg: #fff7ed; /* light: orange-50 */
 }
 .dark .table-wrap {
-  --sticky-bg: #0f172a; /* dark: slate-900 */
+  --tbl-bg: #0f172a; /* dark: slate-900 */
+  --tbl-tint: #a78bfa; /* violet-400 */
+  --tbl-line: rgba(148, 163, 184, 0.28);
 }
 
+/* "separate" instead of "collapse": a pinned (sticky) cell keeps its own borders only in this mode */
 .prose .table-wrap table {
   width: max-content;
   min-width: 100%;
   margin: 0;
-  /* "separate" instead of "collapse": a sticky cell keeps its own borders only in this mode */
   border-collapse: separate;
   border-spacing: 0;
-}
-
-/* Row lines live on the cells now (a row border is not drawn in "separate" mode) */
-.prose .table-wrap :is(td, th) {
-  border-bottom: 1px solid var(--tw-prose-td-borders);
-}
-.prose .table-wrap thead th {
-  border-bottom-color: var(--tw-prose-th-borders);
-}
-.prose .table-wrap tbody tr:last-child td {
-  border-bottom: 0;
+  font-size: 0.9rem;
+  line-height: 1.55;
 }
 .prose .table-wrap tbody tr {
   border-bottom: 0;
 }
 
-/* Cell width caps: phones, then md (iPad), then xl (laptop). Long text wraps inside the cap. */
-.table-wrap :is(td, th) {
+/* Cells: roomy padding, a border on every side, long words wrap instead of spilling out */
+.prose .table-wrap :is(th, td) {
+  padding: 0.6rem 0.75rem;
+  vertical-align: top;
+  text-align: left;
+  border-right: 1px solid var(--tbl-line);
+  border-bottom: 1px solid var(--tbl-line);
+  overflow-wrap: anywhere;
+  min-width: 7rem;
   max-width: 14rem;
 }
-@media (min-width: 768px) {
-  .table-wrap :is(td, th) {
-    max-width: 20rem;
-  }
+/* (the frame already draws the outer edge, so the last column and the last row skip theirs) */
+.prose .table-wrap :is(th, td):last-child {
+  border-right: 0;
 }
-@media (min-width: 1280px) {
-  .table-wrap :is(td, th) {
-    max-width: 28rem;
-  }
+.prose .table-wrap tbody tr:last-child > * {
+  border-bottom: 0;
 }
 
-/* First column: narrow, and it stays in view while the table scrolls sideways */
-.table-wrap :is(td, th):first-child {
-  width: max-content;
-  max-width: 7.5rem;
+/* Header row: a slightly stronger tint */
+.prose .table-wrap thead th {
+  background: var(--tbl-head);
+  font-weight: 600;
+}
+
+/* Zebra rows: odd and even rows get two slightly different tints */
+.prose .table-wrap tbody tr:nth-child(odd) > * {
+  background: var(--tbl-odd);
+}
+.prose .table-wrap tbody tr:nth-child(even) > * {
+  background: var(--tbl-even);
+}
+.prose .table-wrap tbody tr:hover > * {
+  background: var(--tbl-hover);
+}
+
+/* First column: pinned while the table scrolls sideways (it takes the colour of its own row) */
+.prose .table-wrap :is(th, td):first-child {
   position: sticky;
   left: 0;
   z-index: 1;
-  background: var(--sticky-bg);
-  box-shadow: 1px 0 0 rgba(148, 163, 184, 0.25); /* a thin edge so you can see it is pinned */
+  width: 9rem;
+  min-width: 9rem;
+  max-width: 9rem;
 }
-.table-wrap thead th:first-child {
+.prose .table-wrap thead th:first-child {
   z-index: 2;
 }
-@media (min-width: 768px) {
-  .table-wrap :is(td, th):first-child {
-    width: 9rem;
-    min-width: 9rem;
-    max-width: 9rem;
-  }
-}
-@media (min-width: 1280px) {
-  .table-wrap :is(td, th):first-child {
-    width: 11rem;
-    min-width: 11rem;
-    max-width: 11rem;
-  }
-}
 
-/* Laptop only: hide the scrollbar (trackpad and shift + wheel still scroll) */
+/* iPad and up: more room */
+@media (min-width: 768px) {
+  .prose .table-wrap :is(th, td) {
+    padding: 0.75rem 1rem;
+    max-width: 20rem;
+  }
+  .prose .table-wrap :is(th, td):first-child {
+    width: 10.5rem;
+    min-width: 10.5rem;
+    max-width: 10.5rem;
+  }
+}
+/* Laptop */
 @media (min-width: 1280px) {
+  .prose .table-wrap :is(th, td) {
+    max-width: 28rem;
+  }
+  .prose .table-wrap :is(th, td):first-child {
+    width: 12rem;
+    min-width: 12rem;
+    max-width: 12rem;
+  }
+  /* hide the scrollbar (trackpad and shift + wheel still scroll) */
   .table-wrap {
     scrollbar-width: none;
   }
@@ -664,6 +696,8 @@ useNoteLanding()
     display: none;
   }
 }
+
+/* ---------- Everything below is unchanged ---------- */
 
 [id] {
   scroll-margin-top: calc(5rem + env(safe-area-inset-top, 0px));
