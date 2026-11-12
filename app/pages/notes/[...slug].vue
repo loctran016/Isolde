@@ -58,7 +58,8 @@ useHead({
 
 definePageMeta({
   layout: 'note',
-  title: `${noteTitle} | ${island.pageTitle}`,
+  title: `${island.pageTitle}`,
+  // title: `${noteTitle} | ${island.pageTitle}`,
   titleIcon: island.titleIcon,
 })
 
