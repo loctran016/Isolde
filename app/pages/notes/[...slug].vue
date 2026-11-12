@@ -50,7 +50,7 @@ const island = getIsland('/notes')!
 // Browser tab title: "Suy tim | Notes Island" (the note's own description is used when it has one)
 const pageTitles = page.value.meta.stem.split('/').map((s) => s.replace(/^\d+\.(?=\D)\s*/, ''))
 
-const noteTitle = pageTitles || island.pageTitle
+const noteTitle = pageTitles[2] || island.pageTitle
 useHead({
   title: `${noteTitle} | ${island.pageTitle}`,
   meta: [{ name: 'description', content: page.value.data?.description || island.description }],
