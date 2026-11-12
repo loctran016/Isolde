@@ -895,4 +895,17 @@ position: sticky */
 .markdown-body li ul li {
   list-style-type: circle;
 }
+  /* Final border hacky */
+
+.table-wrap {
+  /* keep: border: 1px solid var(--tbl-line); border-radius: 0.5rem; */
+  overflow-x: auto;
+  overflow-y: hidden; /* avoids a vertical scrollbar from the 1px overhang */
+}
+
+.prose .table-wrap table {
+  width: max-content;
+  min-width: calc(100% + 1px); /* 1px wider than the frame */
+  margin-right: -1px;          /* the last column's right border falls outside and is clipped */
+}
 </style>
