@@ -1,6 +1,8 @@
 {
   "default": true,
   "line_length": false,
+  "table-column-style": false,
+  "blanks-around-tables": false,
   "no-alt-text": false,
   "no-inline-html": false,
   "header-increment": false,

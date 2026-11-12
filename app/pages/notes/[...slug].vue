@@ -677,18 +677,36 @@ useNoteLanding()
 
 /* ---- Grouped tables: a band row starts a group; the rows below take its colour until the next band ---- */
 .table-wrap {
-  --h1: #0ea5e9; /* group 1: sky */
-  --h2: #10b981; /* group 2: emerald */
-  --h3: #6366f1; /* group 3: indigo */
-  --h4: #f97316; /* group 4: orange */
+  --h1: #0ea5e9; /* group 1: sky-500 */
+  --h2: #10b981; /* group 2: emerald-500 */
+  --h3: #6366f1; /* group 3: indigo-500 */
+  --h4: #f97316; /* group 4: orange-500 */
+  --h5: #f43f5e; /* group 5: rose-500 */
+  --h6: #eab308; /* group 6: yellow-500 */
+  --h7: #d946ef; /* group 7: fuchsia-500 */
+  --h8: #84cc16; /* group 8: lime-500 */
+  --h9: #ec4899; /* group 9: pink-500 */
+  --h10: #14b8a6; /* group 10: teal-500 */
   --row-1: color-mix(in srgb, var(--tbl-bg) 90%, var(--h1));
   --row-2: color-mix(in srgb, var(--tbl-bg) 90%, var(--h2));
   --row-3: color-mix(in srgb, var(--tbl-bg) 90%, var(--h3));
   --row-4: color-mix(in srgb, var(--tbl-bg) 90%, var(--h4));
+  --row-5: color-mix(in srgb, var(--tbl-bg) 90%, var(--h5));
+  --row-6: color-mix(in srgb, var(--tbl-bg) 90%, var(--h6));
+  --row-7: color-mix(in srgb, var(--tbl-bg) 90%, var(--h7));
+  --row-8: color-mix(in srgb, var(--tbl-bg) 90%, var(--h8));
+  --row-9: color-mix(in srgb, var(--tbl-bg) 90%, var(--h9));
+  --row-10: color-mix(in srgb, var(--tbl-bg) 90%, var(--h10));
   --band-1c: color-mix(in srgb, var(--tbl-bg) 68%, var(--h1));
   --band-2c: color-mix(in srgb, var(--tbl-bg) 68%, var(--h2));
   --band-3c: color-mix(in srgb, var(--tbl-bg) 68%, var(--h3));
   --band-4c: color-mix(in srgb, var(--tbl-bg) 68%, var(--h4));
+  --band-5c: color-mix(in srgb, var(--tbl-bg) 68%, var(--h5));
+  --band-6c: color-mix(in srgb, var(--tbl-bg) 68%, var(--h6));
+  --band-7c: color-mix(in srgb, var(--tbl-bg) 68%, var(--h7));
+  --band-8c: color-mix(in srgb, var(--tbl-bg) 68%, var(--h8));
+  --band-9c: color-mix(in srgb, var(--tbl-bg) 68%, var(--h9));
+  --band-10c: color-mix(in srgb, var(--tbl-bg) 68%, var(--h10));
 }
 
 /* rows after a band (zero specificity, so the last band above a row wins) */
@@ -703,6 +721,24 @@ useNoteLanding()
 }
 :where(.table-wrap tbody tr:has(.band-4) ~ tr) {
   --row-bg: var(--row-4);
+}
+:where(.table-wrap tbody tr:has(.band-5) ~ tr) {
+  --row-bg: var(--row-5);
+}
+:where(.table-wrap tbody tr:has(.band-6) ~ tr) {
+  --row-bg: var(--row-6);
+}
+:where(.table-wrap tbody tr:has(.band-7) ~ tr) {
+  --row-bg: var(--row-7);
+}
+:where(.table-wrap tbody tr:has(.band-8) ~ tr) {
+  --row-bg: var(--row-8);
+}
+:where(.table-wrap tbody tr:has(.band-9) ~ tr) {
+  --row-bg: var(--row-9);
+}
+:where(.table-wrap tbody tr:has(.band-10) ~ tr) {
+  --row-bg: var(--row-10);
 }
 
 /* the band rows themselves */
@@ -720,6 +756,30 @@ useNoteLanding()
 }
 .table-wrap tbody tr:has(.band-4) {
   --row-bg: var(--band-4c);
+  font-weight: 600;
+}
+.table-wrap tbody tr:has(.band-5) {
+  --row-bg: var(--band-5c);
+  font-weight: 600;
+}
+.table-wrap tbody tr:has(.band-6) {
+  --row-bg: var(--band-6c);
+  font-weight: 600;
+}
+.table-wrap tbody tr:has(.band-7) {
+  --row-bg: var(--band-7c);
+  font-weight: 600;
+}
+.table-wrap tbody tr:has(.band-8) {
+  --row-bg: var(--band-8c);
+  font-weight: 600;
+}
+.table-wrap tbody tr:has(.band-9) {
+  --row-bg: var(--band-9c);
+  font-weight: 600;
+}
+.table-wrap tbody tr:has(.band-10) {
+  --row-bg: var(--band-10c);
   font-weight: 600;
 }
 
