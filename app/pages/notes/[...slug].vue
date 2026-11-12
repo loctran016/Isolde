@@ -44,14 +44,21 @@ const path = route.path.replace(/\/+$/, '') || '/'
 const { data: page, error } = await useAsyncData(path, () => clientContent.get(path))
 const island = getIsland('/notes')!
 
+// Strip "1." / "2." ordering prefixes (leaves "1.5 mg" and "1.2.x" alone)
+// const pageTitles = page.value.meta.stem.split('/').map((s) => s.replace(/^\d+\.(?=\D)\s*/, ''))
+
+// Browser tab title: "Suy tim | Notes Island" (the note's own description is used when it has one)
+const pageTitles = page.value.meta.stem.split('/').map((s) => s.replace(/^\d+\.(?=\D)\s*/, ''))
+
+const noteTitle = pageTitles || island.pageTitle
 useHead({
-  title: island.pageTitle,
-  meta: [{ name: 'description', content: island.description }],
+  title: `${noteTitle} | ${island.pageTitle}`,
+  meta: [{ name: 'description', content: page.value.data?.description || island.description }],
 })
 
 definePageMeta({
   layout: 'note',
-  title: island.pageTitle,
+  title: `${noteTitle} | ${island.pageTitle}`,
   titleIcon: island.titleIcon,
 })
 
@@ -64,7 +71,6 @@ if (!page.value) {
 }
 
 // Strip "1." / "2." ordering prefixes (leaves "1.5 mg" and "1.2.x" alone)
-const pageTitles = page.value.meta.stem.split('/').map((s) => s.replace(/^\d+\.(?=\D)\s*/, ''))
 
 // Prepend the title as an H1 node directly on the parsed document
 /* if (page.value && Array.isArray(page.value.nodes)) {
@@ -681,20 +687,46 @@ useNoteLanding()
 }
 
 /* rows after a band (zero specificity, so the last band above a row wins) */
-:where(.table-wrap tbody tr:has(.band-1) ~ tr) { --row-bg: var(--row-1); }
-:where(.table-wrap tbody tr:has(.band-2) ~ tr) { --row-bg: var(--row-2); }
-:where(.table-wrap tbody tr:has(.band-3) ~ tr) { --row-bg: var(--row-3); }
-:where(.table-wrap tbody tr:has(.band-4) ~ tr) { --row-bg: var(--row-4); }
+:where(.table-wrap tbody tr:has(.band-1) ~ tr) {
+  --row-bg: var(--row-1);
+}
+:where(.table-wrap tbody tr:has(.band-2) ~ tr) {
+  --row-bg: var(--row-2);
+}
+:where(.table-wrap tbody tr:has(.band-3) ~ tr) {
+  --row-bg: var(--row-3);
+}
+:where(.table-wrap tbody tr:has(.band-4) ~ tr) {
+  --row-bg: var(--row-4);
+}
 
 /* the band rows themselves */
-.table-wrap tbody tr:has(.band-1) { --row-bg: var(--band-1c); font-weight: 600; }
-.table-wrap tbody tr:has(.band-2) { --row-bg: var(--band-2c); font-weight: 600; }
-.table-wrap tbody tr:has(.band-3) { --row-bg: var(--band-3c); font-weight: 600; }
-.table-wrap tbody tr:has(.band-4) { --row-bg: var(--band-4c); font-weight: 600; }
+.table-wrap tbody tr:has(.band-1) {
+  --row-bg: var(--band-1c);
+  font-weight: 600;
+}
+.table-wrap tbody tr:has(.band-2) {
+  --row-bg: var(--band-2c);
+  font-weight: 600;
+}
+.table-wrap tbody tr:has(.band-3) {
+  --row-bg: var(--band-3c);
+  font-weight: 600;
+}
+.table-wrap tbody tr:has(.band-4) {
+  --row-bg: var(--band-4c);
+  font-weight: 600;
+}
 
 /* section title rows ("Glucocorticoids"): plain background, larger text */
-.table-wrap tbody tr:has(.sec) { --row-bg: var(--tbl-bg); }
-.table-wrap .sec { font-size: 1.05em; font-weight: 700; color: var(--tbl-tint); }
+.table-wrap tbody tr:has(.sec) {
+  --row-bg: var(--tbl-bg);
+}
+.table-wrap .sec {
+  font-size: 1.05em;
+  font-weight: 700;
+  color: var(--tbl-tint);
+}
 
 /* a grey, merged "not applicable" cell */
 .prose .table-wrap tbody tr > td:has(.na) {
@@ -714,7 +746,6 @@ useNoteLanding()
   text-align: center;
   vertical-align: middle;
 }
-
 
 /* First column: pinned while the table scrolls sideways (it takes the colour of its own row) */
 .prose .table-wrap :is(th, td):first-child {
@@ -758,6 +789,19 @@ useNoteLanding()
   .table-wrap::-webkit-scrollbar {
     display: none;
   }
+}
+
+/* Tables with fewer than 3 columns: no pinned first column, no width caps, they just fill the width */
+.prose .table-wrap table:not(:has(thead th:nth-child(3))) {
+  width: 100%;
+}
+.prose .table-wrap table:not(:has(thead th:nth-child(3))) :is(th, td) {
+  max-width: none;
+  min-width: 0;
+}
+.prose .table-wrap table:not(:has(thead th:nth-child(3))) :is(th, td):first-child {
+  position: static;
+  width: auto;
 }
 
 /* ---------- Everything below is unchanged ---------- */

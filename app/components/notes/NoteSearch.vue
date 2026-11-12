@@ -7,6 +7,10 @@ type Hit = {
   snippets?: { title?: string; content?: string }
 }
 
+const FETCH_LIMIT = 60 // ask for more hits than we show, so same-subject matches deeper in the list can rise to the top
+const SHOW_LIMIT = 20
+
+const route = useRoute()
 const open = ref(false)
 const query = ref('')
 const hits = ref<Hit[]>([])
@@ -19,19 +23,33 @@ const landing = useSearchLanding()
 // ---- Page labels for each hit ("Nội khoa / Hô hấp / Hen PQ") ----
 const { data: nav } = useNotesNav()
 const strip = (s: string) => s.replace(/^\d+\.(?=\D)\s*/, '')
+const safeDecode = (s: string) => {
+  try {
+    return decodeURIComponent(s)
+  } catch {
+    return s
+  }
+}
+// "/notes/a%20b/#x" and "/notes/a b" count as the same page
+const normPath = (p: string) => safeDecode(p.split('#')[0]).replace(/\/+$/, '')
 
 const labelByPath = computed(() => {
   const m = new Map<string, string>()
   const walk = (items: NavigationItem[] = []) => {
     for (const i of items) {
-      if (i.stem && i.page !== false) m.set(i.path, i.stem.split('/').map(strip).join(' / '))
+      if (i.stem && i.page !== false)
+        m.set(normPath(i.path), i.stem.split('/').map(strip).join(' / '))
       walk(i.children)
     }
   }
   walk(nav.value)
   return m
 })
-const pageLabel = (id: string) => labelByPath.value.get(id.split('#')[0]) ?? id.split('#')[0]
+const pageLabel = (id: string) => labelByPath.value.get(normPath(id)) ?? normPath(id)
+
+// The top-level folder of a page ("Nội khoa" for "Nội khoa / Hô hấp / Hen PQ")
+const subjectOf = (path: string) => labelByPath.value.get(normPath(path))?.split(' / ')[0] ?? ''
+const mySubject = computed(() => subjectOf(route.path)) // the subject of the note you are reading
 
 // Snippets come back as HTML with <mark> tags. Escape everything except the marks.
 const escapeHtml = (s: string) =>
@@ -41,6 +59,41 @@ const renderSnippet = (html = '') =>
     .split(/(<\/?mark>)/)
     .map((p) => (p === '<mark>' || p === '</mark>' ? p : escapeHtml(p)))
     .join('')
+
+// ---- Ordering: whole phrase in the same subject, then whole phrase elsewhere, then the rest ----
+const lower = (s: string) => s.normalize('NFC').toLowerCase()
+const fold = (s: string) =>
+  lower(s)
+    .normalize('NFD')
+    .replace(/[\u0300-\u036F]/g, '')
+    .replace(/đ/g, 'd')
+
+// Does a hit contain the typed words, together and in order, as whole words?
+// With accents in the query ("suy tim", "Suy tìm") accents must match too; without accents they don't count.
+function phraseTester(q: string) {
+  const sensitive = fold(q) !== lower(q)
+  const prep = sensitive ? lower : fold
+  const words = prep(q)
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+  if (!words.length) return () => false
+  const re = new RegExp(`(?<![\\p{L}\\p{N}])${words.join('\\s+')}(?![\\p{L}\\p{N}])`, 'u')
+  return (h: Hit) =>
+    re.test(prep(`${h.title ?? ''}\n${(h.snippets?.content ?? '').replace(/<\/?mark>/g, '')}`))
+}
+
+function rankHits(list: Hit[], q: string): Hit[] {
+  const isPhrase = phraseTester(q)
+  const mine = mySubject.value
+  // 0: whole phrase, same subject   1: whole phrase, other subject   2: everything else, in the order it came
+  const tier = (h: Hit) => (!isPhrase(h) ? 2 : mine && subjectOf(h.id) === mine ? 0 : 1)
+  return list
+    .map((h, i) => ({ h, i, t: tier(h) }))
+    .sort((a, b) => a.t - b.t || a.i - b.i)
+    .map((x) => x.h)
+}
 
 // ---- Search ----
 let seq = 0
@@ -56,11 +109,11 @@ async function run() {
   loading.value = true
   try {
     const res = await (clientContent as any).search(q, {
-      limit: 20,
-      snippet: { columns: ['content'], around: 12, tag: 'mark' },
+      limit: FETCH_LIMIT,
+      snippet: { columns: ['content'], around: 14, tag: 'mark' },
     })
     if (mine !== seq) return // a newer search has started
-    hits.value = Array.isArray(res) ? res : []
+    hits.value = rankHits(Array.isArray(res) ? res : [], q).slice(0, SHOW_LIMIT)
     active.value = 0
     failed.value = ''
   } catch (e: any) {
@@ -101,7 +154,6 @@ function go(hit: Hit) {
   hide()
   navigateTo(hit.id)
 }
-
 
 // Ctrl/Cmd + F opens the search (this replaces the browser's own find on this site)
 onKeyStroke(['f', 'F'], (e) => {
