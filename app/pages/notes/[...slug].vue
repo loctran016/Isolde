@@ -557,24 +557,28 @@ useNoteLanding()
   </div>
   <!-- pb-24 keeps the floating search button from covering the licence text -->
   <div
-    class="px-2 pt-4 pb-24 w-screen bg-slate-100/20 dark:bg-slate-800/30 items-center flex-wrap gap-2 flex"
+    class="px-2 py-4 ml-0 w-screen bg-slate-100/20 dark:bg-slate-800/30 items-center flex-wrap gap-2 flex"
   >
     <a href="https://isolde.vercel.app">Isolde</a> © 2026 by
-    <a href="https://github.com/loctran016">Tran Tan Loc</a> is licensed under
+    <a href="https://github.com/loctran016" class="-mx-1">Tran Tan Loc</a> is licensed under
     <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a
     ><img
+      class="hidden md:block"
       src="https://mirrors.creativecommons.org/presskit/icons/cc.svg"
       alt=""
       style="max-width: 1em; max-height: 1em; margin-left: 0.2em"
-    /><img
+    /><img 
+      class="hidden md:block"
       src="https://mirrors.creativecommons.org/presskit/icons/by.svg"
       alt=""
       style="max-width: 1em; max-height: 1em; margin-left: 0.2em"
     /><img
+      class="hidden md:block"
       src="https://mirrors.creativecommons.org/presskit/icons/nc.svg"
       alt=""
       style="max-width: 1em; max-height: 1em; margin-left: 0.2em"
     /><img
+      class="hidden md:block"
       src="https://mirrors.creativecommons.org/presskit/icons/sa.svg"
       alt=""
       style="max-width: 1em; max-height: 1em; margin-left: 0.2em"
