@@ -1,6 +1,7 @@
 // server/utils/content.ts
 import { comarkContent } from 'comark-content'
-import { defineComarkPlugin } from 'comark/parse'
+import { defineComarkPlugin } from 'comark'
+import type { MarkdownItPlugin } from 'comark'
 import media from 'comark-content/plugins/media'
 import fs from 'comark-content/sources/fs'
 import mermaid from 'comark/plugins/mermaid'
@@ -13,7 +14,7 @@ import sqliteWasm from 'comark-content/database/sqlite-wasm'
 import sqliteFullTextSearch from 'comark-content/plugins/sqlite-full-text-search'
 import pdf from './pdf-plugin'
 
-const { plugins: comarkUiPlugins } = comarkUi()
+// const { plugins: comarkUiPlugins } = comarkUi()
 
 const multiMDTablePlugin: MarkdownItPlugin = (md) => {
   md.use(markdownItMultiMDTable, { multiline: true, rowspan: true, headerless: true })
@@ -23,7 +24,6 @@ const multiMDTable = defineComarkPlugin(() => ({
   name: 'multiMDTable',
   markdownItPlugins: [multiMDTablePlugin],
 }))
-
 
 export const content = comarkContent({
   source: withSnapshot(
@@ -39,13 +39,17 @@ export const content = comarkContent({
   ),
   markdown: {
     plugins: [
-     // ...comarkUiPlugins,
+      // ...comarkUiPlugins,
       mermaid(),
       toc(),
       multiMDTable(),
     ],
   },
-  plugins: [media(), sqliteFullTextSearch({ database: sqliteWasm() }), pdf({ prefix: 'notes', assets: 'assets:notes-raw' })],
+  plugins: [
+    media(),
+    sqliteFullTextSearch({ database: sqliteWasm() }),
+    pdf({ prefix: 'notes', assets: 'assets:notes-raw' }),
+  ],
 })
 
 // GET /api/content/pdf?path=/notes/...   (add &debug=1 to see how the raw markdown was looked up)
@@ -57,17 +61,23 @@ content.addServeHandler('pdf', async (request) => {
     // methods such as content.pdf only exist once the instance is initialised.
     await content.init()
     if (typeof content.pdf !== 'function') {
-      return new Response('PDF plugin is not registered: add pdf({ ... }) to the plugins list in content.ts', {
-        status: 500,
-      })
+      return new Response(
+        'PDF plugin is not registered: add pdf({ ... }) to the plugins list in content.ts',
+        {
+          status: 500,
+        },
+      )
     }
     if (url.searchParams.has('debug')) return Response.json(await content.pdfDebug(path))
 
     const out = await content.pdf(path)
     if (!out) {
-      return new Response(`PDF: raw markdown not found for "${path}". Open the same URL with &debug=1`, {
-        status: 404,
-      })
+      return new Response(
+        `PDF: raw markdown not found for "${path}". Open the same URL with &debug=1`,
+        {
+          status: 404,
+        },
+      )
     }
     return new Response(out.bytes as BodyInit, {
       headers: {
