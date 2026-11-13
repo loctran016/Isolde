@@ -16,7 +16,7 @@
   "overrides": {
     "d3-selection": "3.0.1",
     "d3-zoom": "3.0.1",
-    "d3-transition": "3.0.1"
+    "d3-transition": "3.0.2"
   },
   "dependencies": {
     "@comark/nuxt": "0.9.0",
