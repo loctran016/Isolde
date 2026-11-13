@@ -2,9 +2,25 @@
 // Shared by every map on the page: the @markmap/element chunk is fetched once.
 let elementLoad: Promise<unknown> | null = null
 export function loadMarkmapElement() {
-  // d3-transition adds selection.interrupt() / .transition(), which markmap's zoom code calls in fit().
-  // It is imported first and explicitly so that it is part of the same bundle as markmap.
-  return (elementLoad ??= import('d3-transition').then(() => import('@markmap/element')))
+  return (elementLoad ??= (async () => {
+    // @markmap/view uses d3-zoom, whose zoom.transform() calls selection.interrupt(). That method is
+    // added by d3-transition, which @markmap/view does not import, so it can be missing in a bundle.
+    // Adding it here, with a named import so the bundler cannot drop it, is what d3-transition does itself.
+    const [{ selection }, { interrupt }] = await Promise.all([
+      import('d3-selection'),
+      import('d3-transition'),
+    ])
+    const proto = selection.prototype as any
+    if (typeof proto.interrupt !== 'function') {
+      proto.interrupt = function (this: any, name?: string) {
+        return this.each(function (this: any) {
+          interrupt(this, name)
+        })
+      }
+      console.debug('[markmap] added selection.interrupt()')
+    }
+    return import('@markmap/element')
+  })())
 }
 </script>
 
