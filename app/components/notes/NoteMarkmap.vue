@@ -1,3 +1,11 @@
+<script lang="ts">
+// Shared by every map on the page: the @markmap/element chunk is fetched once.
+let elementLoad: Promise<unknown> | null = null
+export function loadMarkmapElement() {
+  return (elementLoad ??= import('@markmap/element'))
+}
+</script>
+
 <script setup lang="ts">
 // Renders a ```markmap code block as an interactive mind map with <markmap-view> (@markmap/element).
 // @markmap/element does nothing on the server, so the map is created in the browser only.
@@ -9,12 +17,30 @@ const { themePref } = useTheme()
 const colorScheme = computed(() => (themePref.value === 'system' ? 'auto' : themePref.value))
 
 const el = ref<HTMLElement | null>(null)
+const frame = ref<HTMLElement | null>(null)
 const ready = ref(false)
 
 const uid = Math.random().toString(36).slice(2, 6)
 const t0 = typeof performance !== 'undefined' ? performance.now() : 0
 const log = (msg: string) =>
   console.debug(`[markmap ${uid}] ${msg} (+${Math.round(performance.now() - t0)} ms)`)
+
+// Resolves when the frame is within `margin` of the viewport (the autoloader does the same, so a map
+// far down a long note costs nothing until the reader gets close).
+const whenNear = (node: Element | null, margin = '800px') =>
+  new Promise<void>((resolve) => {
+    if (!node || !('IntersectionObserver' in window)) return resolve()
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          io.disconnect()
+          resolve()
+        }
+      },
+      { rootMargin: margin },
+    )
+    io.observe(node)
+  })
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 const nextFrame = () => new Promise((r) => requestAnimationFrame(() => r(null)))
@@ -59,10 +85,19 @@ onMounted(async () => {
   if (started) return
   started = true
   log('mounted')
+
+  // Warm up the library when the browser is idle, even if the map is still far down the page.
+  const idle: (cb: () => void) => void = (window as any).requestIdleCallback
+    ? (cb) => (window as any).requestIdleCallback(cb)
+    : (cb) => setTimeout(cb, 300)
+  idle(() => loadMarkmapElement().catch(() => {}))
+
+  await whenNear(frame.value)
+  log('near the viewport')
   const spinnerGuard = setTimeout(() => (ready.value = true), 5000) // never spin forever
 
   try {
-    await import('@markmap/element')
+    await loadMarkmapElement()
     await customElements.whenDefined('markmap-view')
     log('element loaded')
 
@@ -121,7 +156,7 @@ watch(
 </script>
 
 <template>
-  <div class="markmap-block not-prose" :class="{ 'is-ready': ready }">
+  <div ref="frame" class="markmap-block not-prose" :class="{ 'is-ready': ready }">
     <div v-if="!ready" class="markmap-loading" aria-live="polite">
       <span class="i-svg-spinners:bars-rotate-fade text-3xl" />
     </div>
