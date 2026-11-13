@@ -45,7 +45,7 @@ useHead({
           </div>
         </header>
 
-        <main class="mx-auto px-4 h-full w-full min-h-[calc(100dvh-var(--header-total))]">
+        <main class="mx-auto h-full w-full min-h-[calc(100dvh-var(--header-total))]">
           <slot />
         </main>
       </ScrollAreaViewport>
@@ -65,6 +65,4 @@ useHead({
   </div>
 </template>
 
-<style>
-
-</style>
+<style></style>
