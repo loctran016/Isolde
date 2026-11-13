@@ -2,7 +2,9 @@
 // Shared by every map on the page: the @markmap/element chunk is fetched once.
 let elementLoad: Promise<unknown> | null = null
 export function loadMarkmapElement() {
-  return (elementLoad ??= import('@markmap/element'))
+  // d3-transition adds selection.interrupt() / .transition(), which markmap's zoom code calls in fit().
+  // It is imported first and explicitly so that it is part of the same bundle as markmap.
+  return (elementLoad ??= import('d3-transition').then(() => import('@markmap/element')))
 }
 </script>
 
@@ -45,6 +47,7 @@ const whenNear = (node: Element | null, margin = '800px') =>
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 const nextFrame = () => new Promise((r) => requestAnimationFrame(() => r(null)))
 
+let fitWarned = false
 let started = false // never initialise the same component twice
 let touched = false // the reader zoomed / panned / used the toolbar: stop re-fitting for them
 let disposed = false
@@ -59,8 +62,9 @@ async function fit() {
   if (!mm || typeof mm.fit !== 'function') return
   try {
     await Promise.race([Promise.resolve(mm.fit()), sleep(1200)])
-  } catch {
-    /* the map is still usable without a fit */
+  } catch (err) {
+    if (!fitWarned) console.warn(`[markmap ${uid}] fit() failed`, err)
+    fitWarned = true
   }
 }
 
@@ -92,7 +96,7 @@ onMounted(async () => {
     : (cb) => setTimeout(cb, 300)
   idle(() => loadMarkmapElement().catch(() => {}))
 
-  await whenNear(frame.value)
+  await Promise.race([whenNear(frame.value), sleep(1500)]) // never wait long for the viewport
   log('near the viewport')
   const spinnerGuard = setTimeout(() => (ready.value = true), 5000) // never spin forever
 
