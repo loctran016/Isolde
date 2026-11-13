@@ -49,9 +49,7 @@ export default defineNuxtConfig({
     compilerOptions: {
       isCustomElement: (tag) => tag === 'markmap-view',
     },
-    resolve: {
-      dedupe: ['d3-selection', 'd3-transition', 'd3-zoom', 'd3-interpolate'],
-    },
+    
   },
   vite: {
     optimizeDeps: {
@@ -64,7 +62,9 @@ export default defineNuxtConfig({
         'elkjs/lib/elk.bundled.js',
       ],
     },
-
+resolve: {
+      dedupe: ['d3-selection', 'd3-transition', 'd3-zoom', 'd3-interpolate'],
+    },
     build: {
       rollupOptions: {
         output: {
