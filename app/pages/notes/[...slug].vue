@@ -548,7 +548,7 @@ useNoteLanding()
     ></MarkdownDocument>
     <button
       type="button"
-      class="flex cursor-pointer items-center gap-1.5 rounded-full border border-purple-300/30 px-3 py-1.5 text-xs transition-colors hover:bg-purple-500/20 lg:text-sm ml-auto"
+      class="flex cursor-pointer items-center gap-1.5 rounded-full border border-purple-300/30 px-3 py-1.5 text-xs transition-colors hover:bg-purple-500/20 lg:text-sm ml-auto mb-2"
       aria-label="Xuất PDF"
       :disabled="pdfBusy"
       @click="exportPdf"
@@ -581,9 +581,9 @@ useNoteLanding()
   <div
     class="px-2 py-4 ml-0 w-screen bg-slate-100/20 dark:bg-slate-800/30 items-center flex-wrap gap-2 flex"
   >
-    <a href="https://isolde.vercel.app">Isolde</a> © 2026 by
-    <a href="https://github.com/loctran016" class="-mx-1">Tran Tan Loc</a> is licensed under
-    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a
+    <a href="https://isolde.vercel.app">Isolde</a> © 2026 <span class="hidden md:block">by</span>
+    <a href="https://github.com/loctran016" class="-mx-1 hidden sm:block">Tran Tan Loc</a> is
+    licensed under <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a
     ><img
       class="hidden md:block"
       src="https://mirrors.creativecommons.org/presskit/icons/cc.svg"
