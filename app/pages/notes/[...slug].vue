@@ -3,6 +3,7 @@ import type { NavigationItem } from 'comark-content'
 import type { MarkdownItPlugin } from 'comark'
 import mermaid, { Mermaid } from '@comark/nuxt/plugins/mermaid'
 import NoteDetails from '~/components/notes/NoteDetails.vue'
+import NoteMarkmap from '~/components/notes/NoteMarkmap.vue'
 import { defineComarkPlugin } from 'comark/parse'
 import markdownItMultimdTable from 'markdown-it-multimd-table'
 import Giscus from '@giscus/vue'
@@ -311,6 +312,22 @@ const replaceSymbols = (nodes: any[]) => {
 }
 replaceSymbols(page.value.nodes)
 
+// ```markmap code blocks become a <markmap> node, drawn by NoteMarkmap (passed in :components below).
+// "start = 2" skips a node's tag and props, and the loop edits the real children array in place.
+const rewriteMarkmaps = (children: any[], start = 0) => {
+  for (let i = start; i < children.length; i++) {
+    const n = children[i]
+    if (!Array.isArray(n)) continue
+    const lang = n[1]?.language ?? /language-(\S+)/.exec(String(n[1]?.class ?? ''))?.[1]
+    if (n[0] === 'pre' && lang === 'markmap') {
+      children[i] = ['markmap', { markdown: String(n[1]?.code ?? textOf(n)).trim() }]
+    } else {
+      rewriteMarkmaps(n, 2)
+    }
+  }
+}
+rewriteMarkmaps(page.value.nodes)
+
 // Wrap every table in a scroll container ("overflow" does nothing on a <table> itself).
 // The wrapper is skipped when it already exists, because this runs on the server and again
 // on the client, and a second pass must not wrap the table twice.
@@ -522,7 +539,12 @@ useNoteLanding()
     <MarkdownDocument
       :value="page"
       :class="['markdown-body', `top-h${topHeading}`]"
-      :components="{ ...comarkUiComponents, mermaid: Mermaid, details: NoteDetails }"
+      :components="{
+        ...comarkUiComponents,
+        mermaid: Mermaid,
+        details: NoteDetails,
+        markmap: NoteMarkmap,
+      }"
     ></MarkdownDocument>
     <button
       type="button"
@@ -895,7 +917,7 @@ position: sticky */
 .markdown-body li ul li {
   list-style-type: circle;
 }
-  /* Final border hacky */
+/* Final border hacky */
 
 .table-wrap {
   /* keep: border: 1px solid var(--tbl-line); border-radius: 0.5rem; */
@@ -906,6 +928,6 @@ position: sticky */
 .prose .table-wrap table {
   width: max-content;
   min-width: calc(100% + 1px); /* 1px wider than the frame */
-  margin-right: -1px;          /* the last column's right border falls outside and is clipped */
+  margin-right: -1px; /* the last column's right border falls outside and is clipped */
 }
 </style>

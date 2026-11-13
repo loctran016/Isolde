@@ -32,7 +32,10 @@ export default defineNuxtConfig({
       // raw .md + images, bundled into the Vercel function (used by the PDF export)
       { baseName: 'notes-raw', dir: fileURLToPath(new URL('./content', import.meta.url)) },
       // TTF fonts with Vietnamese glyphs for the PDF export (put them in server/assets/fonts/)
-      { baseName: 'pdf-fonts', dir: fileURLToPath(new URL('./server/assets/fonts', import.meta.url)) },
+      {
+        baseName: 'pdf-fonts',
+        dir: fileURLToPath(new URL('./server/assets/fonts', import.meta.url)),
+      },
     ],
     publicAssets: [
       {
@@ -41,6 +44,11 @@ export default defineNuxtConfig({
         maxAge: 60 * 60 * 24,
       },
     ],
+  },
+  vue: {
+    compilerOptions: {
+      isCustomElement: (tag) => tag === 'markmap-view',
+    },
   },
   vite: {
     optimizeDeps: {
@@ -167,7 +175,7 @@ export default defineNuxtConfig({
       globPatterns: ['**/*.{js,css,html,png,svg,ico}'],
       navigateFallback: '/',
       navigateFallbackDenylist: [/^\/api\//], // optional, good practice
-  maximumFileSizeToCacheInBytes: 3000000
+      maximumFileSizeToCacheInBytes: 3000000,
     },
     client: {
       installPrompt: true,
