@@ -1,38 +1,36 @@
 <script setup lang="ts">
-// Renders a ```markmap code block as an interactive mind map, using @markmap/parse + @markmap/view.
-// The <svg> is created here by hand (not by the template or <ClientOnly>), so there is exactly one
-// svg per component and it is removed again when the component goes away. A map can therefore never
-// be drawn twice into the same svg.
+// Renders a ```markmap code block as an interactive mind map with <markmap-view> (@markmap/element).
+// @markmap/element does nothing on the server, so the map is created in the browser only.
+// A spinner shows until the map has been drawn and fitted into its frame; the map stays hidden
+// until then, so it never appears off-centre.
 const props = defineProps<{ markdown?: string }>()
 
 const { themePref } = useTheme()
 const colorScheme = computed(() => (themePref.value === 'system' ? 'auto' : themePref.value))
 
-const host = ref<HTMLElement | null>(null)
-const frame = ref<HTMLElement | null>(null)
+const el = ref<HTMLElement | null>(null)
 const ready = ref(false)
-const failed = ref(false)
 
 const uid = Math.random().toString(36).slice(2, 6)
 const t0 = typeof performance !== 'undefined' ? performance.now() : 0
-const log = (msg: string, ...rest: unknown[]) =>
-  console.debug(`[markmap ${uid}] ${msg} (+${Math.round(performance.now() - t0)} ms)`, ...rest)
+const log = (msg: string) =>
+  console.debug(`[markmap ${uid}] ${msg} (+${Math.round(performance.now() - t0)} ms)`)
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 const nextFrame = () => new Promise((r) => requestAnimationFrame(() => r(null)))
 
-let svgEl: SVGSVGElement | null = null
-let mm: any = null
-let parseFn: any = null
-let resolveViewOptions: any = null
-let started = false
+let started = false // never initialise the same component twice
+let touched = false // the reader zoomed / panned / used the toolbar: stop re-fitting for them
 let disposed = false
-let touched = false // the reader zoomed / panned / used a button: stop re-fitting for them
+let fitTimer: ReturnType<typeof setTimeout> | undefined
+let fitCount = 0
 let resizeObserver: ResizeObserver | undefined
 let lastWidth = 0
 
+// Fit the whole map into the frame (the Markmap object is `el.mm`).
 async function fit() {
-  if (!mm?.fit) return
+  const mm = (el.value as any)?.mm
+  if (!mm || typeof mm.fit !== 'function') return
   try {
     await Promise.race([Promise.resolve(mm.fit()), sleep(1200)])
   } catch {
@@ -40,82 +38,63 @@ async function fit() {
   }
 }
 
-function build(markdown: string) {
-  const { root, frontmatter } = parseFn(markdown)
-  const { options, warnings } = resolveViewOptions(
-    { colorScheme: colorScheme.value },
-    frontmatter?.markmap,
-  )
-  if (warnings?.length) log('ignored options', warnings)
-  return { root, options }
-}
-
-function teardown() {
-  resizeObserver?.disconnect()
-  resizeObserver = undefined
-  try {
-    mm?.destroy?.()
-  } catch {
-    /* ignore */
-  }
-  mm = null
-  svgEl?.remove()
-  svgEl = null
+// The element can draw more than once (after the theme attribute is set, after fonts load...),
+// and each draw can move the map. So fit again after every render until the reader touches it.
+function scheduleFit(delay = 60) {
+  if (disposed) return
+  clearTimeout(fitTimer)
+  fitTimer = setTimeout(async () => {
+    if (disposed) return
+    await nextFrame()
+    if (!touched && fitCount < 8) {
+      fitCount++
+      await fit()
+      log(`fit #${fitCount}`)
+    }
+    ready.value = true
+  }, delay)
 }
 
 onMounted(async () => {
-  if (started) return // never initialise the same component twice
+  if (started) return
   started = true
   log('mounted')
-
-  // Whatever happens, never leave the spinner on forever.
-  const spinnerGuard = setTimeout(() => (ready.value = true), 5000)
+  const spinnerGuard = setTimeout(() => (ready.value = true), 5000) // never spin forever
 
   try {
-    const [parseMod, viewMod] = await Promise.all([
-      import('@markmap/parse'),
-      import('@markmap/view'),
-    ])
-    if (disposed || !host.value) return
-    parseFn = (parseMod as any).parse
-    resolveViewOptions = (viewMod as any).resolveViewOptions
-    const { Markmap } = viewMod as any
-    log('packages loaded')
+    await import('@markmap/element')
+    await customElements.whenDefined('markmap-view')
+    log('element loaded')
 
-    // A fresh svg for this component only; anything left in the host is removed first.
-    host.value.replaceChildren()
-    svgEl = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
-    svgEl.setAttribute('class', 'markmap-svg')
+    // <ClientOnly> renders its content a tick after mount, so wait for the element itself.
+    for (let i = 0; i < 80 && !el.value; i++) await sleep(25)
+    const view = el.value as any
+    if (!view || disposed) return
+
+    view.addEventListener('render', () => scheduleFit(60))
     for (const type of ['pointerdown', 'wheel', 'touchstart'])
-      svgEl.addEventListener(type, () => (touched = true), { passive: true })
-    host.value.appendChild(svgEl)
+      view.addEventListener(type, () => (touched = true), { passive: true })
 
-    const { root, options } = build(props.markdown ?? '')
-    mm = Markmap.create(svgEl, root, options)
-    log('map created')
+    view.markdown = props.markdown ?? ''
 
-    // Fit once the frame has been laid out, and once more after the first draw has settled.
-    await nextFrame()
-    await fit()
-    ready.value = true
-    log('fitted, revealed')
-    setTimeout(() => {
-      if (!touched && !disposed) fit()
-    }, 350)
+    // Wait (at most 3 s) for the Markmap object, then fit it.
+    for (let i = 0; i < 60 && !view.mm; i++) await sleep(50)
+    log(view.mm ? 'map created' : 'map NOT created')
+    scheduleFit(0)
 
     // Re-fit when the frame changes width (phone rotation, window resize).
-    lastWidth = frame.value?.clientWidth ?? 0
+    lastWidth = view.clientWidth
     resizeObserver = new ResizeObserver(() => {
-      const w = frame.value?.clientWidth ?? 0
+      const w = view.clientWidth
       if (Math.abs(w - lastWidth) > 24) {
         lastWidth = w
-        if (!touched) fit()
+        fitCount = 0
+        scheduleFit(120)
       }
     })
-    if (frame.value) resizeObserver.observe(frame.value)
+    resizeObserver.observe(view)
   } catch (err) {
     console.error(`[markmap ${uid}] failed`, err)
-    failed.value = true
     ready.value = true
   } finally {
     clearTimeout(spinnerGuard)
@@ -125,52 +104,37 @@ onMounted(async () => {
 onBeforeUnmount(() => {
   disposed = true
   log('unmounted')
-  teardown()
-})
-
-watch(colorScheme, (cs) => {
-  try {
-    mm?.setOptions?.({ colorScheme: cs })
-  } catch {
-    /* option not supported: the CSS colour on the frame still applies */
-  }
+  clearTimeout(fitTimer)
+  resizeObserver?.disconnect()
 })
 
 watch(
   () => props.markdown,
-  async (md, old) => {
-    if (!mm || !parseFn || md === old) return
+  (md, old) => {
+    if (!el.value || md === old) return
     touched = false
-    const { root, options } = build(md ?? '')
-    await mm.setTree(root, options)
-    await nextFrame()
-    await fit()
+    fitCount = 0
+    ;(el.value as any).markdown = md ?? ''
+    scheduleFit(120)
   },
 )
-
-const zoomIn = () => ((touched = true), mm?.zoomIn?.())
-const zoomOut = () => ((touched = true), mm?.zoomOut?.())
-const refit = () => ((touched = false), fit())
 </script>
 
 <template>
-  <div ref="frame" class="markmap-block not-prose" :class="{ 'is-ready': ready }">
+  <div class="markmap-block not-prose" :class="{ 'is-ready': ready }">
     <div v-if="!ready" class="markmap-loading" aria-live="polite">
       <span class="i-svg-spinners:bars-rotate-fade text-3xl" />
     </div>
-    <div ref="host" class="markmap-host" />
-    <pre v-if="failed" class="markmap-fallback">{{ markdown }}</pre>
-    <div v-if="ready && !failed" class="markmap-tools">
-      <button type="button" aria-label="Phóng to" @click="zoomIn">+</button>
-      <button type="button" aria-label="Thu nhỏ" @click="zoomOut">−</button>
-      <button type="button" aria-label="Căn vừa khung" @click="refit">⤢</button>
-    </div>
+    <ClientOnly>
+      <markmap-view ref="el" class="markmap-view" :color-scheme="colorScheme" toolbar />
+    </ClientOnly>
   </div>
 </template>
 
 <style>
-/* Frame: a glass panel that matches the page (orange-50 / slate-900) and the tables.
-   The map is drawn on top of it, so the text colour is set here to always contrast with it. */
+/* Frame: a glass panel that matches the page (orange-50 / slate-900) and the tables. The map's own
+   background is transparent, and color-scheme makes markmap pick light or dark text, so the
+   text always contrasts with this panel. */
 .markmap-block {
   --mm-panel-bg: color-mix(in srgb, #fff7ed 90%, #7c3aed);
   --mm-panel-line: rgba(100, 116, 139, 0.3);
@@ -182,7 +146,6 @@ const refit = () => ((touched = false), fit())
   height: 28rem;
   margin: 1.5em 0;
   overflow: hidden;
-  color: #1c1917; /* stone-900 */
   border: 1px solid var(--mm-panel-line);
   border-radius: 1rem;
   background: var(--mm-panel-bg);
@@ -197,22 +160,18 @@ const refit = () => ((touched = false), fit())
   --mm-panel-line: rgba(148, 163, 184, 0.22);
   --mm-panel-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
   --mm-panel-glow: rgba(255, 255, 255, 0.07);
-  color: #e2e8f0; /* slate-200 */
 }
 
-.markmap-host {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  transition: opacity 0.25s ease;
-}
-.markmap-block.is-ready .markmap-host {
-  opacity: 1;
-}
-.markmap-svg {
+.markmap-view {
   display: block;
   width: 100%;
   height: 100%;
+  --mm-bg: transparent;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+.markmap-block.is-ready .markmap-view {
+  opacity: 1;
 }
 
 .markmap-loading {
@@ -222,44 +181,5 @@ const refit = () => ((touched = false), fit())
   align-items: center;
   justify-content: center;
   opacity: 0.6;
-}
-
-/* shown only if the map could not be drawn: the markdown source, so nothing is lost */
-.markmap-fallback {
-  position: absolute;
-  inset: 0;
-  margin: 0;
-  padding: 1rem;
-  overflow: auto;
-  font-size: 0.85rem;
-  background: transparent;
-  color: inherit;
-}
-
-/* zoom buttons: small glass pills in the bottom-right corner */
-.markmap-tools {
-  position: absolute;
-  right: 0.75rem;
-  bottom: 0.75rem;
-  display: flex;
-  gap: 0.25rem;
-  padding: 0.25rem;
-  border: 1px solid var(--mm-panel-line);
-  border-radius: 9999px;
-  background: color-mix(in srgb, var(--mm-panel-bg) 70%, transparent);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-}
-.markmap-tools button {
-  width: 1.9rem;
-  height: 1.9rem;
-  border-radius: 9999px;
-  font-size: 1.05rem;
-  line-height: 1;
-  cursor: pointer;
-  transition: background-color 0.15s ease;
-}
-.markmap-tools button:hover {
-  background: rgba(124, 58, 237, 0.18);
 }
 </style>
