@@ -128,7 +128,7 @@ const refit = () => ((touched = false), fit())
         @pointerdown.passive="touched = true"
         @wheel.passive="touched = true"
         @touchstart.passive="touched = true"
-      />
+      ></svg>
       <div v-if="ready" class="markmap-tools">
         <button type="button" aria-label="Phóng to" @click="zoomIn">+</button>
         <button type="button" aria-label="Thu nhỏ" @click="zoomOut">−</button>

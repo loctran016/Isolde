@@ -21,6 +21,8 @@
     "@giscus/vue": "^3.1.1",
     "@internationalized/date": "^3.12.4",
     "@markmap/element": "^1.1.0",
+    "@markmap/parse": "^1.1.0",
+    "@markmap/view": "^1.1.0",
     "@nuxt/fonts": "0.14.0",
     "@nuxt/image": "2.2.0",
     "@nuxtjs/cloudinary": "^4.1.0",
