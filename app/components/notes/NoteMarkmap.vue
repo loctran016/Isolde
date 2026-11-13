@@ -137,6 +137,16 @@ onMounted(async () => {
     log(view.mm ? 'map created' : 'map NOT created')
     scheduleFit(0)
 
+const { selection } = await import('d3-selection')
+const mmSelection = view.mm?.selection
+
+console.log({
+  d3PrototypeInterrupt: typeof (selection.prototype as any).interrupt,
+  markmapInterrupt: typeof mmSelection?.interrupt,
+  samePrototype:
+    !!mmSelection &&
+    Object.getPrototypeOf(mmSelection) === selection.prototype,
+})
     // Re-fit when the frame changes width (phone rotation, window resize).
     lastWidth = view.clientWidth
     resizeObserver = new ResizeObserver(() => {
