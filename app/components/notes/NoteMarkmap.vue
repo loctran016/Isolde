@@ -194,4 +194,21 @@ watch(
   justify-content: center;
   opacity: 0.6;
 }
+/* Toolbar (it lives in the element's shadow root, so only ::part(toolbar) can reach it).
+   Same glass look as the table of contents: faint tint, strong blur, thin border. */
+markmap-view::part(toolbar) {
+  background: rgba(254, 243, 199, 0.1); /* amber-100 / 10 */
+  backdrop-filter: blur(24px) saturate(1.5); /* backdrop-blur-xl + backdrop-saturate-150 */
+  -webkit-backdrop-filter: blur(24px) saturate(1.5);
+  border: 1px solid rgba(87, 83, 78, 0.2); /* stone-600 / 20 */
+  border-radius: 0.5rem;
+  color: #1c1917; /* stone-900 */
+  color-scheme: light; /* native controls (the Level picker and its arrows) follow this */
+}
+.dark markmap-view::part(toolbar) {
+  background: rgba(30, 41, 59, 0.3); /* slate-800 / 30 */
+  border-color: rgba(226, 232, 240, 0.2); /* slate-200 / 20 */
+  color: #e2e8f0; /* slate-200 */
+  color-scheme: dark;
+}
 </style>
