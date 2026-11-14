@@ -15,7 +15,7 @@ function formatDate(iso: string) {
 </script>
 
 <template>
-  <ul class="mt-4 space-y-3">
+  <ul class="space-y-3">
     <li
       v-for="day in holyDays"
       :key="day.westernDate"

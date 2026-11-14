@@ -1,5 +1,7 @@
 import { TibetanDate } from 'tibetan-date-calculator'
 
+const TIME_ZONE = 'Asia/Ho_Chi_Minh'
+
 // Recurring monthly practice days, keyed by Tibetan day-of-month (1–30)
 const RECURRING: Record<number, string> = {
   8: 'Medicine Buddha Day',
@@ -31,11 +33,14 @@ export interface TibetanHolyDay {
 
 export default defineEventHandler((): TibetanHolyDay[] => {
   const results: TibetanHolyDay[] = []
-  const now = new Date()
+
+  // Ngày hôm nay theo giờ Việt Nam (en-CA cho định dạng YYYY-MM-DD)
+  const todayStr = new Intl.DateTimeFormat('en-CA', { timeZone: TIME_ZONE }).format(new Date())
+  const [y, m, day] = todayStr.split('-').map(Number)
 
   for (let i = 0; i < 7; i++) {
-    const d = new Date(now)
-    d.setDate(now.getDate() + i)
+    // Lấy 12:00 trưa để không bị lệch ngày do múi giờ
+    const d = new Date(y, m - 1, day + i, 12)
 
     const tib = new TibetanDate(d)
     if (tib.isSkippedDay) continue

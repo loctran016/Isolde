@@ -68,7 +68,7 @@ function eventsForDate(d: { year: number; month: number; day: number }) {
     <CalendarRoot
       v-slot="{ weekDays, grid }"
       :default-value="defaultDate"
-      class="sm:text-lg card lg:col-start-1 lg:col-span-2 lg:row-start-1 lg:row-span-4"
+      class="sm:text-lg card"
       fixed-weeks
       weekdayFormat="short"
       :week-starts-on="1"

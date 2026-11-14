@@ -210,139 +210,69 @@ const dueDateMetaMap = computed(() => {
 
 <template>
   <div
-    class="grid grid-cols-1 lt-sm:my-2 lg:grid-cols-4 lg:grid-rows-5 gap-3 p-3 sm:gap-4 sm:p-4 mx-auto font-sans dark:text-gray-100 sm:max-h-[calc(100vh-var(--header-height))] lt-sm:max-h-200vh"
+    class="flex flex-col gap-3 sm:gap-4 p-3 sm:p-4 lt-sm:my-2 mx-auto font-sans dark:text-gray-100"
   >
-    <!-- Calendar: lazy-loaded to defer reka-ui Calendar + @internationalized/date ~200 kB -->
-    <LazyHomeCalendar
-      :events="events ?? []"
-      :default-date="date"
-      class="sm:text-lg order-0 card lg:col-start-1 lg:col-span-2 lg:row-start-1 h-fit lg:row-span-4"
-    >
-      <template #fallback>
-        <div
-          class="card lg:col-start-1 lg:col-span-2 lg:row-start-1 lg:row-span-3 animate-pulse bg-white/20 dark:bg-stone-700/20"
-        />
-      </template>
-    </LazyHomeCalendar>
+    <!-- Advice: luôn nằm trên cùng, full-width -->
+    <HomeAdvice />
 
-    <!-- Holy days: 1 row x 2 cols, below calendar -->
-    <!-- <div class="card lg:col-start-1 lg:col-span-2 lg:row-start-5 lg:row-span-1">
-      <h2 class="card-title">
-        <div class="i-mdi:calendar-star" />
-        This week's holy days
-      </h2>
-      <TibetanHolyDays class="" />
-    </div> -->
-
-    <!-- Todo: Expanded to 2 cols x 4 rows, replacing Pomodoro & Music -->
-    <div
-      class="card text-lg p-6 shadow-sm border flex flex-col gap-4 lg:col-start-3 lg:col-span-2 lg:row-start-1 lg:row-span-3 overflow-hidden"
-    >
-      <!-- Header - static -->
-      <div class="flex items-center justify-between shrink-0">
-        <h2 class="card-title">
-          <div class="i-mdi:text-box-edit" />
-          To-do
-        </h2>
-        <span class="text-xs opacity-50">{{ taskTodos.length + eventTodos.length }} items</span>
+    <!--
+      HÀNG 1 (desktop cao lg:h-[25rem] = 400px):
+      Calendar | To-do + Gallery/Music. Chiều cao hàng chỉnh ở đúng 1 chỗ này.
+    -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 lg:grid-rows-1 gap-3 sm:gap-4 lg:h-[25rem]">
+      <!-- Cột trái: Calendar -->
+      <div class="min-w-0 lg:h-full">
+        <!-- Calendar: lazy-loaded to defer reka-ui Calendar + @internationalized/date ~200 kB -->
+        <LazyHomeCalendar
+          :events="events ?? []"
+          :default-date="date"
+          class="sm:text-lg card lg:h-full"
+        >
+          <template #fallback>
+            <div class="card min-h-64 lg:h-full animate-pulse bg-white/20 dark:bg-stone-700/20" />
+          </template>
+        </LazyHomeCalendar>
       </div>
 
-      <!-- Sections with proportional heights -->
-      <div class="flex flex-col gap-5 flex-1 min-h-0">
-        <!-- TASKS (no due date) -->
-        <section class="flex flex-col min-h-0" :style="{ flex: sectionFlex.task }">
-          <h3
-            class="text-xs font-medium opacity-50 uppercase tracking-wider mb-2 flex items-center gap-2 shrink-0"
-          >
-            <div class="i-mdi:checkbox-outline text-sm" />
-            Tasks
-          </h3>
-          <PurpleScrollArea class="flex-1 min-h-0">
-            <ul class="flex flex-col gap-1.5">
-              <li v-for="todo in taskTodos" :key="todo.id" class="flex items-center gap-3 group">
-                <CheckboxRoot
-                  :model-value="todo.done"
-                  class="shrink-0 w-5 h-5 rounded-md border border-stone-800/40 dark:border-stone-100/40 flex items-center justify-center data-[state=checked]:bg-purple-500 data-[state=checked]:border-purple-500 focus-visible:ring-2 focus-visible:ring-purple-400 focus-visible:ring-offset-2 outline-none cursor-pointer transition-colors"
-                  @update:model-value="(value) => toggleDone(todo, value === true)"
-                >
-                  <CheckboxIndicator>
-                    <div class="i-mdi:check text-white text-sm" />
-                  </CheckboxIndicator>
-                </CheckboxRoot>
-                <EditableRoot
-                  :model-value="todo.task"
-                  class="flex-1 min-w-0"
-                  @update:model-value="(value) => saveTaskText(todo, String(value))"
-                >
-                  <EditableArea>
-                    <EditablePreview
-                      :class="[
-                        'cursor-text text-sm break-words',
-                        todo.done ? 'line-through opacity-40' : '',
-                      ]"
-                    />
-                    <EditableInput
-                      class="w-full bg-transparent outline-none border-b border-purple-400 text-sm"
-                    />
-                  </EditableArea>
-                </EditableRoot>
-                <button
-                  type="button"
-                  class="opacity-0 group-hover:opacity-100 transition-opacity text-stone-500 hover:text-red-500 shrink-0"
-                  aria-label="Remove task"
-                  @click="removeTodo(todo)"
-                >
-                  <div class="i-mdi:close text-base" />
-                </button>
-              </li>
-              <li v-if="!taskTodos.length" class="text-xs opacity-40 py-1">No tasks yet</li>
-            </ul>
-          </PurpleScrollArea>
-          <!-- Add task form -->
-          <form class="flex gap-2 mt-2 shrink-0" @submit.prevent="addTodo">
-            <input
-              v-model="newTaskText"
-              type="text"
-              placeholder="Add a task…"
-              class="flex-1 bg-transparent outline-none border-b border-stone-800/20 dark:border-stone-100/20 focus:border-purple-500 transition-colors px-1 py-0.5 text-sm"
-            />
-            <button
-              type="submit"
-              :disabled="addingTodo || !newTaskText.trim()"
-              class="text-xs px-2 py-0.5 rounded-md border border-stone-800/20 dark:border-stone-100/20 hover:border-purple-500 hover:text-purple-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shrink-0"
-            >
-              Add
-            </button>
-          </form>
-        </section>
+      <!-- Cột phải: To-do (phần còn lại) / Gallery + Music (h-20) -->
+      <div class="flex flex-col gap-3 sm:gap-4 min-w-0 lg:h-full lg:min-h-0">
+        <!-- Todo: chiếm phần còn lại của cột, danh sách cuộn bên trong -->
+        <div
+          class="card text-lg p-6 shadow-sm border flex flex-col gap-3 overflow-hidden lg:flex-1 lg:min-h-0"
+        >
+          <!-- Header - static -->
+          <div class="flex items-center justify-between shrink-0">
+            <h2 class="card-title">
+              <div class="i-mdi:text-box-edit" />
+              To-do
+            </h2>
+            <span class="text-xs opacity-50">{{ taskTodos.length + eventTodos.length }} items</span>
+          </div>
 
-        <!-- EVENTS (pink, with due dates) -->
-        <!-- <section class="flex flex-col min-h-0" :style="{ flex: sectionFlex.event }">
-          <h3
-            class="text-xs font-medium text-pink-600 dark:text-pink-400 uppercase tracking-wider mb-2 flex items-center gap-2 shrink-0"
-          >
-            <div class="i-mdi:calendar-star text-sm" />
-            Important Events
-          </h3>
-          <PurpleScrollArea class="flex-1 min-h-0">
-            <ul class="flex flex-col gap-1.5">
-              <li
-                v-for="todo in sortedEventTodos"
-                :key="todo.id"
-                class="flex items-center gap-3 group"
-              >
-                <CheckboxRoot
-                  :model-value="todo.done"
-                  class="shrink-0 w-5 h-5 rounded-md border border-pink-400/50 flex items-center justify-center data-[state=checked]:bg-pink-500 data-[state=checked]:border-pink-500 focus-visible:ring-2 focus-visible:ring-pink-400 focus-visible:ring-offset-2 outline-none cursor-pointer transition-colors"
-                  @update:model-value="(value) => toggleDone(todo, value === true)"
-                >
-                  <CheckboxIndicator>
-                    <div class="i-mdi:check text-white text-sm" />
-                  </CheckboxIndicator>
-                </CheckboxRoot>
-                <div class="flex-1 min-w-0">
+          <!-- TASKS (no due date) -->
+          <section class="flex flex-col flex-1 min-h-0">
+            <h3
+              class="text-xs font-medium opacity-50 uppercase tracking-wider mb-2 flex items-center gap-2 shrink-0"
+            >
+              <div class="i-mdi:checkbox-outline text-sm" />
+              Tasks
+            </h3>
+            <!-- Mobile: cao cố định h-44. Desktop: giãn theo phần còn lại và cuộn -->
+            <PurpleScrollArea class="h-44 lg:h-auto lg:flex-1 lg:min-h-0">
+              <ul class="flex flex-col gap-1.5">
+                <li v-for="todo in taskTodos" :key="todo.id" class="flex items-center gap-3 group">
+                  <CheckboxRoot
+                    :model-value="todo.done"
+                    class="shrink-0 w-5 h-5 rounded-md border border-stone-800/40 dark:border-stone-100/40 flex items-center justify-center data-[state=checked]:bg-purple-500 data-[state=checked]:border-purple-500 focus-visible:ring-2 focus-visible:ring-purple-400 focus-visible:ring-offset-2 outline-none cursor-pointer transition-colors"
+                    @update:model-value="(value) => toggleDone(todo, value === true)"
+                  >
+                    <CheckboxIndicator>
+                      <div class="i-mdi:check text-white text-sm" />
+                    </CheckboxIndicator>
+                  </CheckboxRoot>
                   <EditableRoot
                     :model-value="todo.task"
+                    class="flex-1 min-w-0"
                     @update:model-value="(value) => saveTaskText(todo, String(value))"
                   >
                     <EditableArea>
@@ -353,171 +283,164 @@ const dueDateMetaMap = computed(() => {
                         ]"
                       />
                       <EditableInput
-                        class="w-full bg-transparent outline-none border-b border-pink-400 text-sm"
+                        class="w-full bg-transparent outline-none border-b border-purple-400 text-sm"
                       />
                     </EditableArea>
                   </EditableRoot>
-                </div>
-                <template v-for="meta in [dueDateMetaMap.get(todo.id)]" :key="todo.id + '-meta'">
-                  <span :class="meta?.overdue ? 'text-red-500 font-medium' : 'text-pink-500/70'">
-                    {{ meta?.label }}
-                  </span>
-                </template>
-              </li>
-              <li v-if="!eventTodos.length" class="text-xs opacity-40 py-1">No events yet</li>
-            </ul>
-          </PurpleScrollArea>
-
-          <div
-            v-if="showEventForm"
-            class="mt-2 space-y-2 p-3 rounded-lg bg-pink-500/5 border border-pink-500/20 shrink-0"
-          >
-            <input
-              v-model="newEventTask"
-              type="text"
-              placeholder="Event name…"
-              class="w-full bg-transparent outline-none border-b border-pink-400/30 focus:border-pink-500 px-1 py-0.5 text-sm"
-            />
-            <div class="flex gap-2 items-center">
+                  <button
+                    type="button"
+                    class="opacity-0 group-hover:opacity-100 transition-opacity text-stone-500 hover:text-red-500 shrink-0"
+                    aria-label="Remove task"
+                    @click="removeTodo(todo)"
+                  >
+                    <div class="i-mdi:close text-base" />
+                  </button>
+                </li>
+                <li v-if="!taskTodos.length" class="text-xs opacity-40 py-1">No tasks yet</li>
+              </ul>
+            </PurpleScrollArea>
+            <!-- Add task form -->
+            <form class="flex gap-2 mt-2 shrink-0" @submit.prevent="addTodo">
               <input
-                v-model="newEventDueDate"
-                type="date"
-                class="flex-1 bg-transparent outline-none border-b border-pink-400/30 focus:border-pink-500 px-1 py-0.5 text-sm"
+                v-model="newTaskText"
+                type="text"
+                placeholder="Add a task…"
+                class="flex-1 bg-transparent outline-none border-b border-stone-800/20 dark:border-stone-100/20 focus:border-purple-500 transition-colors px-1 py-0.5 text-sm"
               />
               <button
-                type="button"
-                class="text-xs px-2 py-0.5 rounded-md bg-pink-500/20 text-pink-600 dark:text-pink-400 hover:bg-pink-500/30 transition-colors disabled:opacity-50 shrink-0"
-                :disabled="addingEvent || !newEventTask.trim()"
-                @click="addEvent"
+                type="submit"
+                :disabled="addingTodo || !newTaskText.trim()"
+                class="text-xs px-2 py-0.5 rounded-md border border-stone-800/20 dark:border-stone-100/20 hover:border-purple-500 hover:text-purple-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shrink-0"
               >
-                Save
+                Add
               </button>
-              <button
-                type="button"
-                class="text-xs px-2 py-0.5 rounded-md hover:bg-stone-200 dark:hover:bg-stone-700 transition-colors shrink-0"
-                @click="showEventForm = false"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-          <button
-            v-else
-            type="button"
-            class="mt-2 text-xs text-pink-500/60 hover:text-pink-500 transition-colors cursor-pointer shrink-0"
-            @click="showEventForm = true"
-          >
-            + Add event
-          </button>
-        </section> -->
-      </div>
-    </div>
-    <div
-      class="grid lt-sm:order-0 grid-cols-3 lg:grid-rows-2 lg:col-start-3 lg:row-span-2 lg:col-span-2 gap-2 sm:gap-3 text-gray-800 dark:text-gray-100"
-    >
-      <!-- Four action btns -->
-      <StrengthForm>
-        <button
-          type="button"
-          aria-haspopup="dialog"
-          aria-expanded="false"
-          data-state="closed"
-          class="card flex items-center gap-2 justify-center w-full cursor-pointer group"
-        >
-          <div
-            class="i-solar:dumbbell-large-minimalistic-line-duotone dark:i-solar:dumbbell-large-minimalistic-bold-duotone text-3xl lg:text-5xl"
-          />
-          <p
-            class="text-2xl lg:text-3xl opacity-55 dark:opacity-15 transition-all duration-200 group-hover:opacity-100"
-          >
-            +
-          </p>
-        </button>
-      </StrengthForm>
-      <CardioForm>
-        <button
-          type="button"
-          aria-haspopup="dialog"
-          aria-expanded="false"
-          data-state="closed"
-          class="card flex items-center gap-2 justify-center w-full cursor-pointer group"
-        >
-          <div
-            class="i-solar:treadmill-round-line-duotone dark:i-solar:treadmill-round-bold-duotone text-3xl lg:text-5xl"
-          />
-          <p
-            class="text-2xl lg:text-3xl opacity-55 dark:opacity-15 transition-all duration-200 group-hover:opacity-100"
-          >
-            +
-          </p>
-        </button>
-      </CardioForm>
-      <BodyMetricForm>
-        <button
-          type="button"
-          aria-haspopup="dialog"
-          aria-expanded="false"
-          data-state="closed"
-          class="card flex items-center gap-2 justify-center w-full cursor-pointer group"
-        >
-          <div
-            class="i-solar:weigher-line-duotone dark:i-solar:weigher-bold-duotone text-3xl lg:text-5xl"
-          />
-          <p
-            class="text-2xl lg:text-3xl opacity-55 dark:opacity-15 transition-all duration-200 group-hover:opacity-100"
-          >
-            +
-          </p>
-        </button>
-      </BodyMetricForm>
-      <!-- <div
-        class="card  w-full flex flex-col gap-1 items-center justify-center"
-      >
-        <div class="text-3xl sm:text-4xl lg:text-5xl font-semibold flex items-center gap-1">
-          <div
-            class="i-solar:fire-line-duotone dark:i-solar:fire-bold-duotone text-3xl sm:text-3xl lg:text-5xl"
-          />
-          <span class="opacity-90 dark:opacity-100">{{ currentStreak }}</span>
+            </form>
+          </section>
         </div>
-        <p class="text-base opacity-85">{{ currentStreak === 1 ? 'day' : 'days' }} active</p>
-      </div> -->
+
+        <!-- Gallery | Sheet Music: h-20 cố định -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 shrink-0">
+          <NuxtLink
+            to="/gallery"
+            class="card h-20 relative overflow-hidden group flex items-center gap-3 p-4 hover:scale-[1.01] transition-transform duration-200"
+          >
+            <div
+              class="absolute inset-0 bg-gradient-to-br from-pink-400/20 to-purple-400/10 opacity-0 group-hover:opacity-100 transition-opacity"
+            />
+            <div class="i-solar:gallery-round-bold text-3xl text-pink-500 shrink-0 relative" />
+            <div class="relative min-w-0">
+              <p class="font-medium truncate">Gallery</p>
+              <p class="text-xs opacity-60 truncate">Every photo, organized by folder and tag.</p>
+            </div>
+            <div
+              class="i-mdi:chevron-right ml-auto text-xl opacity-40 group-hover:opacity-80 transition-opacity relative shrink-0"
+            />
+          </NuxtLink>
+
+          <NuxtLink
+            to="/musical"
+            class="card h-20 relative overflow-hidden group flex items-center gap-3 p-4 hover:scale-[1.01] transition-transform duration-200"
+          >
+            <div
+              class="absolute inset-0 bg-gradient-to-br from-purple-400/20 to-indigo-400/10 opacity-0 group-hover:opacity-100 transition-opacity"
+            />
+            <div class="i-mdi:music-clef-treble text-3xl text-purple-500 shrink-0 relative" />
+            <div class="relative min-w-0">
+              <p class="font-medium truncate">Sheet Music</p>
+              <p class="text-xs opacity-60 truncate">
+                Sheet music, rendered live, with a built-in metronome.
+              </p>
+            </div>
+            <div
+              class="i-mdi:chevron-right ml-auto text-xl opacity-40 group-hover:opacity-80 transition-opacity relative shrink-0"
+            />
+          </NuxtLink>
+        </div>
+      </div>
     </div>
 
-    <NuxtLink
-      to="/gallery"
-      class="card lg:col-start-1 lg:col-span-1 lg:row-start-5 relative overflow-hidden group flex items-center gap-3 p-4 hover:scale-[1.01] transition-transform duration-200"
-    >
-      <div
-        class="absolute inset-0 bg-gradient-to-br from-pink-400/20 to-purple-400/10 opacity-0 group-hover:opacity-100 transition-opacity"
-      />
-      <div class="i-solar:gallery-round-bold text-3xl text-pink-500 shrink-0 relative" />
-      <div class="relative min-w-0">
-        <p class="font-medium truncate">Gallery</p>
-        <p class="text-xs opacity-60 truncate">Every photo, organized by folder and tag.</p>
+    <!--
+      HÀNG 2 (desktop cao lg:h-72 = 288px):
+      Trái: Pomodoro + Music | Phải: 1 hàng fitness (h-24) + Tibetan Holy Days (phần còn lại).
+    -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 lg:grid-rows-1 gap-3 sm:gap-4 lg:h-72">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 min-w-0 lg:h-full">
+        <PomodoroTimer class="lg:h-full" />
+        <MusicPlayer class="lg:h-full" />
       </div>
-      <div
-        class="i-mdi:chevron-right ml-auto text-xl opacity-40 group-hover:opacity-80 transition-opacity relative shrink-0"
-      />
-    </NuxtLink>
 
-    <NuxtLink
-      to="/musical"
-      class="card lg:col-start-2 lg:col-span-1 lg:row-start-5 relative overflow-hidden group flex items-center gap-3 p-4 hover:scale-[1.01] transition-transform duration-200"
-    >
-      <div
-        class="absolute inset-0 bg-gradient-to-br from-purple-400/20 to-indigo-400/10 opacity-0 group-hover:opacity-100 transition-opacity"
-      />
-      <div class="i-mdi:music-clef-treble text-3xl text-purple-500 shrink-0 relative" />
-      <div class="relative min-w-0">
-        <p class="font-medium truncate">Sheet Music</p>
-        <p class="text-xs opacity-60 truncate">
-          Sheet music, rendered live, with a built-in metronome.
-        </p>
+      <div class="flex flex-col gap-3 sm:gap-4 min-w-0 lg:h-full lg:min-h-0">
+        <!-- 3 nút fitness: h-24 cố định -->
+        <div class="grid grid-cols-3 gap-2 sm:gap-3 shrink-0 text-gray-800 dark:text-gray-100">
+          <StrengthForm>
+            <button
+              type="button"
+              aria-haspopup="dialog"
+              aria-expanded="false"
+              data-state="closed"
+              class="card h-24 flex items-center gap-2 justify-center w-full cursor-pointer group"
+            >
+              <div
+                class="i-solar:dumbbell-large-minimalistic-line-duotone dark:i-solar:dumbbell-large-minimalistic-bold-duotone text-3xl lg:text-5xl"
+              />
+              <p
+                class="text-2xl lg:text-3xl opacity-55 dark:opacity-15 transition-all duration-200 group-hover:opacity-100"
+              >
+                +
+              </p>
+            </button>
+          </StrengthForm>
+          <CardioForm>
+            <button
+              type="button"
+              aria-haspopup="dialog"
+              aria-expanded="false"
+              data-state="closed"
+              class="card h-24 flex items-center gap-2 justify-center w-full cursor-pointer group"
+            >
+              <div
+                class="i-solar:treadmill-round-line-duotone dark:i-solar:treadmill-round-bold-duotone text-3xl lg:text-5xl"
+              />
+              <p
+                class="text-2xl lg:text-3xl opacity-55 dark:opacity-15 transition-all duration-200 group-hover:opacity-100"
+              >
+                +
+              </p>
+            </button>
+          </CardioForm>
+          <BodyMetricForm>
+            <button
+              type="button"
+              aria-haspopup="dialog"
+              aria-expanded="false"
+              data-state="closed"
+              class="card h-24 flex items-center gap-2 justify-center w-full cursor-pointer group"
+            >
+              <div
+                class="i-solar:weigher-line-duotone dark:i-solar:weigher-bold-duotone text-3xl lg:text-5xl"
+              />
+              <p
+                class="text-2xl lg:text-3xl opacity-55 dark:opacity-15 transition-all duration-200 group-hover:opacity-100"
+              >
+                +
+              </p>
+            </button>
+          </BodyMetricForm>
+        </div>
+
+        <!-- Tibetan Holy Days: chiếm phần còn lại của cột, danh sách cuộn bên trong -->
+        <div class="card p-5 flex flex-col gap-3 overflow-hidden lg:flex-1 lg:min-h-0">
+          <h2 class="card-title shrink-0">
+            <div class="i-mdi:calendar-star" />
+            This week's holy days
+          </h2>
+          <!-- Mobile: cao cố định h-32. Desktop: giãn theo phần còn lại và cuộn -->
+          <PurpleScrollArea class="h-32 lg:h-auto lg:flex-1 lg:min-h-0">
+            <TibetanHolyDays />
+          </PurpleScrollArea>
+        </div>
       </div>
-      <div
-        class="i-mdi:chevron-right ml-auto text-xl opacity-40 group-hover:opacity-80 transition-opacity relative shrink-0"
-      />
-    </NuxtLink>
+    </div>
   </div>
 </template>
 
