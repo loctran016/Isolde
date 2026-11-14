@@ -67,7 +67,7 @@ jobs:
 
       - uses: actions/setup-node@v7
         with:
-          node-version: 24 # use the version shown in Vercel: Project Settings > General > Node.js Version
+          node-version: 26 # use the version shown in Vercel: Project Settings > General > Node.js Version
 
       - uses: oven-sh/setup-bun@v2
         with:
