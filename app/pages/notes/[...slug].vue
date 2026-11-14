@@ -470,7 +470,7 @@ useNoteLanding()
 
 <template>
   <div
-    class="px-2 lg:w-9/10 mt-6 lg:mt-8 prose lg:prose-lg antialiased prose-zinc prose-purple prose-h1:font-bold prose-h2:font-bold prose-h3:font-semibold prose-h4:font-semibold prose-h5:font-semibold dark:prose-invert mx-auto prose-a:no-underline hover:prose-a:text-purple-800/95 dark:hover:prose-a:text-purple-300/90 prose-a:transition-all prose-a:duration-200 prose-p:tracking-[0.01em] prose-table:table-auto prose-td:min-w-10 prose-td:min-w-[calc-size(max-content,min(size,10ch))] prose-img:mx-auto prose-img:rounded-md pb-10 xl:pb-14 prose-li:marker:text-slate-800 dark:prose-li:marker:text-slate-400 prose-h2:uppercase"
+    class="px-4 lg:w-9/10 mt-6 lg:mt-8 prose lg:prose-lg antialiased prose-zinc prose-purple prose-h1:font-bold prose-h2:font-bold prose-h3:font-semibold prose-h4:font-semibold prose-h5:font-semibold dark:prose-invert mx-auto prose-a:no-underline hover:prose-a:text-purple-800/95 dark:hover:prose-a:text-purple-300/90 prose-a:transition-all prose-a:duration-200 prose-p:tracking-[0.01em] prose-table:table-auto prose-td:min-w-10 prose-td:min-w-[calc-size(max-content,min(size,10ch))] prose-img:mx-auto prose-img:rounded-md pb-10 xl:pb-14 prose-li:marker:text-slate-800 dark:prose-li:marker:text-slate-400 prose-h2:uppercase"
   >
     <!-- Breadcrumb + actions -->
     <div class="not-prose mb-4 flex items-center justify-between gap-3">
@@ -579,7 +579,7 @@ useNoteLanding()
   </div>
   <!-- pb-24 keeps the floating search button from covering the licence text -->
   <div
-    class="px-2 py-4 ml-0 w-screen bg-slate-100/20 dark:bg-slate-800/30 items-center flex-wrap gap-2 flex"
+    class="px-4 py-4 w-screen bg-slate-100/20 dark:bg-slate-800/30 items-center flex-wrap gap-2 flex"
   >
     <a href="https://isolde.vercel.app">Isolde</a> © 2026 <span class="hidden md:block">by</span>
     <a href="https://github.com/loctran016" class="-mx-1 hidden sm:block">Tran Tan Loc</a> is
