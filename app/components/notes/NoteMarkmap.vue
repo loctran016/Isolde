@@ -1,76 +1,50 @@
-<script lang="ts">
-// Shared by every map on the page: the @markmap/element chunk is fetched once.
-let elementLoad: Promise<unknown> | null = null
-export function loadMarkmapElement() {
-  return (elementLoad ??= (async () => {
-    // @markmap/view uses d3-zoom, whose zoom.transform() calls selection.interrupt(). That method is
-    // added by d3-transition, which @markmap/view does not import, so it can be missing in a bundle.
-    // Adding it here, with a named import so the bundler cannot drop it, is what d3-transition does itself.
-    const [{ selection }, { interrupt }] = await Promise.all([
-      import('d3-selection'),
-      import('d3-transition'),
-    ])
-    const proto = selection.prototype as any
-    if (typeof proto.interrupt !== 'function') {
-      proto.interrupt = function (this: any, name?: string) {
-        return this.each(function (this: any) {
-          interrupt(this, name)
-        })
-      }
-      console.debug('[markmap] added selection.interrupt()')
-    }
-    return import('@markmap/element')
-  })())
-}
-</script>
-
 <script setup lang="ts">
 // Renders a ```markmap code block as an interactive mind map with <markmap-view> (@markmap/element).
-// @markmap/element does nothing on the server, so the map is created in the browser only.
-// A spinner shows until the map has been drawn and fitted into its frame; the map stays hidden
-// until then, so it never appears off-centre.
+// The element does nothing on the server, so the map is created in the browser only. A spinner shows
+// until the map is drawn and fitted into its frame, so it never appears off-centre.
+//
+// Needs in nuxt.config.ts, so that d3 is bundled once (otherwise fit() throws "interrupt is not a function"):
+//   vite: { resolve: { dedupe: ['d3-selection', 'd3-transition', 'd3-zoom', 'd3-interpolate'] } }
 const props = defineProps<{ markdown?: string }>()
 
 const { themePref } = useTheme()
 const colorScheme = computed(() => (themePref.value === 'system' ? 'auto' : themePref.value))
 
+// Calm default look. A theme set in the block's own frontmatter wins (an attribute would override it).
+const theme = computed(() =>
+  /^---[\s\S]*?\n\s*theme\s*:/.test(props.markdown ?? '') ? undefined : 'minimal',
+)
+
 const el = ref<HTMLElement | null>(null)
-const frame = ref<HTMLElement | null>(null)
 const ready = ref(false)
-
-const uid = Math.random().toString(36).slice(2, 6)
-const t0 = typeof performance !== 'undefined' ? performance.now() : 0
-const log = (msg: string) =>
-  console.debug(`[markmap ${uid}] ${msg} (+${Math.round(performance.now() - t0)} ms)`)
-
-// Resolves when the frame is within `margin` of the viewport (the autoloader does the same, so a map
-// far down a long note costs nothing until the reader gets close).
-const whenNear = (node: Element | null, margin = '800px') =>
-  new Promise<void>((resolve) => {
-    if (!node || !('IntersectionObserver' in window)) return resolve()
-    const io = new IntersectionObserver(
-      (entries) => {
-        if (entries.some((e) => e.isIntersecting)) {
-          io.disconnect()
-          resolve()
-        }
-      },
-      { rootMargin: margin },
-    )
-    io.observe(node)
-  })
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 const nextFrame = () => new Promise((r) => requestAnimationFrame(() => r(null)))
 
-let fitWarned = false
-let started = false // never initialise the same component twice
 let touched = false // the reader zoomed / panned / used the toolbar: stop re-fitting for them
 let disposed = false
 let fitTimer: ReturnType<typeof setTimeout> | undefined
 let fitCount = 0
+let fitWarned = false
 let resizeObserver: ResizeObserver | undefined
 let lastWidth = 0
+
+// d3-zoom (used by markmap's fit) calls selection.interrupt(), which d3-transition adds and
+// @markmap/view does not import. With d3 deduped this is a no-op; it is kept as a safety net.
+async function ensureInterrupt() {
+  const [{ selection }, { interrupt }] = await Promise.all([
+    import('d3-selection'),
+    import('d3-transition'),
+  ])
+  const proto = selection.prototype as any
+  if (typeof proto.interrupt !== 'function') {
+    proto.interrupt = function (this: any, name?: string) {
+      return this.each(function (this: any) {
+        interrupt(this, name)
+      })
+    }
+  }
+}
 
 // Fit the whole map into the frame (the Markmap object is `el.mm`).
 async function fit() {
@@ -79,13 +53,13 @@ async function fit() {
   try {
     await Promise.race([Promise.resolve(mm.fit()), sleep(1200)])
   } catch (err) {
-    if (!fitWarned) console.warn(`[markmap ${uid}] fit() failed`, err)
+    if (!fitWarned) console.warn('[markmap] fit() failed', err)
     fitWarned = true
   }
 }
 
-// The element can draw more than once (after the theme attribute is set, after fonts load...),
-// and each draw can move the map. So fit again after every render until the reader touches it.
+// The element can draw more than once (theme attribute, fonts...), and each draw can move the map.
+// So fit again after every render until the reader touches it.
 function scheduleFit(delay = 60) {
   if (disposed) return
   clearTimeout(fitTimer)
@@ -95,31 +69,17 @@ function scheduleFit(delay = 60) {
     if (!touched && fitCount < 8) {
       fitCount++
       await fit()
-      log(`fit #${fitCount}`)
     }
     ready.value = true
   }, delay)
 }
 
 onMounted(async () => {
-  if (started) return
-  started = true
-  log('mounted')
-
-  // Warm up the library when the browser is idle, even if the map is still far down the page.
-  const idle: (cb: () => void) => void = (window as any).requestIdleCallback
-    ? (cb) => (window as any).requestIdleCallback(cb)
-    : (cb) => setTimeout(cb, 300)
-  idle(() => loadMarkmapElement().catch(() => {}))
-
-  await Promise.race([whenNear(frame.value), sleep(1500)]) // never wait long for the viewport
-  log('near the viewport')
   const spinnerGuard = setTimeout(() => (ready.value = true), 5000) // never spin forever
-
   try {
-    await loadMarkmapElement()
+    await ensureInterrupt()
+    await import('@markmap/element')
     await customElements.whenDefined('markmap-view')
-    log('element loaded')
 
     // <ClientOnly> renders its content a tick after mount, so wait for the element itself.
     for (let i = 0; i < 80 && !el.value; i++) await sleep(25)
@@ -131,22 +91,9 @@ onMounted(async () => {
       view.addEventListener(type, () => (touched = true), { passive: true })
 
     view.markdown = props.markdown ?? ''
-
-    // Wait (at most 3 s) for the Markmap object, then fit it.
-    for (let i = 0; i < 60 && !view.mm; i++) await sleep(50)
-    log(view.mm ? 'map created' : 'map NOT created')
+    for (let i = 0; i < 60 && !view.mm; i++) await sleep(50) // wait (max 3 s) for the Markmap object
     scheduleFit(0)
 
-const { selection } = await import('d3-selection')
-const mmSelection = view.mm?.selection
-
-console.log({
-  d3PrototypeInterrupt: typeof (selection.prototype as any).interrupt,
-  markmapInterrupt: typeof mmSelection?.interrupt,
-  samePrototype:
-    !!mmSelection &&
-    Object.getPrototypeOf(mmSelection) === selection.prototype,
-})
     // Re-fit when the frame changes width (phone rotation, window resize).
     lastWidth = view.clientWidth
     resizeObserver = new ResizeObserver(() => {
@@ -159,7 +106,7 @@ console.log({
     })
     resizeObserver.observe(view)
   } catch (err) {
-    console.error(`[markmap ${uid}] failed`, err)
+    console.error('[markmap] failed', err)
     ready.value = true
   } finally {
     clearTimeout(spinnerGuard)
@@ -168,7 +115,6 @@ console.log({
 
 onBeforeUnmount(() => {
   disposed = true
-  log('unmounted')
   clearTimeout(fitTimer)
   resizeObserver?.disconnect()
 })
@@ -186,25 +132,29 @@ watch(
 </script>
 
 <template>
-  <div ref="frame" class="markmap-block not-prose" :class="{ 'is-ready': ready }">
+  <div class="markmap-block not-prose" :class="{ 'is-ready': ready }">
     <div v-if="!ready" class="markmap-loading" aria-live="polite">
       <span class="i-svg-spinners:bars-rotate-fade text-3xl" />
     </div>
     <ClientOnly>
-      <markmap-view ref="el" class="markmap-view" :color-scheme="colorScheme" toolbar />
+      <markmap-view
+        ref="el"
+        class="markmap-view"
+        :theme="theme"
+        :color-scheme="colorScheme"
+        toolbar
+      />
     </ClientOnly>
   </div>
 </template>
 
 <style>
-/* Frame: a glass panel that matches the page (orange-50 / slate-900) and the tables. The map's own
-   background is transparent, and color-scheme makes markmap pick light or dark text, so the
-   text always contrasts with this panel. */
+/* Frame: a quiet glass panel that matches the page (orange-50 / slate-900) and the tables.
+   The map's own background is transparent; color-scheme makes markmap pick light or dark text. */
 .markmap-block {
-  --mm-panel-bg: color-mix(in srgb, #fff7ed 90%, #7c3aed);
-  --mm-panel-line: rgba(100, 116, 139, 0.3);
-  --mm-panel-shadow: 0 8px 30px rgba(15, 23, 42, 0.08);
-  --mm-panel-glow: rgba(255, 255, 255, 0.7);
+  --mm-panel-bg: color-mix(in srgb, #fff7ed 94%, #7c3aed);
+  --mm-panel-line: rgba(100, 116, 139, 0.25);
+  --mm-panel-shadow: 0 6px 24px rgba(15, 23, 42, 0.06);
 
   position: relative;
   width: 100%;
@@ -214,17 +164,14 @@ watch(
   border: 1px solid var(--mm-panel-line);
   border-radius: 1rem;
   background: var(--mm-panel-bg);
-  backdrop-filter: blur(14px) saturate(1.4);
-  -webkit-backdrop-filter: blur(14px) saturate(1.4);
-  box-shadow:
-    inset 0 1px 0 var(--mm-panel-glow),
-    var(--mm-panel-shadow);
+  backdrop-filter: blur(14px) saturate(1.2);
+  -webkit-backdrop-filter: blur(14px) saturate(1.2);
+  box-shadow: var(--mm-panel-shadow);
 }
 .dark .markmap-block {
-  --mm-panel-bg: color-mix(in srgb, #0f172a 88%, #a78bfa);
-  --mm-panel-line: rgba(148, 163, 184, 0.22);
-  --mm-panel-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
-  --mm-panel-glow: rgba(255, 255, 255, 0.07);
+  --mm-panel-bg: color-mix(in srgb, #0f172a 92%, #a78bfa);
+  --mm-panel-line: rgba(148, 163, 184, 0.2);
+  --mm-panel-shadow: 0 6px 24px rgba(0, 0, 0, 0.3);
 }
 
 .markmap-view {
