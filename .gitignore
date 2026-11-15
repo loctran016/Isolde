@@ -27,3 +27,7 @@ stats.json
 .content/
 
 public/graph.json
+
+# Windows Zone.Identifier metadata
+*:Zone.Identifier
+*Zone.Identifier
