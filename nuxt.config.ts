@@ -104,9 +104,10 @@ export default defineNuxtConfig({
   },
   googleFonts: {
     families: {
-      Inter: '100..900',
-      'Space Grotesk': '300..700',
+      Inter: [400, 500, 600, 700],
+      'Space Grotesk': [400, 500, 600, 700],
     },
+    subsets: ['latin', 'vietnamese'],
     display: 'swap',
     download: true, // self-host the font files at build time
     preload: true,
