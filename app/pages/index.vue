@@ -11,9 +11,11 @@ import {
 
 const TIME_ZONE = 'Asia/Ho_Chi_Minh'
 
-// Plain const instead of useState — no SSR/hydration mismatch risk for static value
-const todayIso = today(TIME_ZONE).toString()
-const date = parseDate(todayIso)
+const date = ref(parseDate('2000-01-01'))
+
+onMounted(() => {
+  date.value = today(TIME_ZONE)
+})
 
 const island = getIsland('/')!
 
@@ -184,7 +186,7 @@ async function removeTodo(todo: TodoItem) {
 function dueDateMeta(dateStr: string | null): { label: string; overdue: boolean } {
   if (!dateStr) return { label: 'Today', overdue: false }
   const due = parseDate(dateStr)
-  const diff = due.compare(date)
+  const diff = due.compare(date.value)
 
   if (diff === 0) return { label: 'Today', overdue: false }
   if (diff === 1) return { label: 'Tomorrow', overdue: false }
@@ -213,7 +215,7 @@ const dueDateMetaMap = computed(() => {
     class="flex flex-col gap-3 sm:gap-4 p-3 sm:p-4 lt-sm:my-2 mx-auto font-sans dark:text-gray-100"
   >
     <!-- Advice: luôn nằm trên cùng, full-width -->
-    <HomeAdvice />
+    <LazyHomeAdvice />
 
     <!--
       HÀNG 1 (desktop cao lg:h-[25rem] = 400px):
@@ -365,14 +367,14 @@ const dueDateMetaMap = computed(() => {
     -->
     <div class="grid grid-cols-1 lg:grid-cols-2 lg:grid-rows-1 gap-3 sm:gap-4 lg:h-72">
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 min-w-0 lg:h-full">
-        <PomodoroTimer class="lg:h-full" />
-        <MusicPlayer class="lg:h-full" />
+        <LazyPomodoroTimer class="lg:h-full" />
+        <LazyMusicPlayer class="lg:h-full" />
       </div>
 
       <div class="flex flex-col gap-3 sm:gap-4 min-w-0 lg:h-full lg:min-h-0">
         <!-- 3 nút fitness: h-24 cố định -->
         <div class="grid grid-cols-3 gap-2 sm:gap-3 shrink-0 text-gray-800 dark:text-gray-100">
-          <StrengthForm>
+          <LazyStrengthForm>
             <button
               type="button"
               aria-haspopup="dialog"
@@ -389,8 +391,8 @@ const dueDateMetaMap = computed(() => {
                 +
               </p>
             </button>
-          </StrengthForm>
-          <CardioForm>
+          </LazyStrengthForm>
+          <LazyCardioForm>
             <button
               type="button"
               aria-haspopup="dialog"
@@ -407,8 +409,8 @@ const dueDateMetaMap = computed(() => {
                 +
               </p>
             </button>
-          </CardioForm>
-          <BodyMetricForm>
+          </LazyCardioForm>
+          <LazyBodyMetricForm>
             <button
               type="button"
               aria-haspopup="dialog"
@@ -425,7 +427,7 @@ const dueDateMetaMap = computed(() => {
                 +
               </p>
             </button>
-          </BodyMetricForm>
+          </LazyBodyMetricForm>
         </div>
 
         <!-- Tibetan Holy Days: chiếm phần còn lại của cột, danh sách cuộn bên trong -->
@@ -436,7 +438,7 @@ const dueDateMetaMap = computed(() => {
           </h2>
           <!-- Mobile: cao cố định h-32. Desktop: giãn theo phần còn lại và cuộn -->
           <PurpleScrollArea class="h-32 lg:h-auto lg:flex-1 lg:min-h-0">
-            <TibetanHolyDays />
+            <LazyTibetanHolyDays />
           </PurpleScrollArea>
         </div>
       </div>

@@ -1,0 +1,21 @@
+name: PageSpeed Health Check Bot
+
+on:
+  # 1. Tự động chạy định kỳ vào 8h sáng (giờ VN) mỗi thứ 2 hàng tuần
+  schedule:
+    - cron: '0 1 * * 1'
+  # 2. Hoặc cho phép bạn bấm nút "Run workflow" chạy thủ công bất cứ lúc nào
+  workflow_dispatch:
+
+jobs:
+  lighthouse-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Chạy kiểm tra tốc độ (Lighthouse CI)
+        uses: treosh/lighthouse-ci-action@v11
+        with:
+          configPath: './lighthouserc.json'
+          uploadArtifacts: true

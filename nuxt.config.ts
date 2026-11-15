@@ -49,7 +49,6 @@ export default defineNuxtConfig({
     compilerOptions: {
       isCustomElement: (tag) => tag === 'markmap-view',
     },
-    
   },
   vite: {
     optimizeDeps: {
@@ -62,7 +61,7 @@ export default defineNuxtConfig({
         'elkjs/lib/elk.bundled.js',
       ],
     },
-resolve: {
+    resolve: {
       dedupe: ['d3-selection', 'd3-transition', 'd3-zoom', 'd3-interpolate'],
     },
     build: {
@@ -93,7 +92,7 @@ resolve: {
     '/musical': { swr: 300 },
     '/gallery': { swr: 300 },
     '/': { swr: 300 },
-    '/notes': { swr: 300 },
+    '/notes': { prerender: true },
     '/giscus/**': { headers: { 'access-control-allow-origin': 'https://giscus.app' } },
     // All other pages remain dynamic SSR (default)
     // '/fitness': { ssr: true },   ← implicit, no rule needed
