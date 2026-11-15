@@ -89,9 +89,9 @@ export default defineNuxtConfig({
     '/dev-sw.js': { ssr: false, prerender: false },
     '/sw.js': { ssr: false, prerender: false },
     // ISR on static content pages – regenerate every 2 minutes
-    '/musical': { swr: 300 },
-    '/gallery': { swr: 300 },
-    '/': { swr: 300 },
+    '/musical': { isr: 300 },
+    '/gallery': { isr: 300 },
+    '/': { isr: 300 },
     '/notes': { prerender: true },
     '/giscus/**': { headers: { 'access-control-allow-origin': 'https://giscus.app' } },
     // All other pages remain dynamic SSR (default)
