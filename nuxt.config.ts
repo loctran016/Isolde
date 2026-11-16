@@ -89,8 +89,9 @@ export default defineNuxtConfig({
     '/dev-sw.js': { ssr: false, prerender: false },
     '/sw.js': { ssr: false, prerender: false },
     // ISR on static content pages – regenerate every 2 minutes
-    '/musical': { isr: 300 },
-    '/gallery': { isr: 300 },
+    '/musical': { prerender: true },
+    '/gallery': { prerender: true },
+// ? only load images switch to prerender is good?
     '/': { isr: 300 },
     '/notes': { prerender: true },
     '/giscus/**': { headers: { 'access-control-allow-origin': 'https://giscus.app' } },
@@ -176,7 +177,7 @@ export default defineNuxtConfig({
     },
     workbox: {
       globPatterns: ['**/*.{js,css,html,png,svg,ico}'],
-      navigateFallback: '/',
+      navigateFallback: '/notes',
       navigateFallbackDenylist: [/^\/api\//], // optional, good practice
       maximumFileSizeToCacheInBytes: 3000000,
     },
