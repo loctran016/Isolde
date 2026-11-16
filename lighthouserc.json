@@ -1,7 +1,7 @@
 {
   "ci": {
     "collect": {
-      "url": ["https://ten-mien-cua-ban.com", "https://ten-mien-cua-ban.comsan-pham"],
+      "url": ["https://isolde.vercel.app", "https://isolde.vercel.app/notes"],
       "numberOfRuns": 3
     },
     "assert": {
