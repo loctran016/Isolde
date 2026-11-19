@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { today, parseDate } from '@internationalized/date'
+import type { DateValue } from '@internationalized/date'
 import {
   CheckboxIndicator,
   CheckboxRoot,
@@ -11,9 +11,9 @@ import {
 
 const TIME_ZONE = 'Asia/Ho_Chi_Minh'
 
-const date = ref(parseDate('2000-01-01'))
-
-onMounted(() => {
+const date = shallowRef<DateValue>()
+onMounted(async () => {
+  const { today } = await import('@internationalized/date')
   date.value = today(TIME_ZONE)
 })
 
@@ -39,24 +39,6 @@ interface CalendarEvent {
   type: string
 }
 
-const [{ data: events }, { data: todosData }] = await Promise.all([
-  useAsyncData('exams', async () => {
-    const { data, error } = await supabase.from('exams').select('id, event, location, date, type')
-    if (error) throw error
-    return data as CalendarEvent[]
-  }),
-  useAsyncData('todo', async () => {
-    const { data, error } = await supabase
-      .from('todo')
-      .select('id, task, done, type, due_date, created_at')
-      .order('created_at', { ascending: true })
-    if (error) throw error
-    return data as TodoItem[]
-  }),
-])
-
-// --- ENHANCED TODO SYSTEM ---
-
 interface TodoItem {
   id: number
   task: string
@@ -66,36 +48,69 @@ interface TodoItem {
   created_at: string
 }
 
-const todos = ref<TodoItem[]>(todosData.value ? [...todosData.value] : [])
-
-// Filter by type
-const taskTodos = computed(() => todos.value.filter((t) => t.type === 'task' || !t.type))
-const eventTodos = computed(() => todos.value.filter((t) => t.type === 'event'))
-
-// Sort events by due date (null/overdue first, then upcoming)
-function sortByDueDate(items: TodoItem[]) {
-  return [...items].sort((a, b) => {
-    if (!a.due_date && !b.due_date) return 0
-    if (!a.due_date) return -1
-    if (!b.due_date) return 1
-    return a.due_date.localeCompare(b.due_date)
-  })
+function readLocalCache<T>(key: string): T | undefined {
+  if (!import.meta.client) return undefined
+  try {
+    const raw = localStorage.getItem(key)
+    return raw ? (JSON.parse(raw) as T) : undefined
+  } catch {
+    return undefined
+  }
 }
 
-const sortedEventTodos = computed(() => sortByDueDate(eventTodos.value))
+function writeLocalCache<T>(key: string, value: T) {
+  if (!import.meta.client) return
+  try {
+    localStorage.setItem(key, JSON.stringify(value))
+  } catch {}
+}
 
-// Section flex values: Tasks 1.25, Events 1
-const sectionFlex = { task: 1.25, event: 1 }
+const { data: events } = useLazyAsyncData(
+  'exams',
+  async () => {
+    const { data, error } = await supabase.from('exams').select('id, event, location, date, type')
+    if (error) throw error
+    const rows = data as CalendarEvent[]
+    writeLocalCache('isolde:cache:exams', rows)
+    return rows
+  },
+  {
+    server: false,
+    default: () => readLocalCache<CalendarEvent[]>('isolde:cache:exams') ?? [],
+  },
+)
 
-// --- Add new items ---
+const { data: todosData, status: todoStatus } = useLazyAsyncData(
+  'todo',
+  async () => {
+    const { data, error } = await supabase
+      .from('todo')
+      .select('id, task, done, type, due_date, created_at')
+      .order('created_at', { ascending: true })
+    if (error) throw error
+    const rows = data as TodoItem[]
+    writeLocalCache('isolde:cache:todo', rows)
+    return rows
+  },
+  {
+    server: false,
+    default: () => readLocalCache<TodoItem[]>('isolde:cache:todo') ?? [],
+  },
+)
+
+const todos = ref<TodoItem[]>([])
+watch(
+  todosData,
+  (value) => {
+    if (value) todos.value = [...value]
+  },
+  { immediate: true },
+)
+
+const taskTodos = computed(() => todos.value.filter((t) => t.type === 'task' || !t.type))
 
 const newTaskText = ref('')
 const addingTodo = ref(false)
-
-const showEventForm = ref(false)
-const newEventTask = ref('')
-const newEventDueDate = ref('')
-const addingEvent = ref(false)
 
 async function addTodo() {
   const task = newTaskText.value.trim()
@@ -111,6 +126,7 @@ async function addTodo() {
 
     if (error) throw error
     todos.value.push(data as TodoItem)
+    writeLocalCache('isolde:cache:todo', todos.value)
     newTaskText.value = ''
   } catch (e) {
     console.error('Failed to add todo', e)
@@ -119,39 +135,16 @@ async function addTodo() {
   }
 }
 
-async function addEvent() {
-  const task = newEventTask.value.trim()
-  if (!task) return
-
-  addingEvent.value = true
-  try {
-    const dueDate = newEventDueDate.value || null
-    const { data, error } = await supabase
-      .from('todo')
-      .insert({ task, done: false, type: 'event', due_date: dueDate })
-      .select('id, task, done, type, due_date, created_at')
-      .single()
-
-    if (error) throw error
-    todos.value.push(data as TodoItem)
-    newEventTask.value = ''
-    newEventDueDate.value = ''
-    showEventForm.value = false
-  } catch (e) {
-    console.error('Failed to add event', e)
-  } finally {
-    addingEvent.value = false
-  }
-}
-
 // --- Toggle / Edit / Delete ---
 
 async function toggleDone(todo: TodoItem, value: boolean) {
   const previous = todo.done
   todo.done = value
+  writeLocalCache('isolde:cache:todo', todos.value)
   const { error } = await supabase.from('todo').update({ done: value }).eq('id', todo.id)
   if (error) {
     todo.done = previous
+    writeLocalCache('isolde:cache:todo', todos.value)
     console.error('Failed to update todo', error)
   }
 }
@@ -162,9 +155,11 @@ async function saveTaskText(todo: TodoItem, value: string) {
 
   const previous = todo.task
   todo.task = trimmed
+  writeLocalCache('isolde:cache:todo', todos.value)
   const { error } = await supabase.from('todo').update({ task: trimmed }).eq('id', todo.id)
   if (error) {
     todo.task = previous
+    writeLocalCache('isolde:cache:todo', todos.value)
     console.error('Failed to update todo text', error)
   }
 }
@@ -174,40 +169,14 @@ async function removeTodo(todo: TodoItem) {
   if (index === -1) return
 
   const [removed] = todos.value.splice(index, 1)
+  writeLocalCache('isolde:cache:todo', todos.value)
   const { error } = await supabase.from('todo').delete().eq('id', todo.id)
   if (error) {
     todos.value.splice(index, 0, removed)
+    writeLocalCache('isolde:cache:todo', todos.value)
     console.error('Failed to delete todo', error)
   }
 }
-
-// --- Merged format helper (single parseDate call per item) ---
-
-function dueDateMeta(dateStr: string | null): { label: string; overdue: boolean } {
-  if (!dateStr) return { label: 'Today', overdue: false }
-  const due = parseDate(dateStr)
-  const diff = due.compare(date.value)
-
-  if (diff === 0) return { label: 'Today', overdue: false }
-  if (diff === 1) return { label: 'Tomorrow', overdue: false }
-  if (diff < 0) return { label: `${Math.abs(diff)}d overdue`, overdue: true }
-
-  const jsDate = due.toDate(TIME_ZONE)
-  return {
-    label: jsDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-    overdue: false,
-  }
-}
-
-// Precompute due date metadata for all event todos — avoids calling
-// dueDateMeta in every render cycle via v-for template trick
-const dueDateMetaMap = computed(() => {
-  const map = new Map<number, { label: string; overdue: boolean }>()
-  for (const todo of sortedEventTodos.value) {
-    map.set(todo.id, dueDateMeta(todo.due_date))
-  }
-  return map
-})
 </script>
 
 <template>
@@ -226,6 +195,7 @@ const dueDateMetaMap = computed(() => {
       <div class="min-w-0 lg:h-full">
         <!-- Calendar: lazy-loaded to defer reka-ui Calendar + @internationalized/date ~200 kB -->
         <LazyHomeCalendar
+          v-if="date"
           :events="events ?? []"
           :default-date="date"
           class="sm:text-lg card lg:h-full"
@@ -234,6 +204,10 @@ const dueDateMetaMap = computed(() => {
             <div class="card min-h-64 lg:h-full animate-pulse bg-white/20 dark:bg-stone-700/20" />
           </template>
         </LazyHomeCalendar>
+        <div
+          v-else
+          class="card min-h-64 lg:h-full animate-pulse bg-white/20 dark:bg-stone-700/20"
+        />
       </div>
 
       <!-- Cột phải: To-do (phần còn lại) / Gallery + Music (h-20) -->
@@ -248,7 +222,7 @@ const dueDateMetaMap = computed(() => {
               <div class="i-mdi:text-box-edit" />
               To-do
             </h2>
-            <span class="text-xs opacity-50">{{ taskTodos.length + eventTodos.length }} items</span>
+            <span class="text-xs opacity-50">{{ taskTodos.length }} items</span>
           </div>
 
           <!-- TASKS (no due date) -->
@@ -298,7 +272,15 @@ const dueDateMetaMap = computed(() => {
                     <div class="i-mdi:close text-base" />
                   </button>
                 </li>
-                <li v-if="!taskTodos.length" class="text-xs opacity-40 py-1">No tasks yet</li>
+                <li
+                  v-if="todoStatus === 'pending' && !taskTodos.length"
+                  class="text-xs opacity-40 py-1 animate-pulse"
+                >
+                  Loading tasks…
+                </li>
+                <li v-else-if="!taskTodos.length" class="text-xs opacity-40 py-1">
+                  No tasks yet
+                </li>
               </ul>
             </PurpleScrollArea>
             <!-- Add task form -->

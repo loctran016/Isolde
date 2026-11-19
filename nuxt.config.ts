@@ -88,11 +88,9 @@ export default defineNuxtConfig({
     '/manifest.webmanifest': { ssr: false, prerender: false },
     '/dev-sw.js': { ssr: false, prerender: false },
     '/sw.js': { ssr: false, prerender: false },
-    // ISR on static content pages – regenerate every 2 minutes
     '/musical': { prerender: true },
     '/gallery': { prerender: true },
-// ? only load images switch to prerender is good?
-    '/': { isr: 300 },
+    '/': { prerender: true },
     '/notes': { prerender: true },
     '/giscus/**': { headers: { 'access-control-allow-origin': 'https://giscus.app' } },
     // All other pages remain dynamic SSR (default)
@@ -133,6 +131,12 @@ export default defineNuxtConfig({
         { name: 'apple-mobile-web-app-capable', content: 'yes' },
         { name: 'apple-mobile-web-app-status-bar-style', content: 'black-translucent' },
         { name: 'theme-color', content: '#9d2f63' },
+      ],
+      style: [
+        {
+          innerHTML: `html{background:#fafaf9}html.dark{background:#1c1917}`,
+          tagPriority: 'critical',
+        },
       ],
       script: [
         {
@@ -177,7 +181,7 @@ export default defineNuxtConfig({
     },
     workbox: {
       globPatterns: ['**/*.{js,css,html,png,svg,ico}'],
-      navigateFallback: '/notes',
+      navigateFallback: '/',
       navigateFallbackDenylist: [/^\/api\//], // optional, good practice
       maximumFileSizeToCacheInBytes: 3000000,
     },

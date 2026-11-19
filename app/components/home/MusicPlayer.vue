@@ -39,7 +39,13 @@ watch(volume, (v) => {
 
 <template>
   <div class="card flex flex-col gap-4">
-    <audio ref="audioEl" :src="currentTrack.src" :volume="volume" @ended="next" />
+    <audio
+      ref="audioEl"
+      :src="currentTrack.src"
+      :volume="volume"
+      preload="none"
+      @ended="next"
+    />
 
     <h2 class="font-semibold font-head text-lg flex items-center gap-2">
       <div class="i-mdi:music-note" />

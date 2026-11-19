@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import type { TibetanHolyDay } from '~/server/api/tibetan-week.get'
 
-const { data: holyDays } = await useAsyncData('tibetan-week', () =>
-  $fetch<TibetanHolyDay[]>('/api/tibetan-week'),
+const { data: holyDays } = useLazyAsyncData(
+  'tibetan-week',
+  () => $fetch<TibetanHolyDay[]>('/api/tibetan-week'),
+  { server: false, default: () => [] },
 )
 
 function formatDate(iso: string) {
