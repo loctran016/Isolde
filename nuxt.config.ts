@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url'
 
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
-  devtools: { enabled: false },
+  devtools: { enabled: true },
   watch: ['~/uno.config.ts'],
   modules: [
     '@unocss/nuxt',

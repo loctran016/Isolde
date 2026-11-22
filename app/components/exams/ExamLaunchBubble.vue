@@ -3,13 +3,10 @@ const open = ref(false)
 </script>
 
 <template>
-  <div
-    class="fixed right-3 z-30 sm:right-5"
-    :style="{ bottom: 'calc(5.25rem + env(safe-area-inset-bottom, 0px))' }"
-  >
+  <div class="fixed right-3 z-30 bottom-3">
     <button
       type="button"
-      class="grid h-10 w-10 place-items-center rounded-full border border-purple-300/50 bg-white/80 text-purple-700 shadow-lg backdrop-blur-md transition hover:bg-purple-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple-600 active:scale-95 dark:border-white/15 dark:bg-stone-800/90 dark:text-purple-200 dark:hover:bg-stone-700"
+      class="grid h-16 w-16 md:h-20 md:w-20 place-items-center rounded-full border border-purple-300/50 bg-white/80 text-purple-700 shadow-lg backdrop-blur-md transition hover:bg-purple-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple-600 active:scale-95 dark:border-white/15 dark:bg-purple-800/90 dark:text-purple-200 dark:hover:bg-purple-700"
       aria-label="Mở màn hình luyện đề"
       @click="open = true"
     >
