@@ -1,5 +1,5 @@
 // composables/useExamSession.ts
-import { computed, onMounted, onUnmounted, ref, toValue, type MaybeRefOrGetter } from 'vue'
+import { computed, onMounted, onUnmounted, ref, toValue, watch, type MaybeRefOrGetter } from 'vue'
 import type {
   DisplayOption,
   ExamFilterQuery,
@@ -7,6 +7,7 @@ import type {
   ExamPaletteItem,
   ExamQuestion,
   ExamScoreSummary,
+  ExamsManifest,
   PaletteItemState,
   PreparedQuestion,
   ReviewFilter,
@@ -14,6 +15,7 @@ import type {
 } from '~/types/quiz.types'
 
 export const EXAM_HISTORY_KEY = 'isolde_exam_history'
+const EXAM_SESSION_KEY = 'isolde_exam_session'
 const HISTORY_LIMIT = 100
 const WARNING_THRESHOLD_SEC = 300
 const SECONDS_PER_QUESTION = 40
@@ -56,7 +58,46 @@ export function readExamHistory(): ExamHistoryRecord[] {
   if (typeof window === 'undefined') return []
   try {
     const parsed = JSON.parse(window.localStorage.getItem(EXAM_HISTORY_KEY) ?? '[]')
-    return Array.isArray(parsed) ? (parsed as ExamHistoryRecord[]) : []
+    if (!Array.isArray(parsed)) return []
+    return parsed
+      .filter((r): r is Record<string, unknown> => !!r && typeof r === 'object')
+      .map((r) => {
+        const subject = typeof r.subject === 'string' ? r.subject : ''
+        const exam = typeof r.exam === 'string' ? r.exam : 'all'
+        const group = /^[1-8]$/.test(String(r.group)) ? String(r.group) : 'all'
+        const conflict = r.conflict === '1' ? '1' : '0'
+        const mode: ExamFilterQuery['mode'] = r.mode === 'exam' ? 'exam' : 'practice'
+        const correctCount = Number.isFinite(Number(r.correctCount))
+          ? Math.max(0, Math.round(Number(r.correctCount)))
+          : 0
+        const totalCount = Number.isFinite(Number(r.totalCount))
+          ? Math.max(0, Math.round(Number(r.totalCount)))
+          : 0
+        const percentage = Number.isFinite(Number(r.percentage))
+          ? Math.max(0, Math.min(100, Number(r.percentage)))
+          : 0
+        const elapsedSec = Number.isFinite(Number(r.elapsedSec))
+          ? Math.max(0, Math.round(Number(r.elapsedSec)))
+          : 0
+        const finishedAt =
+          typeof r.finishedAt === 'string' && !Number.isNaN(Date.parse(r.finishedAt))
+            ? r.finishedAt
+            : new Date(0).toISOString()
+        return {
+          key: typeof r.key === 'string' ? r.key : examHistoryKey(subject, exam, group, conflict),
+          subject,
+          exam,
+          group,
+          conflict,
+          mode,
+          correctCount,
+          totalCount,
+          percentage,
+          elapsedSec,
+          finishedAt,
+        } satisfies ExamHistoryRecord
+      })
+      .filter((r) => r.subject.length > 0)
   } catch {
     return []
   }
@@ -110,7 +151,42 @@ function prepareQuestion(q: ExamQuestion, shuffleOptions: boolean): PreparedQues
 }
 
 const pad2 = (n: number) => String(n).padStart(2, '0')
-const safeSegment = (s: string) => /^[\w.-]+$/.test(s)
+const safeSegment = (s: string) => !!s && !/[/?#\\]/.test(s)
+
+interface ExamSessionSnapshot {
+  subject: string
+  config: ExamFilterQuery
+  answers: Record<string, string>
+  flagged: Record<string, boolean>
+  revealedHints: Record<string, boolean>
+  currentIndex: number
+  submitted: boolean
+  autoSubmitted: boolean
+  summary: ExamScoreSummary | null
+  reviewFilter: ReviewFilter
+  endAt: number
+}
+
+function sessionSnapshotKey(subject: string, q: ExamFilterQuery) {
+  return `${subject}|${q.mode}|${q.exam}|${q.group}|${q.conflict}|${q.shuffle}|${q.time}`
+}
+
+function readExamSession(): ExamSessionSnapshot | null {
+  if (typeof window === 'undefined') return null
+  try {
+    const parsed = JSON.parse(window.localStorage.getItem(EXAM_SESSION_KEY) ?? 'null')
+    return parsed && typeof parsed === 'object' ? (parsed as ExamSessionSnapshot) : null
+  } catch {
+    return null
+  }
+}
+
+function clearExamSession() {
+  if (typeof window === 'undefined') return
+  try {
+    window.localStorage.removeItem(EXAM_SESSION_KEY)
+  } catch {}
+}
 
 // ───────────────────────── Composable ─────────────────────────
 
@@ -141,6 +217,29 @@ export function useExamSession(
   const endAt = ref(0)
   const nowTick = ref(Date.now())
   let handle: ReturnType<typeof setInterval> | null = null
+
+  function saveExamSession() {
+    if (typeof window === 'undefined') return
+    const sub = toValue(subject)
+    const q = toValue(query)
+    if (!sub || !questions.value.length) return
+    const snapshot: ExamSessionSnapshot = {
+      subject: sub,
+      config: q,
+      answers: answers.value,
+      flagged: flagged.value,
+      revealedHints: revealedHints.value,
+      currentIndex: currentIndex.value,
+      submitted: submitted.value,
+      autoSubmitted: autoSubmitted.value,
+      summary: summary.value,
+      reviewFilter: reviewFilter.value,
+      endAt: endAt.value,
+    }
+    try {
+      window.localStorage.setItem(EXAM_SESSION_KEY, JSON.stringify(snapshot))
+    } catch {}
+  }
 
   const mode = computed(() => toValue(query).mode)
   const isExam = computed(() => mode.value === 'exam')
@@ -196,16 +295,31 @@ export function useExamSession(
     const sub = toValue(subject)
     const q = toValue(query)
     try {
-      if (!safeSegment(sub) || (q.exam !== 'all' && !safeSegment(q.exam)))
-        throw new Error('Tham số học phần hoặc bộ đề không hợp lệ.')
-      const file = q.exam === 'all' ? 'bank' : q.exam
-      const bank = await $fetch<SubjectQuestionBank>(`/data/exams/${sub}/${file}.json`)
+      if (!safeSegment(sub)) throw new Error('Tham số học phần không hợp lệ.')
+      if (q.exam !== 'all' && !safeSegment(q.exam))
+        throw new Error('Tham số bộ đề không hợp lệ.')
+
+      const manifest = await $fetch<ExamsManifest>('/data/exams/exams-manifest.json')
+      const subjectEntry = manifest.subjects.find((item) => item.subject === sub)
+      if (!subjectEntry) throw new Error('Không tìm thấy học phần trong danh sách đề thi.')
+      if (q.exam !== 'all') {
+        const examEntry = subjectEntry.exams.find((item) => item.exam_id === q.exam)
+        if (!examEntry) throw new Error('Không tìm thấy bộ đề trong học phần đã chọn.')
+      }
+
+      const bank = await $fetch<SubjectQuestionBank>(
+        `/data/exams/${encodeURIComponent(sub)}/bank.json`,
+      )
       subjectLabel.value = bank.subject_label
 
       let list = bank.questions
-      if (q.exam !== 'all') list = list.filter((x) => x.exam_id === q.exam)
+      if (q.exam !== 'all') {
+        const examId = q.exam.normalize('NFC')
+        list = list.filter((x) => x.exam_id.normalize('NFC') === examId)
+      }
       if (q.group !== 'all') list = list.filter((x) => String(x.group_id) === q.group)
       if (q.conflict === '1') list = list.filter((x) => x.status === 'conflict')
+      if (!list.length) throw new Error('Không có câu hỏi nào khớp bộ lọc đã chọn.')
 
       const doShuffle = q.shuffle === '1'
       const ordered = doShuffle ? shuffled(list) : list
@@ -227,7 +341,41 @@ export function useExamSession(
           ? Math.round(minutes * 60)
           : Math.max(60, questions.value.length * SECONDS_PER_QUESTION)
 
-      if (questions.value.length) startTimer()
+      const snapshot = readExamSession()
+      if (
+        snapshot &&
+        snapshot.subject === sub &&
+        sessionSnapshotKey(sub, snapshot.config) === sessionSnapshotKey(sub, q) &&
+        !snapshot.submitted
+      ) {
+        answers.value =
+          snapshot.answers && typeof snapshot.answers === 'object' ? snapshot.answers : {}
+        flagged.value =
+          snapshot.flagged && typeof snapshot.flagged === 'object' ? snapshot.flagged : {}
+        revealedHints.value =
+          snapshot.revealedHints && typeof snapshot.revealedHints === 'object'
+            ? snapshot.revealedHints
+            : {}
+        currentIndex.value = Math.min(
+          Math.max(0, snapshot.currentIndex ?? 0),
+          questions.value.length - 1,
+        )
+        endAt.value =
+          snapshot.endAt > Date.now() ? snapshot.endAt : Date.now() + totalSec.value * 1000
+      }
+
+      if (questions.value.length) {
+        if (isExam.value && snapshot && endAt.value > 0) {
+          startedAt.value = endAt.value - totalSec.value * 1000
+          nowTick.value = Date.now()
+          handle = setInterval(tick, 1000)
+          document.addEventListener('visibilitychange', onVisibility)
+          tick()
+        } else {
+          startTimer()
+        }
+        saveExamSession()
+      }
     } catch (e) {
       questions.value = []
       error.value = e instanceof Error && e.message ? e.message : 'Không tải được dữ liệu đề thi.'
@@ -294,6 +442,7 @@ export function useExamSession(
   function goTo(index: number) {
     if (!visibleQuestions.value.length) return
     currentIndex.value = Math.min(Math.max(0, index), visibleQuestions.value.length - 1)
+    saveExamSession()
   }
   function goToId(id: string) {
     let idx = visibleQuestions.value.findIndex((q) => q.id === id)
@@ -302,6 +451,7 @@ export function useExamSession(
       idx = questions.value.findIndex((q) => q.id === id)
     }
     if (idx >= 0) currentIndex.value = idx
+    saveExamSession()
   }
   const next = () => goTo(currentIndex.value + 1)
   const prev = () => goTo(currentIndex.value - 1)
@@ -317,6 +467,7 @@ export function useExamSession(
     if (isPractice.value) {
       if (existing) return // practice: locked at first click
       answers.value = { ...answers.value, [questionId]: key }
+      saveExamSession()
       return
     }
     // exam: change freely; tapping the same option again clears the answer
@@ -326,15 +477,18 @@ export function useExamSession(
     } else {
       answers.value = { ...answers.value, [questionId]: key }
     }
+    saveExamSession()
   }
 
   function toggleFlag(questionId: string) {
     flagged.value = { ...flagged.value, [questionId]: !flagged.value[questionId] }
+    saveExamSession()
   }
 
   function toggleHint(questionId: string) {
     if (!isPractice.value) return
     revealedHints.value = { ...revealedHints.value, [questionId]: !revealedHints.value[questionId] }
+    saveExamSession()
   }
 
   // ── Submit ──
@@ -371,11 +525,13 @@ export function useExamSession(
       elapsedSec,
       finishedAt: new Date().toISOString(),
     })
+    clearExamSession()
   }
 
   function setReviewFilter(filter: ReviewFilter) {
     reviewFilter.value = filter
     currentIndex.value = 0
+    saveExamSession()
   }
 
   // ── Note reference drawer ──

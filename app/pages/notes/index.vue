@@ -441,5 +441,6 @@ watch([selectedSubject, search, onlyTodo], () => {
         </PaginationList>
       </PaginationRoot>
     </div>
+    <ExamLaunchBubble />
   </main>
 </template>

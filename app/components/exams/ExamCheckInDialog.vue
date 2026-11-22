@@ -33,7 +33,7 @@ const GROUPS: { value: string; label: string }[] = [
   { value: '8', label: 'Hình ảnh' },
 ]
 
-const open = ref(false)
+const open = defineModel<boolean>('open', { default: false })
 const manifest = ref<ExamsManifest | null>(null)
 const loading = ref(false)
 const loadError = ref<string | null>(null)
@@ -159,7 +159,7 @@ function startSession() {
     mssv: mssv.value.trim(),
   }
   open.value = false
-  navigateTo({ path: `/notes/exam/${subject.value}`, query: { ...query } })
+  navigateTo({ path: `/exams/${subject.value}`, query: { ...query } })
 }
 
 const field =
@@ -169,15 +169,6 @@ const label = 'mb-1.5 block text-xs font-medium text-white/50'
 
 <template>
   <DialogRoot v-model:open="open">
-    <button
-      type="button"
-      class="inline-flex h-10 shrink-0 items-center gap-2 rounded-full border border-white/10 bg-white/[0.06] px-4 text-sm font-medium text-white/90 backdrop-blur-md transition hover:bg-white/[0.12] focus-visible:outline-2 focus-visible:outline-white/60 active:scale-[0.97]"
-      @click="open = true"
-    >
-      <span class="i-solar-pen-new-square-linear text-base" aria-hidden="true" />
-      Vào phòng thi
-    </button>
-
     <DialogPortal>
       <DialogOverlay class="exam-overlay fixed inset-0 z-50 bg-black/70 backdrop-blur-sm" />
       <DialogContent

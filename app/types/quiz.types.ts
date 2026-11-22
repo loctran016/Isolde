@@ -67,7 +67,7 @@ export type ExamMode = 'practice' | 'exam'
 export type ReviewFilter = 'all' | 'wrong' | 'conflict'
 export type PaletteItemState = 'unanswered' | 'answered' | 'correct' | 'incorrect'
 
-/** Query-string contract between ExamCheckInDialog and pages/notes/exam/[id].vue */
+/** Query-string contract between ExamCheckInDialog and app/pages/exams/[id].vue */
 export interface ExamFilterQuery {
   mode: ExamMode
   exam: string // "all" | exam_id

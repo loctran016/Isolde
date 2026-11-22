@@ -140,17 +140,19 @@
 - `public/data/exams/exams-manifest.json`, `public/data/exams/<subject>/bank.json` và `<exam_id>.json` là dữ liệu sinh tự động; chỉ đọc phía client.
 - Thư mục thực tế:
   - `app/components/exams/ExamCheckInDialog.vue`
+  - `app/components/exams/ExamLaunchBubble.vue`
   - `app/components/exams/ExamQuestionCard.vue`
   - `app/components/exams/ExamPaletteDrawer.vue`
   - `app/components/exams/ExamNoteRefDrawer.vue`
   - `app/composables/useExamSession.ts`
   - `app/pages/exams/[id].vue`, đặt `layout: false`
   - `app/types/quiz.types.ts`
-- Route phòng thi thực tế trong cấu trúc file là `/exams/<subject>`; đường dẫn trong `ExamCheckInDialog.vue` hiện dùng `/notes/exam/<subject>` — đây là sai lệch cần xác nhận trước khi chỉnh dữ liệu hoặc route.
-- `ExamCheckInDialog.vue` hiện chưa được mount trong `app/pages/notes/index.vue`; không giả định điểm vào đã có, trừ khi thêm/mount theo yêu cầu.
-- `ExamFilterQuery` là hợp đồng query giữa dialog và trang thi. Các type data/session nằm trong `app/types/quiz.types.ts`, không phải `app/types/quiz.ts`.
-- `useExamSession` tải `bank.json` hoặc bộ đề theo subject; lọc nhóm/conflict; trộn câu; dùng timer timestamp chống trôi đồng hồ; lưu điểm lịch sử.
-- Lịch sử làm bài dùng localStorage key `isolde_exam_history`; đọc/ghi trong client, giới hạn 100 bản ghi, xử lý storage full/private mode.
+- Route phòng thi là `/exams/<subject>`; `ExamCheckInDialog.vue` điều hướng đến route này với config trong query.
+- `ExamLaunchBubble.vue` là bubble tròn fixed trên trang `/notes`; bubble mở `ExamCheckInDialog` qua `v-model:open` trong `ClientOnly`; `app/pages/notes/index.vue` chỉ mount `ExamLaunchBubble`.
+- `ExamFilterQuery` là hợp đồng query giữa dialog và trang thi `/exams/[id].vue`. Route dùng `subject` làm `id`, còn `exam` trong query là `exam_id` hoặc `all`. Các type data/session nằm trong `app/types/quiz.types.ts`, không phải `app/types/quiz.ts`.
+- `useExamSession` xác thực subject/bộ đề qua manifest, tải `bank.json` theo subject, lọc theo `exam_id`/nhóm/conflict; trộn câu; dùng timer timestamp chống trôi đồng hồ; lưu điểm lịch sử.
+- Luồng check-in: `/notes` → bubble → dialog chọn học phần/bộ đề/config → `/exams/<subject>?mode=...&exam=...&group=...&conflict=...&shuffle=...&time=...&name=...&mssv=...`.
+- Lịch sử làm bài dùng localStorage key `isolde_exam_history`; đọc/ghi chỉ trong client, giới hạn 100 bản ghi, chuẩn hóa bản ghi cũ thiếu trường, xử lý storage full/private mode. Trạng thái thi đang làm có bản ghi client-only để F5 khôi phục bài làm, không đổi key lịch sử hiện hữu.
 - Câu có ảnh lấy `/data/exams/${subject}/${image}`. Hiển thị rõ `verified`/`conflict`/`ai_only`. Giữ canonical answer key khi trộn đáp án.
 - Hình ảnh đề nằm trong `assets/` của bundle đề được sync; không sửa trực tiếp `public/data/exams/`.
 - Khi schema docmint thay đổi, cập nhật `app/types/quiz.types.ts` trước, rồi mới sửa composable/component.

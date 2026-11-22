@@ -6,7 +6,6 @@
     "graph": "node scripts/build-graph.mjs",
     "build": "node scripts/format-md.mjs --cites && node scripts/build-graph.mjs && comark-content snapshot && nuxt build",
     "format:md": "node scripts/format-md.mjs",
-    "predev": "bun scripts/sync-exams.mjs --quiet",
     "prebuild": "bun scripts/sync-exams.mjs --quiet",
     "dev": "node scripts/build-graph.mjs && nuxt dev",
     "generate": "node scripts/build-graph.mjs && nuxt generate",

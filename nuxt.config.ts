@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url'
 
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
-  devtools: { enabled: true },
+  devtools: { enabled: false },
   watch: ['~/uno.config.ts'],
   modules: [
     '@unocss/nuxt',
@@ -27,6 +27,9 @@ export default defineNuxtConfig({
     dir: '~~/content', // src paths are now relative to content/
   },
   nitro: {
+    watchOptions: {
+      ignored: ['**/.content/**', '**/.nuxt/**', '**/.output/**', '**/public/data/exams/**', '**/public/audios/**'],
+    },
     serverAssets: [
       { baseName: 'comark', dir: fileURLToPath(new URL('./.content', import.meta.url)) },
       // raw .md + images, bundled into the Vercel function (used by the PDF export)
@@ -51,14 +54,43 @@ export default defineNuxtConfig({
     },
   },
   vite: {
+    server: {
+      watch: {
+        ignored: [
+          '**/.content/**',
+          '**/.nuxt/**',
+          '**/.output/**',
+          '**/public/data/exams/**',
+          '**/public/audios/**',
+          '**/node_modules/**',
+        ],
+      },
+    },
     optimizeDeps: {
       include: [
-        '@vue/devtools-core',
-        '@vue/devtools-kit',
         '@internationalized/date',
         'reka-ui',
         'elkjs',
         'elkjs/lib/elk.bundled.js',
+        '@comark/vue',
+        '@giscus/vue',
+        '@markmap/element',
+        '@regle/core',
+        '@regle/rules',
+        '@tanstack/vue-table',
+        '@yeger/vue-masonry-wall',
+        'abcjs',
+        'comark',
+        'comark-content/client',
+        'comark-content/plugins/sqlite-full-text-search/client',
+        'comark-ui/vue',
+        'comark/parse',
+        'd3-selection',
+        'd3-transition',
+        'markdown-it-multimd-table',
+        'force-graph',
+        'exceljs',
+        'vue-easy-lightbox',
       ],
     },
     resolve: {
