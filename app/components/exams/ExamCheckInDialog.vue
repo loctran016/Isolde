@@ -162,8 +162,9 @@ function startSession() {
   navigateTo({ path: `/exams/${subject.value}`, query: { ...query } })
 }
 
+// focus: violet thay cho trắng
 const field =
-  'h-11 w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 text-sm text-white/90 outline-none transition focus:border-white/30 focus:bg-white/[0.07] disabled:opacity-40'
+  'h-11 w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 text-sm text-white/90 outline-none transition focus:border-violet-400/70 focus:bg-white/[0.07] disabled:opacity-40'
 const label = 'mb-1.5 block text-xs font-medium text-white/50'
 </script>
 
@@ -172,7 +173,7 @@ const label = 'mb-1.5 block text-xs font-medium text-white/50'
     <DialogPortal>
       <DialogOverlay class="exam-overlay fixed inset-0 z-50 bg-black/70 backdrop-blur-sm" />
       <DialogContent
-        class="exam-content fixed left-1/2 top-1/2 z-50 max-h-[92dvh] w-[min(42rem,calc(100vw-1.5rem))] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-3xl border border-white/10 bg-[#0A0A0A] p-4 font-sans text-white/90 shadow-2xl sm:p-6"
+        class="exam-content fixed left-1/2 top-1/2 z-50 max-h-[92dvh] w-[min(42rem,calc(100vw-1.5rem))] -translate-x-1/2 -translate-y-1/2 overflow-y-auto overscroll-contain rounded-3xl border border-white/10 bg-[#0A0A0A] p-4 font-sans text-white/90 shadow-2xl sm:p-6"
       >
         <div class="mb-4 flex items-start justify-between gap-3">
           <div>
@@ -182,7 +183,7 @@ const label = 'mb-1.5 block text-xs font-medium text-white/50'
             </DialogDescription>
           </div>
           <DialogClose
-            class="grid h-10 w-10 shrink-0 place-items-center rounded-full text-white/60 transition hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-white/60"
+            class="grid h-10 w-10 shrink-0 place-items-center rounded-full text-white/60 transition hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-violet-400"
             aria-label="Đóng"
           >
             <span class="i-solar-close-circle-linear text-xl" aria-hidden="true" />
@@ -214,7 +215,7 @@ const label = 'mb-1.5 block text-xs font-medium text-white/50'
                 <p class="text-xs text-white/50">Hệ thống thi trực tuyến · Thông tin thí sinh</p>
               </div>
               <span
-                class="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 px-3 py-1 text-xs font-medium text-emerald-300"
+                class="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-emerald-500/15 px-3 py-1 text-xs font-medium text-emerald-300"
               >
                 <span class="h-1.5 w-1.5 rounded-full bg-emerald-400" aria-hidden="true" />
                 Sẵn sàng dự thi
@@ -312,14 +313,14 @@ const label = 'mb-1.5 block text-xs font-medium text-white/50'
               </span>
               <span
                 v-if="lastRecord"
-                class="rounded-full bg-sky-500/15 px-3 py-1.5 text-sky-200"
+                class="rounded-full bg-violet-500/15 px-3 py-1.5 text-violet-200"
                 :title="new Date(lastRecord.finishedAt).toLocaleString('vi-VN')"
               >
                 Lần gần nhất:
                 <span class="font-mono tabular-nums font-semibold"
                   >{{ lastRecord.percentage }}%</span
                 >
-                <span class="font-mono tabular-nums text-sky-200/70">
+                <span class="font-mono tabular-nums text-violet-200/70">
                   ({{ lastRecord.correctCount }}/{{ lastRecord.totalCount }} ·
                   {{ formatDuration(lastRecord.elapsedSec) }})
                 </span>
@@ -343,7 +344,7 @@ const label = 'mb-1.5 block text-xs font-medium text-white/50'
             >
               <RadioGroupItem
                 value="practice"
-                class="min-h-[4.5rem] rounded-2xl border border-white/10 bg-white/[0.03] p-3 text-left transition focus-visible:outline-2 focus-visible:outline-white/60 data-[state=checked]:border-emerald-400/60 data-[state=checked]:bg-emerald-500/10"
+                class="min-h-[4.5rem] rounded-2xl border border-white/10 bg-white/[0.03] p-3 text-left transition focus-visible:outline-2 focus-visible:outline-violet-400 data-[state=checked]:border-violet-400/60 data-[state=checked]:bg-violet-500/10"
               >
                 <span class="block text-sm font-semibold">Luyện tập</span>
                 <span class="mt-0.5 block text-xs text-white/55"
@@ -352,7 +353,7 @@ const label = 'mb-1.5 block text-xs font-medium text-white/50'
               </RadioGroupItem>
               <RadioGroupItem
                 value="exam"
-                class="min-h-[4.5rem] rounded-2xl border border-white/10 bg-white/[0.03] p-3 text-left transition focus-visible:outline-2 focus-visible:outline-white/60 data-[state=checked]:border-sky-400/60 data-[state=checked]:bg-sky-500/10"
+                class="min-h-[4.5rem] rounded-2xl border border-white/10 bg-white/[0.03] p-3 text-left transition focus-visible:outline-2 focus-visible:outline-violet-400 data-[state=checked]:border-amber-400/60 data-[state=checked]:bg-amber-500/10"
               >
                 <span class="block text-sm font-semibold">Thi thật (PMT EMS)</span>
                 <span class="mt-0.5 block text-xs text-white/55"
@@ -376,7 +377,7 @@ const label = 'mb-1.5 block text-xs font-medium text-white/50'
                 <span class="text-sm">Đảo thứ tự câu &amp; đáp án</span>
                 <SwitchRoot
                   v-model="shuffle"
-                  class="relative h-6 w-11 shrink-0 rounded-full bg-white/15 transition data-[state=checked]:bg-emerald-500 focus-visible:outline-2 focus-visible:outline-white/60"
+                  class="relative h-6 w-11 shrink-0 rounded-full bg-white/15 transition data-[state=checked]:bg-violet-500 focus-visible:outline-2 focus-visible:outline-violet-300"
                 >
                   <SwitchThumb
                     class="block h-5 w-5 translate-x-0.5 rounded-full bg-white shadow transition-transform data-[state=checked]:translate-x-[1.375rem]"
@@ -389,7 +390,7 @@ const label = 'mb-1.5 block text-xs font-medium text-white/50'
                 <span class="text-sm">Chỉ ôn câu Conflict</span>
                 <SwitchRoot
                   v-model="conflictOnly"
-                  class="relative h-6 w-11 shrink-0 rounded-full bg-white/15 transition data-[state=checked]:bg-amber-500 focus-visible:outline-2 focus-visible:outline-white/60"
+                  class="relative h-6 w-11 shrink-0 rounded-full bg-white/15 transition data-[state=checked]:bg-amber-500 focus-visible:outline-2 focus-visible:outline-amber-300"
                 >
                   <SwitchThumb
                     class="block h-5 w-5 translate-x-0.5 rounded-full bg-white shadow transition-transform data-[state=checked]:translate-x-[1.375rem]"
@@ -401,7 +402,7 @@ const label = 'mb-1.5 block text-xs font-medium text-white/50'
 
           <button
             type="button"
-            class="h-12 w-full rounded-2xl bg-white text-sm font-semibold text-black transition hover:bg-white/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white disabled:cursor-not-allowed disabled:opacity-40"
+            class="h-12 w-full rounded-2xl bg-violet-500 text-sm font-semibold text-white transition hover:bg-violet-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-300 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-violet-500"
             :disabled="!canStart"
             @click="startSession"
           >
