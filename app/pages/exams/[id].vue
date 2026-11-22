@@ -119,7 +119,7 @@ const reviewTabs = computed<{ value: ReviewFilter; label: string; count: number 
   { value: 'conflict', label: 'Câu Conflict', count: conflictCount.value },
 ])
 
-// ── Keyboard: ← / → to move, 1-5 or A-E to answer ──
+// ── Keyboard: ← / → to move, 1-6 or A-F to answer ──
 function onKeydown(e: KeyboardEvent) {
   if (e.metaKey || e.ctrlKey || e.altKey) return
   const el = e.target as HTMLElement | null
@@ -157,6 +157,22 @@ function onKeydown(e: KeyboardEvent) {
 
 // ── Exam (PMT-EMS) specifics ──
 const questionPane = ref<HTMLElement | null>(null)
+
+// [TẠM TẮT] Bản sửa scroll (mỗi mode tự sở hữu scroll container).
+// Bật lại: bỏ comment khối này + đổi class theo các comment trong template.
+// const examRoot = ref<HTMLElement | null>(null)
+// const practiceRoot = ref<HTMLElement | null>(null)
+// watch(
+//   () => currentQuestion.value?.id,
+//   async () => {
+//     await nextTick()
+//     questionPane.value?.scrollTo({ top: 0 })
+//     examRoot.value?.scrollTo({ top: 0 })
+//     practiceRoot.value?.scrollTo({ top: 0 })
+//   },
+// )
+
+// Bản gốc
 watch(
   () => currentQuestion.value?.id,
   async () => {
@@ -194,9 +210,19 @@ const scoreTone = computed(() => {
   <!-- ═════════════════════════════════════════════════════════════
        mode=exam  →  PMT-EMS ExamSys replica (light, no Isolde theme)
        ═════════════════════════════════════════════════════════════ -->
+  <!--
+    [TẠM TẮT] Scroll fix cho exam root. Khi bật lại, thay class của div dưới bằng:
+    ref="examRoot"
+    class="exam-root flex h-dvh select-none flex-col overflow-y-auto overflow-x-hidden overscroll-contain bg-white md:overflow-hidden"
+    và wrapper body: "flex flex-none flex-col md:min-h-0 md:flex-1 md:flex-row"
+    main: "flex min-w-0 flex-col border-[#B8A672] bg-white md:min-h-0 md:flex-1 md:border-r"
+    questionPane: "p-4 md:min-h-0 md:flex-1 md:overflow-y-auto md:overscroll-contain md:p-5"
+  -->
   <div v-if="isExam" class="exam-root flex h-dvh select-none flex-col overflow-hidden bg-white">
-    <header class="exam-banner flex h-11 shrink-0 items-center justify-center">
-      <h1 class="sans text-[15px] font-bold uppercase tracking-wide text-[#1A1A1A]">
+    <header class="exam-banner flex h-11 shrink-0 items-center justify-center px-2">
+      <h1
+        class="sans text-center text-[13px] font-bold uppercase tracking-wide text-[#1A1A1A] sm:text-[15px]"
+      >
         HỆ THỐNG TRẮC NGHIỆM TRỰC TUYẾN
       </h1>
     </header>
@@ -378,8 +404,13 @@ const scoreTone = computed(() => {
   </div>
 
   <!-- ═════════════════════════════════════════════════════════════
-       mode=practice  →  Isolde #0A0A0A dark study theme
+       mode=practice  →  Isolde #0A0A0A dark study theme (glass + violet primary)
        ═════════════════════════════════════════════════════════════ -->
+  <!--
+    [TẠM TẮT] Scroll fix cho practice root. Khi bật lại, thay class của div dưới bằng:
+    ref="practiceRoot"
+    class="h-dvh overflow-y-auto overflow-x-hidden overscroll-contain bg-[#0A0A0A] font-sans text-white/90 antialiased"
+  -->
   <div v-else class="min-h-dvh bg-[#0A0A0A] font-sans text-white/90 antialiased">
     <header
       class="sticky top-0 z-40 border-b border-white/10 bg-[#0A0A0A]/85 pt-[env(safe-area-inset-top)] backdrop-blur-md"
@@ -390,15 +421,15 @@ const scoreTone = computed(() => {
         <div class="min-w-0">
           <NuxtLink
             to="/notes"
-            class="inline-flex h-10 items-center gap-1.5 rounded-full pr-3 text-sm text-white/75 transition hover:text-white focus-visible:outline-2 focus-visible:outline-white/60"
+            class="inline-flex h-10 items-center gap-1.5 rounded-full pr-3 text-sm text-white/75 transition hover:text-white focus-visible:outline-2 focus-visible:outline-violet-400"
           >
             <span class="i-solar-arrow-left-linear text-base" aria-hidden="true" />
-            Notes Island
+            <span class="truncate">Notes Island</span>
           </NuxtLink>
         </div>
         <div class="text-center">
           <span
-            class="inline-flex rounded-full bg-emerald-500/15 px-3 py-1 text-xs font-medium text-emerald-300 sm:text-sm"
+            class="inline-flex whitespace-nowrap rounded-full bg-violet-500/15 px-3 py-1 text-xs font-medium text-violet-300 sm:text-sm"
           >
             Chế độ Luyện tập
           </span>
@@ -425,14 +456,14 @@ const scoreTone = computed(() => {
         <div class="mt-4 flex justify-center gap-2">
           <button
             type="button"
-            class="h-11 rounded-full bg-white px-5 text-sm font-semibold text-black"
+            class="h-11 rounded-full bg-violet-500 px-5 text-sm font-semibold text-white transition hover:bg-violet-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-300"
             @click="session.load()"
           >
             Thử lại
           </button>
           <button
             type="button"
-            class="h-11 rounded-full border border-white/20 px-5 text-sm"
+            class="h-11 rounded-full border border-white/20 px-5 text-sm transition hover:bg-white/10"
             @click="leaveRoom"
           >
             Quay lại Notes
@@ -447,7 +478,7 @@ const scoreTone = computed(() => {
         <p class="text-sm text-white/70">Không có câu hỏi nào khớp bộ lọc đã chọn.</p>
         <button
           type="button"
-          class="mt-4 h-11 rounded-full bg-white px-5 text-sm font-semibold text-black"
+          class="mt-4 h-11 rounded-full bg-violet-500 px-5 text-sm font-semibold text-white transition hover:bg-violet-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-300"
           @click="leaveRoom"
         >
           Quay lại Notes
@@ -500,10 +531,10 @@ const scoreTone = computed(() => {
                 :key="tab.value"
                 type="button"
                 role="tab"
-                class="inline-flex h-10 items-center gap-2 rounded-full border px-4 text-sm transition focus-visible:outline-2 focus-visible:outline-white/60"
+                class="inline-flex h-10 items-center gap-2 rounded-full border px-4 text-sm transition focus-visible:outline-2 focus-visible:outline-violet-400"
                 :class="
                   reviewFilter === tab.value
-                    ? 'border-white bg-white text-black'
+                    ? 'border-violet-500 bg-violet-500 text-white'
                     : 'border-white/15 text-white/75 hover:bg-white/10'
                 "
                 :aria-selected="reviewFilter === tab.value"
@@ -512,7 +543,7 @@ const scoreTone = computed(() => {
                 {{ tab.label }}
                 <span
                   class="font-mono text-xs tabular-nums"
-                  :class="reviewFilter === tab.value ? 'text-black/60' : 'text-white/50'"
+                  :class="reviewFilter === tab.value ? 'text-white/70' : 'text-white/50'"
                 >
                   {{ tab.count }}
                 </span>
@@ -552,7 +583,7 @@ const scoreTone = computed(() => {
           >
             <button
               type="button"
-              class="inline-flex h-11 items-center gap-1.5 rounded-full border border-white/15 px-5 text-sm transition hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-white/60 disabled:opacity-30"
+              class="inline-flex h-11 items-center gap-1.5 rounded-full border border-white/15 px-5 text-sm transition hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-violet-400 disabled:opacity-30"
               :disabled="!hasPrev"
               @click="session.prev()"
             >
@@ -564,7 +595,7 @@ const scoreTone = computed(() => {
             </p>
             <button
               type="button"
-              class="inline-flex h-11 items-center gap-1.5 rounded-full border border-white/15 px-5 text-sm transition hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-white/60 disabled:opacity-30"
+              class="inline-flex h-11 items-center gap-1.5 rounded-full bg-violet-500 px-5 text-sm font-medium text-white transition hover:bg-violet-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-300 disabled:bg-white/10 disabled:text-white/30 disabled:hover:bg-white/10"
               :disabled="!hasNext"
               @click="session.next()"
             >
@@ -648,14 +679,14 @@ const scoreTone = computed(() => {
         <div class="mt-6 flex gap-3">
           <button
             type="button"
-            class="h-11 flex-1 rounded-full border border-white/20 text-sm transition hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-white/60"
+            class="h-11 flex-1 rounded-full border border-white/20 text-sm transition hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-violet-400"
             @click="confirmOpen = false"
           >
             Làm tiếp
           </button>
           <button
             type="button"
-            class="h-11 flex-1 rounded-full bg-white text-sm font-semibold text-black transition hover:bg-white/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+            class="h-11 flex-1 rounded-full bg-violet-500 text-sm font-semibold text-white transition hover:bg-violet-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-300"
             @click="confirmSubmit"
           >
             Nộp bài
