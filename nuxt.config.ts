@@ -28,7 +28,13 @@ export default defineNuxtConfig({
   },
   nitro: {
     watchOptions: {
-      ignored: ['**/.content/**', '**/.nuxt/**', '**/.output/**', '**/public/data/exams/**', '**/public/audios/**'],
+      ignored: [
+        '**/.content/**',
+        '**/.nuxt/**',
+        '**/.output/**',
+        '**/public/data/exams/**',
+        '**/public/audios/**',
+      ],
     },
     serverAssets: [
       { baseName: 'comark', dir: fileURLToPath(new URL('./.content', import.meta.url)) },
