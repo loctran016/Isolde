@@ -410,7 +410,7 @@ watch([selectedSubject, search, onlyTodo], () => {
         :items-per-page="itemsPerPage"
         :sibling-count="1"
         show-edges
-        class="mt-4 md:mt-6"
+        class="mt-4 md:mt-6 max-w-9/10"
       >
         <PaginationList v-slot="{ items }" class="flex items-center justify-center gap-1">
           <PaginationFirst class="px-2 py-1 rounded disabled:opacity-40 cursor-pointer"
