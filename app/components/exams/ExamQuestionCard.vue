@@ -42,13 +42,13 @@ function optionState(key: string): OptionState {
 // ── Practice (dark) styles ──
 const optionClass: Record<OptionState, string> = {
   idle: 'border-white/10 bg-white/[0.03] hover:bg-white/[0.07]',
-  selected: 'border-sky-400/70 bg-sky-500/15',
+  selected: 'border-violet-400/70 bg-violet-500/15',
   correct: 'border-emerald-400/70 bg-emerald-500/15',
   incorrect: 'border-red-400/70 bg-red-500/15',
 }
 const badgeClass: Record<OptionState, string> = {
   idle: 'border-white/20 text-white/70',
-  selected: 'border-sky-300 bg-sky-400 text-black',
+  selected: 'border-violet-300 bg-violet-400 text-black',
   correct: 'border-emerald-300 bg-emerald-400 text-black',
   incorrect: 'border-red-300 bg-red-400 text-black',
 }
@@ -174,7 +174,7 @@ const showHintButton = computed(() => props.mode === 'practice' && !!props.quest
         <button
           v-if="showHintButton"
           type="button"
-          class="inline-flex h-10 items-center gap-1.5 rounded-full border border-white/10 px-3.5 text-sm text-white/75 transition hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-white/60 disabled:opacity-40"
+          class="inline-flex h-10 items-center gap-1.5 rounded-full border border-white/10 px-3.5 text-sm text-white/75 transition hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-violet-400 disabled:opacity-40"
           :aria-pressed="hintRevealed"
           :disabled="locked"
           @click="emit('toggle-hint')"
@@ -184,7 +184,7 @@ const showHintButton = computed(() => props.mode === 'practice' && !!props.quest
         </button>
         <button
           type="button"
-          class="inline-flex h-10 items-center gap-1.5 rounded-full border px-3.5 text-sm transition focus-visible:outline-2 focus-visible:outline-white/60"
+          class="inline-flex h-10 items-center gap-1.5 rounded-full border px-3.5 text-sm transition focus-visible:outline-2 focus-visible:outline-violet-400"
           :class="
             flagged
               ? 'border-amber-400/60 bg-amber-500/15 text-amber-200'
@@ -228,23 +228,24 @@ const showHintButton = computed(() => props.mode === 'practice' && !!props.quest
     </figure>
 
     <div class="mt-5 grid gap-2.5" role="group" :aria-label="`Đáp án câu ${index}`">
+      <!-- items-center: badge A/B/C/D và text căn giữa theo chiều dọc -->
       <button
         v-for="opt in question.displayOptions"
         :key="opt.key"
         type="button"
-        class="flex min-h-[44px] w-full items-start gap-3 rounded-2xl border px-3.5 py-3 text-left transition focus-visible:outline-2 focus-visible:outline-white/60 disabled:cursor-default"
+        class="flex min-h-[44px] w-full items-center gap-3 rounded-2xl border px-3.5 py-3 text-left transition focus-visible:outline-2 focus-visible:outline-violet-400 disabled:cursor-default"
         :class="optionClass[optionState(opt.key)]"
         :disabled="!interactive || locked"
         :aria-pressed="optionState(opt.key) === 'selected'"
         @click="emit('select', opt.key)"
       >
         <span
-          class="mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-full border font-mono text-sm font-semibold tabular-nums"
+          class="grid h-7 w-7 shrink-0 place-items-center rounded-full border font-mono text-sm font-semibold leading-none tabular-nums"
           :class="badgeClass[optionState(opt.key)]"
         >
           {{ opt.label }}
         </span>
-        <span class="whitespace-pre-line text-[15px] leading-snug text-white/90">{{
+        <span class="min-w-0 flex-1 whitespace-pre-line text-[15px] leading-snug text-white/90">{{
           opt.text
         }}</span>
       </button>
@@ -279,7 +280,7 @@ const showHintButton = computed(() => props.mode === 'practice' && !!props.quest
               <button
                 v-if="question.note_ref"
                 type="button"
-                class="ml-auto inline-flex h-10 items-center gap-1.5 rounded-full border border-white/10 px-3.5 text-sm text-white/80 transition hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-white/60"
+                class="ml-auto inline-flex h-10 items-center gap-1.5 rounded-full border border-white/10 px-3.5 text-sm text-white/80 transition hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-violet-400"
                 @click="emit('open-note', question.note_ref)"
               >
                 <span class="i-solar-book-2-linear text-base" aria-hidden="true" />
