@@ -205,7 +205,7 @@ export default defineNuxtConfig({
     redirect: false,
   },
   pwa: {
-    registerType: 'prompt',
+    registerType: 'autoUpdate',
     injectRegister: null, // disable auto-registration -- we'll register manually, deferred
     manifest: {
       name: 'Isolde',
