@@ -10,7 +10,7 @@ const open = ref(false)
       aria-label="Mở màn hình luyện đề"
       @click="open = true"
     >
-      <span class="i-solar:document-add-linear block text-xl" aria-hidden="true" />
+      <span class="i-solar:document-add-linear block text-2xl md:text-3xl" aria-hidden="true" />
     </button>
 
     <ClientOnly>
