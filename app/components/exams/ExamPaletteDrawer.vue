@@ -240,7 +240,7 @@ function examRowTag(item: ExamPaletteItem): string {
             :key="item.id"
             type="button"
             role="listitem"
-            class="relative grid h-11 min-w-[2.5rem] place-items-center rounded-xl border font-mono text-sm font-medium tabular-nums transition focus-visible:outline-2 focus-visible:outline-white/60"
+            class="relative grid h-11 min-w-[2.5rem] place-items-center rounded-xl border font-mono text-sm font-medium tabular-nums transition focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-white/60"
             :class="[
               stateClass[item.state],
               item.current ? 'ring-2 ring-white' : 'hover:bg-white/10',
@@ -301,7 +301,7 @@ function examRowTag(item: ExamPaletteItem): string {
     <DialogRoot v-model:open="mobileOpen">
       <button
         type="button"
-        class="fixed bottom-[max(1rem,env(safe-area-inset-bottom))] right-1/2 -translate-x-1/2 z-30 inline-flex h-12 items-center gap-2 rounded-full border border-white/15 bg-[#0A0A0A]/90 px-5 text-sm font-medium text-white shadow-lg backdrop-blur-md transition active:scale-95 focus-visible:outline-2 focus-visible:outline-white/60 lg:hidden"
+        class="fixed bottom-[max(1rem,env(safe-area-inset-bottom))] right-1/2 -translate-x-1/2 z-30 inline-flex h-12 items-center gap-2 rounded-full border border-white/15 bg-[#0A0A0A]/90 px-5 text-sm font-medium text-white shadow-lg backdrop-blur-md transition active:scale-95 focus-visible:outline-2 focus-visible:outline-white/60 lg:hidden cursor-pointer"
         @click="mobileOpen = true"
       >
         <span class="i-solar-widget-5-linear text-base" aria-hidden="true" />
