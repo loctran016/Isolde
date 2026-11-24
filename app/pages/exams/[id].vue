@@ -411,7 +411,10 @@ const scoreTone = computed(() => {
     ref="practiceRoot"
     class="h-dvh overflow-y-auto overflow-x-hidden overscroll-contain bg-[#0A0A0A] font-sans text-white/90 antialiased"
   -->
-  <div v-else class="min-h-dvh bg-[#0A0A0A] font-sans text-white/90 antialiased">
+  <div
+    v-else
+    class="h-dvh overflow-y-auto overflow-x-hidden overscroll-contain bg-[#0A0A0A] font-sans text-white/90 antialiased"
+  >
     <header
       class="sticky top-0 z-40 border-b border-white/10 bg-[#0A0A0A]/85 pt-[env(safe-area-inset-top)] backdrop-blur-md"
     >
@@ -442,7 +445,7 @@ const scoreTone = computed(() => {
       </div>
     </header>
 
-    <main class="mx-auto max-w-6xl px-3 pb-28 pt-5 sm:px-5 lg:pb-10">
+    <main class="mx-auto max-w-6xl px-3 pb-28 pt-5 sm:px-5 lg:pb-5">
       <div v-if="loading" class="space-y-4" aria-busy="true">
         <div class="h-24 animate-pulse rounded-3xl bg-white/[0.04]" />
         <div class="h-72 animate-pulse rounded-3xl bg-white/[0.04]" />
