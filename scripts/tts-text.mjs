@@ -30,6 +30,7 @@ export const ABBREVIATIONS = {
   GP: 'giải phẫu',
   GPB: 'giải phẫu bệnh',
   MP: 'mô phôi',
+  VRT: "viêm ruột thừa",
 }
 
 export const REPLACEMENTS = [
