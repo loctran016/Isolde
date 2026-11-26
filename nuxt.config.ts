@@ -89,7 +89,7 @@ export default defineNuxtConfig({
         'comark',
         'comark-content/client',
         'comark-content/plugins/sqlite-full-text-search/client',
-        'comark-ui/vue',
+        // 'comark-ui/vue',
         'comark/parse',
         'd3-selection',
         'd3-transition',

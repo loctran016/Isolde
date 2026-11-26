@@ -7,7 +7,7 @@ import NoteMarkmap from '~/components/notes/NoteMarkmap.vue'
 import { defineComarkPlugin } from 'comark/parse'
 import markdownItMultimdTable from 'markdown-it-multimd-table'
 import Giscus from '@giscus/vue'
-import comarkUi from 'comark-ui/vue'
+// import comarkUi from 'comark-ui/vue'
 
 const { themePref } = useTheme()
 
@@ -22,7 +22,7 @@ const giscusTheme = computed(() => {
 })
 
 // comark-ui bundles every block (steps, cards, tabs, ...). It returns { plugins, components }.
-const { plugins: comarkUiPlugins, components: comarkUiComponents } = comarkUi()
+// const { plugins: comarkUiPlugins, components: comarkUiComponents } = comarkUi()
 
 const multimdTablePlugin: MarkdownItPlugin = (md) => {
   md.use(markdownItMultimdTable, {
@@ -38,7 +38,8 @@ const multimdTable = defineComarkPlugin(() => ({
 }))
 
 // comarkUiPlugins is an array, so it is spread (not nested) into the list
-const plugins = [...comarkUiPlugins, multimdTable(), mermaid()]
+const plugins = [multimdTable(), mermaid()]
+// const plugins = [...comarkUiPlugins, multimdTable(), mermaid()]
 
 const route = useRoute()
 const path = route.path.replace(/\/+$/, '') || '/'
@@ -383,7 +384,7 @@ async function runParseTest(markdown: string = PARSE_SAMPLE) {
   const cases: { name: string; plugins: any[] }[] = [
     { name: 'no plugins', plugins: [] },
     { name: 'multimd-table only', plugins: [multimdTable()] },
-    { name: 'page plugins (comark-ui + multimd + mermaid)', plugins },
+    { name: 'page plugins ( multimd + mermaid)', plugins },
   ]
 
   for (const c of cases) {
@@ -540,7 +541,6 @@ useNoteLanding()
       :value="page"
       :class="['markdown-body', `top-h${topHeading}`]"
       :components="{
-        ...comarkUiComponents,
         mermaid: Mermaid,
         details: NoteDetails,
         markmap: NoteMarkmap,

@@ -8,7 +8,7 @@ import mermaid from 'comark/plugins/mermaid'
 import toc from 'comark/plugins/toc'
 import { withSnapshot } from 'comark-content/sources/snapshot'
 import markdownItMultiMDTable from 'markdown-it-multimd-table'
-import comarkUi from 'comark-ui/html' // server side: use the framework-free entry, not comark-ui/vue
+// import comarkUi from 'comark-ui/html' // server side: use the framework-free entry, not comark-ui/vue
 
 import sqliteWasm from 'comark-content/database/sqlite-wasm'
 import sqliteFullTextSearch from 'comark-content/plugins/sqlite-full-text-search'
